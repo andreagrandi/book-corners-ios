@@ -267,17 +267,17 @@ class LibraryListViewModel {
 }
 ```
 
-- [ ] 1.5.1 Read through `BookCornersApp.swift` and `ContentView.swift` to understand the
+- [x] 1.5.1 Read through `BookCornersApp.swift` and `ContentView.swift` to understand the ✅
   generated code
-- [ ] 1.5.2 Make sure you understand: `@main`, `App`, `Scene`, `WindowGroup`, `View`, `body`
+- [x] 1.5.2 Make sure you understand: `@main`, `App`, `Scene`, `WindowGroup`, `View`, `body` ✅
 
 ### 1.6 Run on simulator
 
-- [ ] 1.6.1 In the Xcode toolbar at the top, select a simulator device (e.g., **iPhone 16**)
+- [x] 1.6.1 In the Xcode toolbar at the top, select a simulator device (e.g., **iPhone 16**) ✅
   from the device dropdown
-- [ ] 1.6.2 Press **Cmd+R** (or click the play button ▶) to build and run
-- [ ] 1.6.3 The iOS Simulator should launch and display "Hello, world!"
-- [ ] 1.6.4 Try **Cmd+B** (build without running) — useful to quickly check if your code
+- [x] 1.6.2 Press **Cmd+R** (or click the play button ▶) to build and run ✅
+- [x] 1.6.3 The iOS Simulator should launch and display "Hello, world!" ✅
+- [x] 1.6.4 Try **Cmd+B** (build without running) — useful to quickly check if your code ✅
   compiles without launching the simulator every time
 
 > **Tip:** You can also use **SwiftUI Previews** — the canvas on the right side of Xcode that
