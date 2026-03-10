@@ -380,7 +380,7 @@ automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `phot
 
 Set up a shared decoder that handles the API's snake_case keys and ISO 8601 dates.
 
-- [ ] 2.2.1 Create a shared `JSONDecoder` configured with:
+- [x] 2.2.1 Create a shared `JSONDecoder` configured with: ✅
   - `.keyDecodingStrategy = .convertFromSnakeCase` — maps `photo_url` → `photoURL`
   - `.dateDecodingStrategy = .iso8601` — parses `"2025-06-15T14:30:00Z"` into `Date`
   - This will live inside `APIClient` as a property
@@ -394,7 +394,7 @@ Set up a shared decoder that handles the API's snake_case keys and ISO 8601 date
 
 Build the central networking class that all views and view models will use.
 
-- [ ] 2.3.1 Create `Services/APIClient.swift` with:
+- [x] 2.3.1 Create `Services/APIClient.swift` with: ✅
   - Stored properties: `baseURL` (URL), `accessToken` (String?), `session` (URLSession),
     `decoder` (JSONDecoder)
   - Initializer accepting `baseURL` (default: production URL) and optional `URLSession`
@@ -410,7 +410,7 @@ Build the central networking class that all views and view models will use.
 The core method that all endpoint methods call. Uses Swift generics (like Go generics or
 Python's `TypeVar`) to decode any response type.
 
-- [ ] 2.4.1 Implement `request<T: Decodable>(path:method:body:queryItems:) async throws -> T`:
+- [x] 2.4.1 Implement `request<T: Decodable>(path:method:body:queryItems:) async throws -> T`: ✅
   - Build `URL` from `baseURL` + path + query parameters
   - Create `URLRequest`, set HTTP method, headers (`Content-Type: application/json`,
     `Authorization: Bearer <token>` if logged in)
@@ -435,7 +435,7 @@ Python's `TypeVar`) to decode any response type.
 A custom error enum so callers can handle specific failure cases (like showing a login
 screen on 401, or a "try again later" message on 429).
 
-- [ ] 2.5.1 Create `APIClientError` enum in `Services/APIClient.swift` (or its own file):
+- [x] 2.5.1 Create `APIClientError` enum in `Services/APIClientError.swift`: ✅
   - Cases: `invalidURL`, `httpError(statusCode: Int, message: String)`,
     `unauthorized`, `rateLimited(retryAfter: Int?)`, `decodingError(Error)`,
     `networkError(Error)`
