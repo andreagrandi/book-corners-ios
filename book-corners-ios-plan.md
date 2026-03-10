@@ -323,7 +323,7 @@ The compiler auto-generates the encoding/decoding — you just declare the field
 We use `JSONDecoder.keyDecodingStrategy = .convertFromSnakeCase` so the API's `snake_case` fields
 automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `photoURL`).
 
-- [ ] 2.1.1 Create `Models/Library.swift` with the `Library` struct:
+- [x] 2.1.1 Create `Models/Library.swift` with the `Library` struct: ✅
   - Fields: `id` (Int), `slug` (String), `name` (String), `description` (String),
     `photoURL` (String), `thumbnailURL` (String), `lat` (Double), `lng` (Double),
     `address` (String), `city` (String), `country` (String), `postalCode` (String),
