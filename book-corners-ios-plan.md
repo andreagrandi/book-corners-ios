@@ -286,10 +286,10 @@ class LibraryListViewModel {
 
 ### 1.7 Commit the initial project
 
-- [ ] 1.7.1 Review what Xcode generated — make sure no sensitive files are included
-- [ ] 1.7.2 Check that `.gitignore` covers Xcode user data (`xcuserdata/`)
-- [ ] 1.7.3 Stage all new files and commit
-- [ ] 1.7.4 Push to remote
+- [x] 1.7.1 Review what Xcode generated — make sure no sensitive files are included ✅
+- [x] 1.7.2 Check that `.gitignore` covers Xcode user data (`xcuserdata/`) ✅
+- [x] 1.7.3 Stage all new files and commit ✅
+- [x] 1.7.4 Push to remote ✅
 
 ---
 
@@ -301,16 +301,204 @@ backend. JSON encoding/decoding, error handling, and multipart form uploads.
 **Concepts:** `URLSession`, `async/await`, `Codable`, `JSONDecoder` key strategies, generics,
 `URLRequest`, `HTTPURLResponse`, custom error types, multipart/form-data encoding.
 
-- [ ] 2.1 Define all API model structs (`Library`, `TokenPair`, `User`, etc.) with `Codable`
-- [ ] 2.2 Configure shared `JSONDecoder` (`.convertFromSnakeCase`, `.iso8601` date strategy)
-- [ ] 2.3 Create `APIClient` class with configurable `baseURL` and optional `accessToken`
-- [ ] 2.4 Implement generic `request<T: Decodable>()` method
-- [ ] 2.5 Define `APIClientError` enum (httpError, unauthorized, rateLimited, decodingError, etc.)
-- [ ] 2.6 Add convenience methods for each endpoint (getLibraries, getLibrary, getLatest, getStats)
-- [ ] 2.7 Implement `MultipartFormData` helper for photo uploads
-- [ ] 2.8 Add auth endpoint methods (login, register, refresh, getMe)
-- [ ] 2.9 Create mock/preview support for SwiftUI previews
-- [ ] 2.10 Smoke test — temporary view that fetches latest libraries and prints to console
+### 2.1 Define API model structs
+
+Create `Codable` structs in `Models/` that match the JSON the API returns. In Swift, `Codable`
+is like Python's `@dataclass` with built-in JSON serialization, or a Go struct with `json:` tags.
+The compiler auto-generates the encoding/decoding — you just declare the fields.
+
+We use `JSONDecoder.keyDecodingStrategy = .convertFromSnakeCase` so the API's `snake_case` fields
+automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `photoURL`).
+
+- [ ] 2.1.1 Create `Models/Library.swift` with the `Library` struct:
+  - Fields: `id` (Int), `slug` (String), `name` (String), `description` (String),
+    `photoURL` (String), `thumbnailURL` (String), `lat` (Double), `lng` (Double),
+    `address` (String), `city` (String), `country` (String), `postalCode` (String),
+    `wheelchairAccessible` (String), `capacity` (Int?), `isIndoor` (Bool?),
+    `isLit` (Bool?), `website` (String), `contact` (String), `source` (String),
+    `operator_` (String — `operator` is a Swift reserved word, needs `CodingKeys`),
+    `brand` (String), `createdAt` (Date)
+  - Note: String fields are never null but may be empty `""`. Only `capacity`, `isIndoor`,
+    `isLit` are nullable (use optionals). The `operator` field needs a `CodingKeys` enum
+    because `operator` is a reserved word in Swift.
+
+- [ ] 2.1.2 Create `Models/LibraryListResponse.swift`:
+  - `LibraryListResponse`: `items` ([Library]), `pagination` (PaginationMeta)
+  - `PaginationMeta`: `page` (Int), `pageSize` (Int), `total` (Int), `totalPages` (Int),
+    `hasNext` (Bool), `hasPrevious` (Bool)
+
+- [ ] 2.1.3 Create `Models/LatestLibrariesResponse.swift`:
+  - `LatestLibrariesResponse`: `items` ([Library])
+
+- [ ] 2.1.4 Create `Models/AuthModels.swift` with auth-related structs:
+  - `TokenPair`: `access` (String), `refresh` (String)
+  - `AccessToken`: `access` (String)
+  - `User`: `id` (Int), `username` (String), `email` (String)
+  - `LoginRequest`: `username` (String), `password` (String) — `Encodable` only
+  - `RegisterRequest`: `username` (String), `password` (String), `email` (String) — `Encodable`
+  - `RefreshRequest`: `refresh` (String) — `Encodable`
+
+- [ ] 2.1.5 Create `Models/Report.swift`:
+  - `ReportReason` enum: `damaged`, `missing`, `incorrectInfo`, `inappropriate`, `other`
+    — conforms to `String, Codable, CaseIterable`
+  - `Report`: `id` (Int), `reason` (String), `createdAt` (Date)
+
+- [ ] 2.1.6 Create `Models/LibraryPhoto.swift`:
+  - `LibraryPhoto`: `id` (Int), `caption` (String), `status` (String), `createdAt` (Date)
+
+- [ ] 2.1.7 Create `Models/Statistics.swift`:
+  - `Statistics`: `totalApproved` (Int), `totalWithImage` (Int),
+    `topCountries` ([CountryCount]), `cumulativeSeries` ([CumulativeEntry]),
+    `granularity` (String)
+  - `CountryCount`: `countryCode` (String), `countryName` (String), `flagEmoji` (String),
+    `count` (Int)
+  - `CumulativeEntry`: `period` (String), `cumulativeCount` (Int)
+
+- [ ] 2.1.8 Create `Models/APIError.swift`:
+  - `APIErrorResponse`: `message` (String), `details` (optional — use `AnyCodable` or
+    keep as raw JSON `[String: String]?` for simplicity)
+
+> **Swift vs Python comparison:** A Swift `struct` with `Codable` is like a Python
+> `@dataclass` combined with a Pydantic model. The key difference: Swift is statically typed,
+> so the compiler checks all field types at compile time. If the JSON doesn't match, you get
+> a runtime decoding error (which we'll handle in our `APIClient`).
+
+### 2.2 Configure JSONDecoder
+
+Set up a shared decoder that handles the API's snake_case keys and ISO 8601 dates.
+
+- [ ] 2.2.1 Create a shared `JSONDecoder` configured with:
+  - `.keyDecodingStrategy = .convertFromSnakeCase` — maps `photo_url` → `photoURL`
+  - `.dateDecodingStrategy = .iso8601` — parses `"2025-06-15T14:30:00Z"` into `Date`
+  - This will live inside `APIClient` as a property
+
+> **Why `.convertFromSnakeCase`?** The Django backend uses Python's snake_case convention
+> (`photo_url`, `created_at`). Swift convention is camelCase (`photoURL`, `createdAt`).
+> Instead of writing a `CodingKeys` enum for every struct, this one-line decoder config
+> handles the conversion automatically. It's like Go's `json:"photo_url"` tags but global.
+
+### 2.3 Create APIClient
+
+Build the central networking class that all views and view models will use.
+
+- [ ] 2.3.1 Create `Services/APIClient.swift` with:
+  - Stored properties: `baseURL` (URL), `accessToken` (String?), `session` (URLSession),
+    `decoder` (JSONDecoder)
+  - Initializer accepting `baseURL` (default: production URL) and optional `URLSession`
+    (for testing — we'll inject a mock session in Step 3)
+  - Default production URL: `https://bookcorners.org/api/v1/`
+
+> **Why inject URLSession?** Same reason you'd pass a database connection in Python/Go
+> tests — dependency injection. In Step 3, we'll create a mock `URLSession` that returns
+> fake responses without hitting the network.
+
+### 2.4 Implement generic request method
+
+The core method that all endpoint methods call. Uses Swift generics (like Go generics or
+Python's `TypeVar`) to decode any response type.
+
+- [ ] 2.4.1 Implement `request<T: Decodable>(path:method:body:queryItems:) async throws -> T`:
+  - Build `URL` from `baseURL` + path + query parameters
+  - Create `URLRequest`, set HTTP method, headers (`Content-Type: application/json`,
+    `Authorization: Bearer <token>` if logged in)
+  - For POST/PUT/PATCH with a body: encode with `JSONEncoder` (also snake_case strategy)
+  - Call `URLSession.shared.data(for: request)` with async/await
+  - Check `HTTPURLResponse.statusCode` — throw typed errors for 401, 429, 4xx, 5xx
+  - Decode response body with the configured `JSONDecoder`
+  - Return the decoded `T`
+
+> **`async/await` in Swift** works almost identically to Python's `async/await`. The
+> `try await` combo means "this can both fail (throw) and suspend (await)". URLSession's
+> `.data(for:)` is the async version of what would be `requests.get()` in Python or
+> `http.Get()` in Go — but non-blocking.
+
+> **Swift 6.2 concurrency note:** In Xcode 26, code defaults to main actor isolation
+> (single-threaded, like being on the main/UI thread). URLSession handles threading
+> internally — when you `await` a network call, the UI stays responsive. You don't need
+> `@concurrent` or `Task.detached` for basic networking.
+
+### 2.5 Define APIClientError
+
+A custom error enum so callers can handle specific failure cases (like showing a login
+screen on 401, or a "try again later" message on 429).
+
+- [ ] 2.5.1 Create `APIClientError` enum in `Services/APIClient.swift` (or its own file):
+  - Cases: `invalidURL`, `httpError(statusCode: Int, message: String)`,
+    `unauthorized`, `rateLimited(retryAfter: Int?)`, `decodingError(Error)`,
+    `networkError(Error)`
+  - Conform to `Error` and `LocalizedError` (provides `.localizedDescription`)
+  - Parse error body when possible to extract the API's `message` field
+
+> **Swift enums with associated values** are like Rust's enums or a tagged union. Each case
+> can carry different data. This is much more expressive than Python's exception classes or
+> Go's `errors.New()`. Pattern matching with `switch` lets callers handle each case cleanly.
+
+### 2.6 Add read-only endpoint methods
+
+Convenience methods that wrap the generic `request()` for each API endpoint. These are
+what view models will actually call.
+
+- [ ] 2.6.1 Add `getLibraries(page:pageSize:query:city:country:lat:lng:radiusKm:hasPhoto:)
+  async throws -> LibraryListResponse` — builds query parameters, calls `request()`
+- [ ] 2.6.2 Add `getLibrary(slug:) async throws -> Library`
+- [ ] 2.6.3 Add `getLatestLibraries(limit:hasPhoto:) async throws -> LatestLibrariesResponse`
+- [ ] 2.6.4 Add `getStatistics() async throws -> Statistics`
+
+### 2.7 Implement MultipartFormData helper
+
+iOS has no built-in multipart encoder (unlike Python's `requests` library). We need to
+manually construct the HTTP body with boundary-separated parts.
+
+- [ ] 2.7.1 Create `Services/MultipartFormData.swift`:
+  - A struct/class that accumulates form fields and file attachments
+  - Method `addField(name:value:)` — adds a text field
+  - Method `addFile(name:fileName:mimeType:data:)` — adds a file part
+  - Property `contentType` — returns `"multipart/form-data; boundary=<boundary>"`
+  - Method `encode() -> Data` — assembles the complete body with boundary separators
+
+> **Multipart/form-data** is the HTTP encoding for file uploads — the same format a browser
+> uses for `<form enctype="multipart/form-data">`. Each part is separated by a unique
+> "boundary" string. It's like MIME encoding for email attachments. Python's `requests`
+> hides this; in Swift we build it manually.
+
+### 2.8 Add auth and write endpoint methods
+
+Methods for endpoints that require authentication or use multipart encoding.
+
+- [ ] 2.8.1 Add `login(username:password:) async throws -> TokenPair`
+- [ ] 2.8.2 Add `register(username:email:password:) async throws -> TokenPair`
+- [ ] 2.8.3 Add `refreshToken(refreshToken:) async throws -> AccessToken`
+- [ ] 2.8.4 Add `getMe() async throws -> User`
+- [ ] 2.8.5 Add `submitLibrary(...)` method using `MultipartFormData` (we'll flesh this out
+  in Step 9, just add the signature for now)
+- [ ] 2.8.6 Add `reportLibrary(slug:reason:details:photo:)` method signature
+- [ ] 2.8.7 Add `addPhoto(slug:photo:caption:)` method signature
+
+### 2.9 Create mock/preview support
+
+SwiftUI previews need data without hitting the network. Create sample data and a mock client.
+
+- [ ] 2.9.1 Create `Preview Content/SampleData.swift` with static sample `Library`, `User`,
+  etc. instances for use in SwiftUI previews
+- [ ] 2.9.2 Extract `APIClientProtocol` protocol from `APIClient` (lists all public methods)
+  — this enables dependency injection and mocking
+- [ ] 2.9.3 Create `Preview Content/MockAPIClient.swift` that conforms to `APIClientProtocol`
+  and returns sample data immediately
+
+> **Protocols in Swift** are like Go interfaces — they define a set of methods without
+> implementation. Any type that implements all the methods automatically conforms. This is
+> how we swap a real `APIClient` for a mock in previews and tests.
+
+### 2.10 Smoke test
+
+Verify the networking layer works end-to-end before moving on.
+
+- [ ] 2.10.1 Temporarily modify `ContentView` to call `APIClient().getLatestLibraries()`
+  in a `.task` modifier and print the results to the console
+- [ ] 2.10.2 Build and run on simulator — verify library data prints in Xcode's console
+- [ ] 2.10.3 Test error handling: try an invalid URL, check that errors are caught properly
+- [ ] 2.10.4 Revert `ContentView` to its original state after verifying
+- [ ] 2.10.5 Commit the networking layer
 
 ---
 
