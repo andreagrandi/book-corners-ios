@@ -340,10 +340,10 @@ automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `phot
   - `PaginationMeta`: `page` (Int), `pageSize` (Int), `total` (Int), `totalPages` (Int),
     `hasNext` (Bool), `hasPrevious` (Bool)
 
-- [ ] 2.1.3 Create `Models/LatestLibrariesResponse.swift`:
+- [x] 2.1.3 Create `Models/LatestLibrariesResponse.swift`: ✅
   - `LatestLibrariesResponse`: `items` ([Library])
 
-- [ ] 2.1.4 Create `Models/AuthModels.swift` with auth-related structs:
+- [x] 2.1.4 Create `Models/AuthModels.swift` with auth-related structs: ✅
   - `TokenPair`: `access` (String), `refresh` (String)
   - `AccessToken`: `access` (String)
   - `User`: `id` (Int), `username` (String), `email` (String)
@@ -351,15 +351,15 @@ automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `phot
   - `RegisterRequest`: `username` (String), `password` (String), `email` (String) — `Encodable`
   - `RefreshRequest`: `refresh` (String) — `Encodable`
 
-- [ ] 2.1.5 Create `Models/Report.swift`:
+- [x] 2.1.5 Create `Models/Report.swift`: ✅
   - `ReportReason` enum: `damaged`, `missing`, `incorrectInfo`, `inappropriate`, `other`
     — conforms to `String, Codable, CaseIterable`
   - `Report`: `id` (Int), `reason` (String), `createdAt` (Date)
 
-- [ ] 2.1.6 Create `Models/LibraryPhoto.swift`:
+- [x] 2.1.6 Create `Models/LibraryPhoto.swift`: ✅
   - `LibraryPhoto`: `id` (Int), `caption` (String), `status` (String), `createdAt` (Date)
 
-- [ ] 2.1.7 Create `Models/Statistics.swift`:
+- [x] 2.1.7 Create `Models/Statistics.swift`: ✅
   - `Statistics`: `totalApproved` (Int), `totalWithImage` (Int),
     `topCountries` ([CountryCount]), `cumulativeSeries` ([CumulativeEntry]),
     `granularity` (String)
@@ -367,7 +367,7 @@ automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `phot
     `count` (Int)
   - `CumulativeEntry`: `period` (String), `cumulativeCount` (Int)
 
-- [ ] 2.1.8 Create `Models/APIError.swift`:
+- [x] 2.1.8 Create `Models/APIError.swift`: ✅
   - `APIErrorResponse`: `message` (String), `details` (optional — use `AnyCodable` or
     keep as raw JSON `[String: String]?` for simplicity)
 
