@@ -149,19 +149,19 @@ Open Xcode and create a new project:
 
 ### 1.3 Create folder/group structure
 
-Xcode organizes files using **groups** (shown as folders in the navigator). Unlike Python
-packages or Go modules, groups are purely organizational — they don't affect imports or
-namespacing. All Swift files in a target can see each other without explicit imports.
+Xcode organizes files using **folders** (in Xcode 26, the old "New Group" is now "New Folder").
+Unlike Python packages or Go modules, folders are purely organizational — they don't affect
+imports or namespacing. All Swift files in a target can see each other without explicit imports.
 
-- [ ] 1.3.1 In the Project Navigator, right-click the **BookCorners** folder (the yellow folder
-  icon, not the blue project icon) → **New Group**. Create these groups:
+- [x] 1.3.1 In the Project Navigator, right-click the **BookCorners** folder (the blue folder ✅
+  icon inside the top-level project) → **New Folder**. Create these folders:
   - `Models`
   - `Services`
   - `ViewModels`
   - `Views`
   - `Extensions`
   - `Utilities`
-- [ ] 1.3.2 Inside the `Views` group, create sub-groups:
+- [x] 1.3.2 Inside the `Views` folder, create sub-folders: ✅
   - `Components`
   - `Tabs`
   - `Libraries`
@@ -171,9 +171,8 @@ namespacing. All Swift files in a target can see each other without explicit imp
   - `Report`
   - `Photos`
   - `Admin`
-- [ ] 1.3.3 Move `ContentView.swift` into `Views/Tabs/` (drag it in the navigator)
-- [ ] 1.3.4 Verify the folder structure on disk matches what's in Xcode. In modern Xcode
-  (15+), groups map directly to filesystem folders by default.
+- [x] 1.3.3 Move `ContentView.swift` into `Views/Tabs/` (drag it in the navigator) ✅
+- [x] 1.3.4 Verify the folder structure on disk matches what's in Xcode. ✅
 
 > **Python comparison:** In Python you'd have `models/`, `services/`, `views/` packages with
 > `__init__.py`. In Swift, there are no package boundaries within a target — every file can
@@ -190,8 +189,8 @@ for app metadata.
 Modern Xcode projects manage most `Info.plist` keys through the target's **Info** tab rather
 than editing the file directly.
 
-- [ ] 1.4.1 Select the **BookCorners** target → **Info** tab
-- [ ] 1.4.2 Under **Custom iOS Target Properties**, add these keys (click the `+` button):
+- [x] 1.4.1 Select the **BookCorners** target → **Info** tab ✅
+- [x] 1.4.2 Under **Custom iOS Target Properties**, add these keys (hover a row for `+` button): ✅
   - `Privacy - Location When In Use Usage Description` → `"Book Corners uses your location to show nearby libraries"`
   - `Privacy - Photo Library Usage Description` → `"Book Corners needs access to your photos to submit library pictures"`
   - `Privacy - Camera Usage Description` → `"Book Corners uses the camera to take photos of libraries"`

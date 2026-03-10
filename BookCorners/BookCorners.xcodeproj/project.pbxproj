@@ -397,6 +397,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -429,6 +432,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
