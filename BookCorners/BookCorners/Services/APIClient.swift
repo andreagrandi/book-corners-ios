@@ -94,4 +94,47 @@ class APIClient {
             return .httpError(statusCode: statusCode, message: message)
         }
     }
+
+    func getLibrary(slug: String) async throws -> Library {
+        try await request(path: "libraries/\(slug)")
+    }
+
+    func getStatistics() async throws -> Statistics {
+        try await request(path: "statistics/")
+    }
+
+    func getLatestLibraries(limit: Int = 10, hasPhoto: Bool? = nil) async throws -> LatestLibrariesResponse {
+        var items = [URLQueryItem(name: "limit", value: String(limit))]
+        if let hasPhoto {
+            items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto)))
+        }
+
+        return try await request(path: "libraries/latest", queryItems: items)
+    }
+
+    func getLibraries(
+        page: Int = 1,
+        pageSize: Int = 20,
+        query: String? = nil,
+        city: String? = nil,
+        country: String? = nil,
+        lat: Double? = nil,
+        lng: Double? = nil,
+        radiusKm: Int? = nil,
+        hasPhoto: Bool? = nil,
+    ) async throws -> LibraryListResponse {
+        var items = [
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "page_size", value: String(pageSize)),
+        ]
+        if let query { items.append(URLQueryItem(name: "q", value: query)) }
+        if let city { items.append(URLQueryItem(name: "city", value: city)) }
+        if let country { items.append(URLQueryItem(name: "country", value: country)) }
+        if let lat { items.append(URLQueryItem(name: "lat", value: String(lat))) }
+        if let lng { items.append(URLQueryItem(name: "lng", value: String(lng))) }
+        if let radiusKm { items.append(URLQueryItem(name: "radius_km", value: String(radiusKm))) }
+        if let hasPhoto { items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto))) }
+
+        return try await request(path: "libraries/", queryItems: items)
+    }
 }

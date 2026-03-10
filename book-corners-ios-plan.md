@@ -451,11 +451,11 @@ screen on 401, or a "try again later" message on 429).
 Convenience methods that wrap the generic `request()` for each API endpoint. These are
 what view models will actually call.
 
-- [ ] 2.6.1 Add `getLibraries(page:pageSize:query:city:country:lat:lng:radiusKm:hasPhoto:)
+- [x] 2.6.1 Add `getLibraries(page:pageSize:query:city:country:lat:lng:radiusKm:hasPhoto:) ✅
   async throws -> LibraryListResponse` — builds query parameters, calls `request()`
-- [ ] 2.6.2 Add `getLibrary(slug:) async throws -> Library`
-- [ ] 2.6.3 Add `getLatestLibraries(limit:hasPhoto:) async throws -> LatestLibrariesResponse`
-- [ ] 2.6.4 Add `getStatistics() async throws -> Statistics`
+- [x] 2.6.2 Add `getLibrary(slug:) async throws -> Library` ✅
+- [x] 2.6.3 Add `getLatestLibraries(limit:hasPhoto:) async throws -> LatestLibrariesResponse` ✅
+- [x] 2.6.4 Add `getStatistics() async throws -> Statistics` ✅
 
 ### 2.7 Implement MultipartFormData helper
 
