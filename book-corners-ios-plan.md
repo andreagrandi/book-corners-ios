@@ -8,6 +8,19 @@
 (with code guidance) when we begin working on it. Steps are ordered by dependency — each
 builds on the previous.
 
+**Teaching protocol:** This is a learning project. For every step:
+
+1. **Before starting:** Explain the key concepts we're about to use. Use Python/Go analogies.
+   Don't rush into code — make sure the learner understands *why* before *how*.
+2. **During:** Explain new syntax and patterns as they appear. Don't gloss over anything
+   that would be unfamiliar to a Python/Go developer.
+3. **After completing a step:** Recap what was built and the concepts covered. Ask the
+   learner questions to check understanding (e.g., "What would happen if...?", "How is
+   this different from...?", "Can you explain what X does?"). Don't move on until the
+   learner confirms they understand.
+4. **Pacing:** Never rush. One concept at a time. If the learner seems confused, stop
+   and clarify before continuing.
+
 **API strategy:** Use the production API (`https://bookcorners.org/api/v1/`) for read-only
 steps (browsing, maps, search). Switch to the local backend when we reach write operations
 (submit, report, photos) to avoid polluting production data. The `APIClient` will support
