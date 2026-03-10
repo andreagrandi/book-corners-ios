@@ -112,9 +112,9 @@ navigator, simulator, MVVM in SwiftUI context, `@Observable` macro.
 
 Open Xcode and create a new project:
 
-- [ ] 1.1.1 Open Xcode → **File → New → Project** (or `Cmd+Shift+N`)
-- [ ] 1.1.2 Choose **iOS → App** template, click Next
-- [ ] 1.1.3 Fill in the project options:
+- [x] 1.1.1 Open Xcode → **File → New → Project** (or `Cmd+Shift+N`) ✅
+- [x] 1.1.2 Choose **iOS → App** template, click Next ✅
+- [x] 1.1.3 Fill in the project options: ✅
   - **Product Name:** `BookCorners`
   - **Organization Identifier:** something like `org.bookcorners` (this combines with the product
     name to form the **Bundle Identifier** — `org.bookcorners.BookCorners` — a unique ID for your
@@ -123,7 +123,7 @@ Open Xcode and create a new project:
   - **Language:** Swift
   - **Storage:** None (we won't use SwiftData or Core Data for now)
   - **Include Tests:** check this box (we'll use the test target in Step 3)
-- [ ] 1.1.4 When prompted for a location, select the **existing** `book-corners-ios` directory.
+- [x] 1.1.4 When prompted for a location, select the **existing** `book-corners-ios` directory. ✅
   Xcode will create a `BookCorners/` folder inside it. Make sure "Create Git repository" is
   **unchecked** (we already have one).
 
@@ -134,11 +134,11 @@ Open Xcode and create a new project:
 
 ### 1.2 Set deployment target to iOS 26.0
 
-- [ ] 1.2.1 In the **Project Navigator** (left sidebar), click the top-level **BookCorners**
+- [x] 1.2.1 In the **Project Navigator** (left sidebar), click the top-level **BookCorners** ✅
   project (the blue icon, not the folder)
-- [ ] 1.2.2 Select the **BookCorners** target under TARGETS
-- [ ] 1.2.3 Go to the **General** tab
-- [ ] 1.2.4 Under **Minimum Deployments**, set iOS to **26.0**
+- [x] 1.2.2 Select the **BookCorners** target under TARGETS ✅
+- [x] 1.2.3 Go to the **General** tab ✅
+- [x] 1.2.4 Under **Minimum Deployments**, set iOS to **26.0** ✅
 
 > **Why iOS 26?** iOS 26 is the current release (shipped September 2025) and App Store
 > submissions will **require** the iOS 26 SDK from April 2026. It brings **Liquid Glass** —
