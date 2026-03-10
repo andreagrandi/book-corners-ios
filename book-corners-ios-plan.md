@@ -335,7 +335,7 @@ automatically map to Swift's `camelCase` properties (e.g., `photo_url` → `phot
     `isLit` are nullable (use optionals). The `operator` field needs a `CodingKeys` enum
     because `operator` is a reserved word in Swift.
 
-- [ ] 2.1.2 Create `Models/LibraryListResponse.swift`:
+- [x] 2.1.2 Create `Models/LibraryListResponse.swift`: ✅
   - `LibraryListResponse`: `items` ([Library]), `pagination` (PaginationMeta)
   - `PaginationMeta`: `page` (Int), `pageSize` (Int), `total` (Int), `totalPages` (Int),
     `hasNext` (Bool), `hasPrevious` (Bool)
