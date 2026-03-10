@@ -22,15 +22,17 @@ a configurable base URL.
 | Language | Swift 6 | Latest stable, strict concurrency |
 | UI | SwiftUI | Declarative, Apple's recommended framework |
 | Architecture | MVVM + `@Observable` | Clean separation; `@Observable` replaces older `ObservableObject`/`@Published` |
-| Min iOS | 18.0 | Latest APIs: new `Tab` syntax for `TabView`, refined MapKit, `@Observable` improvements |
+| Min iOS | 26.0 | Latest: Liquid Glass design, Foundation Models, Xcode 26 required for App Store from April 2026 |
+| Design | Liquid Glass | iOS 26's translucent design language — applied automatically to native SwiftUI controls |
 | Networking | `URLSession` + `async/await` | No third-party HTTP libs — learn the fundamentals first |
 | Maps | MapKit (SwiftUI) | Apple Maps with `Map`, `Annotation`, `MapCameraPosition` |
 | Location | CoreLocation | `CLLocationManager` with async wrapper |
 | Photos | PhotosUI | `PhotosPicker`, EXIF extraction via `CGImageSource` |
 | Token storage | Keychain (Security framework) | Thin wrapper, no library — learn the platform |
-| Testing | XCTest + Swift Testing | Unit tests for networking, ViewModels; learn both frameworks |
+| Testing | Swift Testing | Apple's modern test framework (`@Test`, `@Suite`, `#expect`) — replaces XCTest |
 | Dependencies | None initially | Educational goal: understand Apple frameworks before adding libraries |
 | Package manager | Swift Package Manager | Built into Xcode, no CocoaPods/Carthage |
+| IDE | Xcode 26 | Required for iOS 26 SDK; mandatory for App Store submissions from April 2026 |
 
 ---
 
@@ -75,7 +77,7 @@ BookCorners/
   Extensions/                      -- CLLocation+Distance, Date+Formatting, etc.
   Utilities/                       -- NominatimService, PhotonService, EXIFReader
   Preview Content/                 -- mock data for SwiftUI previews
-BookCornersTests/                  -- unit tests (XCTest + Swift Testing)
+BookCornersTests/                  -- unit tests (Swift Testing framework)
 ```
 
 ---
@@ -129,18 +131,20 @@ Open Xcode and create a new project:
 > Think of `BookCornersApp.swift` as your `main.go` or `if __name__ == "__main__"` — it's
 > where the app starts.
 
-### 1.2 Set deployment target to iOS 18.0
+### 1.2 Set deployment target to iOS 26.0
 
 - [ ] 1.2.1 In the **Project Navigator** (left sidebar), click the top-level **BookCorners**
   project (the blue icon, not the folder)
 - [ ] 1.2.2 Select the **BookCorners** target under TARGETS
 - [ ] 1.2.3 Go to the **General** tab
-- [ ] 1.2.4 Under **Minimum Deployments**, set iOS to **18.0**
+- [ ] 1.2.4 Under **Minimum Deployments**, set iOS to **26.0**
 
-> **Why iOS 18?** Each iOS version adds new SwiftUI APIs. iOS 18 gives us the new `Tab` API
-> for `TabView` (cleaner syntax), improvements to `@Observable`, and refined MapKit. The
-> tradeoff is that users on older devices/iOS versions can't install your app. iOS 18 covers
-> iPhone XS (2018) and later, which is a reasonable cutoff in 2026.
+> **Why iOS 26?** iOS 26 is the current release (shipped September 2025) and App Store
+> submissions will **require** the iOS 26 SDK from April 2026. It brings **Liquid Glass** —
+> a new translucent design language that automatically applies to native SwiftUI controls
+> (tab bars, navigation bars, toolbars). It also includes the Foundation Models framework
+> for on-device AI, new TabView modifiers (`tabViewBottomAccessory`, `tabBarMinimizeBehavior`),
+> and refined MapKit APIs. The minimum device is iPhone 11 (A13 chip, 2019).
 
 ### 1.3 Create folder/group structure
 
@@ -306,15 +310,16 @@ backend. JSON encoding/decoding, error handling, and multipart form uploads.
 
 ## Step 3 — Testing Foundation
 
-**Goal:** Set up the testing infrastructure, learn XCTest and Swift Testing frameworks,
+**Goal:** Set up the testing infrastructure, learn the Swift Testing framework,
 and write tests for the networking layer built in Step 2.
 
-**Concepts:** XCTest vs Swift Testing (`@Test`, `#expect`), test targets in Xcode, mocking
-with protocols, `URLProtocol` for intercepting network requests, async test patterns.
+**Concepts:** Swift Testing (`@Test`, `@Suite`, `#expect`, `#require`), test targets in
+Xcode 26, mocking with protocols, `URLProtocol` for intercepting network requests, async
+test patterns, parameterized tests.
 
 - [ ] 3.1 Add a test target to the Xcode project (if not already present)
-- [ ] 3.2 Understand XCTest basics (test classes, `setUp`/`tearDown`, assertions)
-- [ ] 3.3 Understand Swift Testing framework (`@Test`, `@Suite`, `#expect`, `#require`)
+- [ ] 3.2 Understand Swift Testing framework (`@Test`, `@Suite`, `#expect`, `#require`, `init`/`deinit` for setup/teardown)
+- [ ] 3.3 Understand how Swift Testing differs from XCTest (no class inheritance, uses macros, parameterized tests via `@Test(arguments:)`)
 - [ ] 3.4 Extract `APIClientProtocol` from `APIClient` for testability
 - [ ] 3.5 Create `MockURLProtocol` to intercept and stub network requests
 - [ ] 3.6 Write tests for JSON decoding (Library, TokenPair, etc. from sample JSON)
@@ -322,8 +327,10 @@ with protocols, `URLProtocol` for intercepting network requests, async test patt
 - [ ] 3.8 Write tests for `MultipartFormData` encoding
 - [ ] 3.9 Establish test patterns (fixtures, helpers) for reuse in later steps
 
-> **Note:** From this point on, each step should include tests for new ViewModels and services.
-> Tests won't be listed as separate sub-steps, but are expected as part of the work.
+> **Note:** We use **Swift Testing** exclusively — Apple's modern framework that replaces
+> XCTest. It uses `@Test` instead of `test*` method naming, `#expect` instead of
+> `XCTAssertEqual`, and structs instead of classes. From this point on, each step should
+> include tests for new ViewModels and services.
 
 ---
 
@@ -354,14 +361,15 @@ state, SwiftUI sheets, `actor` for thread-safe token refresh.
 
 **Goal:** Set up the app's main tab-based navigation with placeholder views.
 
-**Concepts:** `TabView` with iOS 18 `Tab` API, `Label`, SF Symbols, `@State`/`@SceneStorage`
-for tab selection, conditional UI based on auth state.
+**Concepts:** `TabView` with `Tab` API, Liquid Glass tab bar (automatic in iOS 26), `Label`,
+SF Symbols, `@State`/`@SceneStorage` for tab selection, `tabBarMinimizeBehavior`,
+conditional UI based on auth state.
 
-- [ ] 5.1 Create `ContentView` with `TabView` using iOS 18 `Tab` API (Nearby, Map, Submit, Profile)
+- [ ] 5.1 Create `ContentView` with `TabView` using `Tab` API (Nearby, Map, Submit, Profile)
 - [ ] 5.2 Create placeholder views for each tab
 - [ ] 5.3 Handle auth-gated tabs (Submit shows login sheet if unauthenticated)
 - [ ] 5.4 Build `ProfileView` — conditional content based on auth state
-- [ ] 5.5 Configure tab bar appearance and tint color
+- [ ] 5.5 Configure tab bar — Liquid Glass styling is automatic; explore `tabBarMinimizeBehavior`
 - [ ] 5.6 Persist selected tab with `@SceneStorage`
 
 ---
