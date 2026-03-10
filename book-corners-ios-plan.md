@@ -105,13 +105,181 @@ lifecycle and MVVM pattern. Get "Hello World" running on the simulator.
 **Concepts:** Xcode project creation, `@main`, `App` protocol, `Scene`, `WindowGroup`, project
 navigator, simulator, MVVM in SwiftUI context, `@Observable` macro.
 
-- [ ] 1.1 Create new Xcode project (App template, SwiftUI, Swift)
-- [ ] 1.2 Set deployment target to iOS 18.0
-- [ ] 1.3 Create folder/group structure (Models, Services, ViewModels, Views, Extensions, Utilities)
-- [ ] 1.4 Configure Info.plist permissions (location, photo library, camera)
-- [ ] 1.5 Understand MVVM and how it maps to SwiftUI (`@Observable` classes as ViewModels)
-- [ ] 1.6 Run on simulator — verify "Hello, world!" appears
-- [ ] 1.7 Commit the initial project
+### 1.1 Create new Xcode project
+
+Open Xcode and create a new project:
+
+- [ ] 1.1.1 Open Xcode → **File → New → Project** (or `Cmd+Shift+N`)
+- [ ] 1.1.2 Choose **iOS → App** template, click Next
+- [ ] 1.1.3 Fill in the project options:
+  - **Product Name:** `BookCorners`
+  - **Organization Identifier:** something like `org.bookcorners` (this combines with the product
+    name to form the **Bundle Identifier** — `org.bookcorners.BookCorners` — a unique ID for your
+    app on the App Store, similar to a Java/Go package path)
+  - **Interface:** SwiftUI
+  - **Language:** Swift
+  - **Storage:** None (we won't use SwiftData or Core Data for now)
+  - **Include Tests:** check this box (we'll use the test target in Step 3)
+- [ ] 1.1.4 When prompted for a location, select the **existing** `book-corners-ios` directory.
+  Xcode will create a `BookCorners/` folder inside it. Make sure "Create Git repository" is
+  **unchecked** (we already have one).
+
+> **What just happened?** Xcode generated a minimal SwiftUI app with two key files:
+> `BookCornersApp.swift` (the entry point) and `ContentView.swift` (the initial screen).
+> Think of `BookCornersApp.swift` as your `main.go` or `if __name__ == "__main__"` — it's
+> where the app starts.
+
+### 1.2 Set deployment target to iOS 18.0
+
+- [ ] 1.2.1 In the **Project Navigator** (left sidebar), click the top-level **BookCorners**
+  project (the blue icon, not the folder)
+- [ ] 1.2.2 Select the **BookCorners** target under TARGETS
+- [ ] 1.2.3 Go to the **General** tab
+- [ ] 1.2.4 Under **Minimum Deployments**, set iOS to **18.0**
+
+> **Why iOS 18?** Each iOS version adds new SwiftUI APIs. iOS 18 gives us the new `Tab` API
+> for `TabView` (cleaner syntax), improvements to `@Observable`, and refined MapKit. The
+> tradeoff is that users on older devices/iOS versions can't install your app. iOS 18 covers
+> iPhone XS (2018) and later, which is a reasonable cutoff in 2026.
+
+### 1.3 Create folder/group structure
+
+Xcode organizes files using **groups** (shown as folders in the navigator). Unlike Python
+packages or Go modules, groups are purely organizational — they don't affect imports or
+namespacing. All Swift files in a target can see each other without explicit imports.
+
+- [ ] 1.3.1 In the Project Navigator, right-click the **BookCorners** folder (the yellow folder
+  icon, not the blue project icon) → **New Group**. Create these groups:
+  - `Models`
+  - `Services`
+  - `ViewModels`
+  - `Views`
+  - `Extensions`
+  - `Utilities`
+- [ ] 1.3.2 Inside the `Views` group, create sub-groups:
+  - `Components`
+  - `Tabs`
+  - `Libraries`
+  - `Map`
+  - `Auth`
+  - `Submit`
+  - `Report`
+  - `Photos`
+  - `Admin`
+- [ ] 1.3.3 Move `ContentView.swift` into `Views/Tabs/` (drag it in the navigator)
+- [ ] 1.3.4 Verify the folder structure on disk matches what's in Xcode. In modern Xcode
+  (15+), groups map directly to filesystem folders by default.
+
+> **Python comparison:** In Python you'd have `models/`, `services/`, `views/` packages with
+> `__init__.py`. In Swift, there are no package boundaries within a target — every file can
+> access every other file's public and internal types. The folder structure is purely for
+> human organization.
+
+### 1.4 Configure Info.plist permissions
+
+When your app wants to access the camera, location, or photo library, iOS requires you to
+declare **why** in advance, with a user-facing explanation string. These go in `Info.plist` —
+a property list file that's roughly equivalent to `AndroidManifest.xml` or a `pyproject.toml`
+for app metadata.
+
+Modern Xcode projects manage most `Info.plist` keys through the target's **Info** tab rather
+than editing the file directly.
+
+- [ ] 1.4.1 Select the **BookCorners** target → **Info** tab
+- [ ] 1.4.2 Under **Custom iOS Target Properties**, add these keys (click the `+` button):
+  - `Privacy - Location When In Use Usage Description` → `"Book Corners uses your location to show nearby libraries"`
+  - `Privacy - Photo Library Usage Description` → `"Book Corners needs access to your photos to submit library pictures"`
+  - `Privacy - Camera Usage Description` → `"Book Corners uses the camera to take photos of libraries"`
+
+> **Important:** These strings are shown to the user in the permission dialog. Make them
+> specific and honest — vague descriptions like "needs access to your data" get rejected
+> during App Store review.
+
+### 1.5 Understand the SwiftUI app lifecycle and MVVM
+
+Before writing more code, let's understand how a SwiftUI app is structured.
+
+**The App entry point:**
+
+Open `BookCornersApp.swift`. You'll see something like:
+
+```swift
+import SwiftUI
+
+@main
+struct BookCornersApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+Breaking this down:
+- `@main` marks this as the entry point (like `func main()` in Go)
+- `App` is a protocol (like a Go interface) that requires a `body` property
+- `Scene` describes a window configuration. `WindowGroup` creates a standard window
+- `ContentView()` is the root view — what the user sees first
+
+**MVVM in SwiftUI:**
+
+MVVM stands for **Model-View-ViewModel**. If you've used Django, you can roughly map it:
+
+| MVVM | Django equivalent | Go equivalent | Role |
+|------|-------------------|---------------|------|
+| **Model** | Django model / serializer | struct | Data structures, business rules |
+| **View** | Template | Template / handler | What the user sees (UI) |
+| **ViewModel** | View (the Python class) | Controller/handler logic | Prepares data for display, handles user actions |
+
+In SwiftUI specifically:
+- **Models** are plain `struct`s (often `Codable` for JSON, like Python dataclasses or Go structs)
+- **Views** are SwiftUI `View` structs — declarative descriptions of UI
+- **ViewModels** are `@Observable` classes that hold mutable state and business logic
+
+The `@Observable` macro (iOS 17+) is the modern way to make SwiftUI react to state changes.
+When a property on an `@Observable` class changes, any View reading that property
+automatically re-renders. This is similar to React's state management, or Django signals
+triggering template updates — but built into the language.
+
+```swift
+// Example (don't add this yet — just for understanding):
+@Observable
+class LibraryListViewModel {
+    var libraries: [Library] = []   // when this changes, the View updates
+    var isLoading = false
+
+    func loadLibraries() async {
+        isLoading = true
+        libraries = try await apiClient.getLibraries()
+        isLoading = false
+    }
+}
+```
+
+- [ ] 1.5.1 Read through `BookCornersApp.swift` and `ContentView.swift` to understand the
+  generated code
+- [ ] 1.5.2 Make sure you understand: `@main`, `App`, `Scene`, `WindowGroup`, `View`, `body`
+
+### 1.6 Run on simulator
+
+- [ ] 1.6.1 In the Xcode toolbar at the top, select a simulator device (e.g., **iPhone 16**)
+  from the device dropdown
+- [ ] 1.6.2 Press **Cmd+R** (or click the play button ▶) to build and run
+- [ ] 1.6.3 The iOS Simulator should launch and display "Hello, world!"
+- [ ] 1.6.4 Try **Cmd+B** (build without running) — useful to quickly check if your code
+  compiles without launching the simulator every time
+
+> **Tip:** You can also use **SwiftUI Previews** — the canvas on the right side of Xcode that
+> live-renders your view without running the full app. Press `Cmd+Option+Enter` to toggle
+> the preview canvas. Previews are faster than launching the simulator for UI work.
+
+### 1.7 Commit the initial project
+
+- [ ] 1.7.1 Review what Xcode generated — make sure no sensitive files are included
+- [ ] 1.7.2 Check that `.gitignore` covers Xcode user data (`xcuserdata/`)
+- [ ] 1.7.3 Stage all new files and commit
+- [ ] 1.7.4 Push to remote
 
 ---
 
