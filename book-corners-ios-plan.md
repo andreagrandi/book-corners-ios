@@ -19,14 +19,15 @@ a configurable base URL.
 
 | Layer | Choice | Rationale |
 |---|---|---|
-| Language | Swift 6 | Latest stable, strict concurrency |
+| Language | Swift 6.2 | Ships with Xcode 26; default main actor isolation, `@concurrent`, simpler Sendable |
 | UI | SwiftUI | Declarative, Apple's recommended framework |
 | Architecture | MVVM + `@Observable` | Clean separation; `@Observable` replaces older `ObservableObject`/`@Published` |
 | Min iOS | 26.0 | Latest: Liquid Glass design, Foundation Models, Xcode 26 required for App Store from April 2026 |
 | Design | Liquid Glass | iOS 26's translucent design language — applied automatically to native SwiftUI controls |
 | Networking | `URLSession` + `async/await` | No third-party HTTP libs — learn the fundamentals first |
-| Maps | MapKit (SwiftUI) | Apple Maps with `Map`, `Annotation`, `MapCameraPosition` |
-| Location | CoreLocation | `CLLocationManager` with async wrapper |
+| Maps | MapKit (SwiftUI) | Apple Maps with `Map`, `Annotation`, `MapCameraPosition`; geocoding via `MKGeocodingRequest` |
+| Geocoding | MapKit + GeoToolbox | `MKReverseGeocodingRequest` replaces deprecated `CLGeocoder`; `PlaceDescriptor` for place data |
+| Location | CoreLocation | `CLLocationUpdate.liveUpdates()` async sequence (modern API, replaces delegate pattern) |
 | Photos | PhotosUI | `PhotosPicker`, EXIF extraction via `CGImageSource` |
 | Token storage | Keychain (Security framework) | Thin wrapper, no library — learn the platform |
 | Testing | Swift Testing | Apple's modern test framework (`@Test`, `@Suite`, `#expect`) — replaces XCTest |
@@ -75,7 +76,7 @@ BookCorners/
     Photos/                        -- AddPhotoView
     Admin/                         -- PendingLibrariesView, AdminDetailView
   Extensions/                      -- CLLocation+Distance, Date+Formatting, etc.
-  Utilities/                       -- NominatimService, PhotonService, EXIFReader
+  Utilities/                       -- PhotonService, EXIFReader, GeocodingHelper
   Preview Content/                 -- mock data for SwiftUI previews
 BookCornersTests/                  -- unit tests (Swift Testing framework)
 ```
@@ -241,10 +242,16 @@ In SwiftUI specifically:
 - **Views** are SwiftUI `View` structs — declarative descriptions of UI
 - **ViewModels** are `@Observable` classes that hold mutable state and business logic
 
-The `@Observable` macro (iOS 17+) is the modern way to make SwiftUI react to state changes.
+The `@Observable` macro is the modern way to make SwiftUI react to state changes.
 When a property on an `@Observable` class changes, any View reading that property
-automatically re-renders. This is similar to React's state management, or Django signals
-triggering template updates — but built into the language.
+automatically re-renders — iOS 26 makes this even more efficient with granular property-level
+tracking. This is similar to React's state management, or Django signals triggering template
+updates — but built into the language.
+
+> **Swift 6.2 note:** New Xcode 26 projects default to main actor isolation for all code.
+> This means your code is single-threaded by default — safe and simple. When you explicitly
+> need background work (network calls, heavy computation), you use `@concurrent` to opt in.
+> This is the opposite of older Swift, where you had to opt *in* to thread safety.
 
 ```swift
 // Example (don't add this yet — just for understanding):
@@ -341,7 +348,8 @@ and auth state management across the app. Email/password only for now — social
 (Google, Apple) deferred to Step 14 after backend support is added.
 
 **Concepts:** Keychain Services API (`SecItemAdd/CopyMatching/Update/Delete`), `@Observable`
-state, SwiftUI sheets, `actor` for thread-safe token refresh.
+state, SwiftUI sheets, Swift 6.2 concurrency (`@concurrent` for background work, default
+main actor isolation).
 
 - [ ] 4.1 Create `KeychainService` — save/load/delete data in the iOS Keychain
 - [ ] 4.2 Create `AuthService` (`@Observable`) — manages `isAuthenticated`, `currentUser`, tokens
@@ -379,10 +387,11 @@ conditional UI based on auth state.
 **Goal:** Display a proximity-sorted list of libraries based on user location, with pull-to-refresh
 and pagination.
 
-**Concepts:** `CLLocationManager`, location permissions, `List`, `LazyVStack`, `.task`,
-`.refreshable`, pagination, `AsyncImage`, distance computation.
+**Concepts:** `CLLocationUpdate.liveUpdates()` async sequence, `CLServiceSession` for
+permissions, `List`, `LazyVStack`, `.task`, `.refreshable`, pagination, `AsyncImage`,
+distance computation.
 
-- [ ] 6.1 Create `LocationService` (`@Observable`) — request authorization, expose current location
+- [ ] 6.1 Create `LocationService` (`@Observable`) — use `CLLocationUpdate.liveUpdates()` async sequence, `CLServiceSession` for authorization
 - [ ] 6.2 Inject `LocationService` into the environment
 - [ ] 6.3 Create `LibraryListViewModel` — load/refresh/paginate libraries
 - [ ] 6.4 Compute client-side distance (`CLLocation.distance(from:)`), sort by proximity
@@ -418,7 +427,7 @@ inline `Map`, conditional sections.
 **Goal:** Apple Maps with library pins. Tap pins to see details. Reload when the map moves.
 
 **Concepts:** SwiftUI `Map` (`MapContentBuilder`), `Annotation`, `Marker`,
-`MapCameraPosition`, `.onMapCameraChange`, `.mapControls`, clustering.
+`MapCameraPosition`, `.onMapCameraChange`, `.mapControls`, Liquid Glass styling, clustering.
 
 - [ ] 8.1 Create `MapViewModel` — load libraries for visible region, track camera position
 - [ ] 8.2 Build `MapTabView` — `Map` with user location, controls (compass, scale, location button)
@@ -436,13 +445,14 @@ inline `Map`, conditional sections.
 **Goal:** Form to submit a new library with photo, GPS extraction from EXIF, address autocomplete
 (Photon), and reverse geocoding (Nominatim).
 
-**Concepts:** `PhotosPicker`, `CGImageSource` (EXIF), multipart upload, `Form` with sections,
-input validation, debounced search.
+**Concepts:** `PhotosPicker`, `CGImageSource` (EXIF), multipart upload, `Form` with Liquid
+Glass sections, input validation, debounced search, `MKReverseGeocodingRequest` (replaces
+deprecated `CLGeocoder`).
 
 - [ ] 9.1 Create `SubmitLibraryViewModel` — all form state + submission logic
 - [ ] 9.2 Build photo picker with preview thumbnail
 - [ ] 9.3 Extract GPS coordinates from photo EXIF data (`CGImageSource`)
-- [ ] 9.4 Create `NominatimService` — reverse geocode coordinates to address
+- [ ] 9.4 Reverse geocode with `MKReverseGeocodingRequest` (iOS 26) or Nominatim API as fallback
 - [ ] 9.5 Create `PhotonService` — address autocomplete with debouncing
 - [ ] 9.6 Build the submission form (Photo, Location, Details, Accessibility sections)
 - [ ] 9.7 Implement country picker (ISO 3166-1 codes)
