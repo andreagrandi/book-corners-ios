@@ -462,7 +462,7 @@ what view models will actually call.
 iOS has no built-in multipart encoder (unlike Python's `requests` library). We need to
 manually construct the HTTP body with boundary-separated parts.
 
-- [ ] 2.7.1 Create `Services/MultipartFormData.swift`:
+- [x] 2.7.1 Create `Services/MultipartFormData.swift`: ✅
   - A struct/class that accumulates form fields and file attachments
   - Method `addField(name:value:)` — adds a text field
   - Method `addFile(name:fileName:mimeType:data:)` — adds a file part
