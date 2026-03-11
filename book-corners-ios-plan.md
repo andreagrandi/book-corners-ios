@@ -505,12 +505,12 @@ SwiftUI previews need data without hitting the network. Create sample data and a
 
 Verify the networking layer works end-to-end before moving on.
 
-- [ ] 2.10.1 Temporarily modify `ContentView` to call `APIClient().getLatestLibraries()`
+- [x] 2.10.1 Temporarily modify `ContentView` to call `APIClient().getLatestLibraries()` ✅
   in a `.task` modifier and print the results to the console
-- [ ] 2.10.2 Build and run on simulator — verify library data prints in Xcode's console
-- [ ] 2.10.3 Test error handling: try an invalid URL, check that errors are caught properly
-- [ ] 2.10.4 Revert `ContentView` to its original state after verifying
-- [ ] 2.10.5 Commit the networking layer
+- [x] 2.10.2 Build and run on simulator — verify library data prints in Xcode's console ✅
+- [x] 2.10.3 Test error handling: try an invalid URL, check that errors are caught properly ✅
+- [x] 2.10.4 Revert `ContentView` to its original state after verifying ✅
+- [x] 2.10.5 Commit the networking layer ✅
 
 ---
 

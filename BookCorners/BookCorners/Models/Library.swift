@@ -12,8 +12,8 @@ struct Library: Codable, Identifiable {
     let slug: String
     let name: String
     let description: String
-    let photoURL: String
-    let thumbnailURL: String
+    let photoUrl: String
+    let thumbnailUrl: String
     let lat: Double
     let lng: Double
     let address: String
@@ -32,18 +32,10 @@ struct Library: Codable, Identifiable {
     let createdAt: Date
 
     enum CodingKeys: String, CodingKey {
-        case id, slug, name, description
-        case photoURL = "photo_url"
-        case thumbnailURL = "thumbnail_url"
-        case lat, lng, address, city, country
-        case postalCode = "postal_code"
-        case wheelchairAccessible = "wheelchair_accessible"
-        case capacity
-        case isIndoor = "is_indoor"
-        case isLit = "is_lit"
-        case website, contact, source
+        case id, slug, name, description, photoUrl, thumbnailUrl
+        case lat, lng, address, city, country, postalCode
+        case wheelchairAccessible, capacity, isIndoor, isLit
+        case website, contact, source, brand, createdAt
         case operatorName = "operator"
-        case brand
-        case createdAt = "created_at"
     }
 }
