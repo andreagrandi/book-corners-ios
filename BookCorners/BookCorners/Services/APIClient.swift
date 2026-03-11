@@ -80,6 +80,35 @@ class APIClient {
         }
     }
 
+    private func multipartRequest<T: Decodable>(
+        path: String,
+        multipart: MultipartFormData,
+    ) async throws -> T {
+        let url = baseURL.appending(path: path)
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue(multipart.contentType, forHTTPHeaderField: "Content-Type")
+        if let accessToken {
+            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+        urlRequest.httpBody = multipart.encode()
+
+        let (data, response) = try await session.data(for: urlRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIClientError.networkError(URLError(.badServerResponse))
+        }
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
+            throw try parseError(statusCode: httpResponse.statusCode, data: data)
+        }
+
+        do {
+            return try decoder.decode(T.self, from: data)
+        } catch {
+            throw APIClientError.decodingError(error)
+        }
+    }
+
     private func parseError(statusCode: Int, data: Data) throws -> APIClientError {
         let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data)
         let message = errorResponse?.message ?? "Unknown error"
@@ -94,6 +123,8 @@ class APIClient {
             return .httpError(statusCode: statusCode, message: message)
         }
     }
+
+    // MARK: - Read Endpoints
 
     func getLibrary(slug: String) async throws -> Library {
         try await request(path: "libraries/\(slug)")
@@ -142,6 +173,10 @@ class APIClient {
         try await request(path: "auth/login", method: "POST", body: LoginRequest(username: username, password: password))
     }
 
+    func getMe() async throws -> User {
+        try await request(path: "auth/me", method: "GET")
+    }
+
     func register(username: String, password: String, email: String) async throws -> TokenPair {
         try await request(
             path: "auth/register", method: "POST",
@@ -153,7 +188,84 @@ class APIClient {
         try await request(path: "auth/refresh", method: "POST", body: RefreshRequest(refresh: refreshToken))
     }
 
-    func getMe() async throws -> User {
-        try await request(path: "auth/me", method: "GET")
+    // MARK: - Write Endpoints (multipart)
+
+    func submitLibrary(
+        address: String,
+        city: String,
+        country: String,
+        latitude: Double,
+        longitude: Double,
+        photo: Data,
+        name: String? = nil,
+        description: String? = nil,
+        postalCode: String? = nil,
+        wheelchairAccessible: String? = nil,
+        capacity: Int? = nil,
+        isIndoor: Bool? = nil,
+        isLit: Bool? = nil,
+        website: String? = nil,
+        contact: String? = nil,
+        operatorName: String? = nil,
+        brand: String? = nil,
+    ) async throws -> Library {
+        var multipart = MultipartFormData()
+
+        // Required fields
+        multipart.addField(name: "address", value: address)
+        multipart.addField(name: "city", value: city)
+        multipart.addField(name: "country", value: country)
+        multipart.addField(name: "latitude", value: String(latitude))
+        multipart.addField(name: "longitude", value: String(longitude))
+        multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo)
+
+        // Optional fields
+        if let name { multipart.addField(name: "name", value: name) }
+        if let description { multipart.addField(name: "description", value: description) }
+        if let postalCode { multipart.addField(name: "postal_code", value: postalCode) }
+        if let wheelchairAccessible { multipart.addField(name: "wheelchair_accessible", value: wheelchairAccessible) }
+        if let capacity { multipart.addField(name: "capacity", value: String(capacity)) }
+        if let isIndoor { multipart.addField(name: "is_indoor", value: String(isIndoor)) }
+        if let isLit { multipart.addField(name: "is_lit", value: String(isLit)) }
+        if let website { multipart.addField(name: "website", value: website) }
+        if let contact { multipart.addField(name: "contact", value: contact) }
+        if let operatorName { multipart.addField(name: "operator", value: operatorName) }
+        if let brand { multipart.addField(name: "brand", value: brand) }
+
+        return try await multipartRequest(path: "libraries/", multipart: multipart)
+    }
+
+    func reportLibrary(
+        slug: String,
+        reason: String,
+        details: String? = nil,
+        photo: Data? = nil,
+    ) async throws -> Report {
+        var multipart = MultipartFormData()
+
+        // Required fields
+        multipart.addField(name: "reason", value: reason)
+
+        // Optional fields
+        if let details { multipart.addField(name: "details", value: details) }
+        if let photo { multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo) }
+
+        return try await multipartRequest(path: "libraries/\(slug)/report/", multipart: multipart)
+    }
+
+    func addPhoto(
+        slug: String,
+        photo: Data,
+        caption: String? = nil,
+    ) async throws -> LibraryPhoto {
+        var multipart = MultipartFormData()
+
+        // Required fields
+        multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo)
+
+        // Optional fields
+        if let caption { multipart.addField(name: "caption", value: caption) }
+
+        return try await multipartRequest(path: "libraries/\(slug)/photo/", multipart: multipart)
     }
 }

@@ -478,10 +478,10 @@ manually construct the HTTP body with boundary-separated parts.
 
 Methods for endpoints that require authentication or use multipart encoding.
 
-- [ ] 2.8.1 Add `login(username:password:) async throws -> TokenPair`
-- [ ] 2.8.2 Add `register(username:email:password:) async throws -> TokenPair`
-- [ ] 2.8.3 Add `refreshToken(refreshToken:) async throws -> AccessToken`
-- [ ] 2.8.4 Add `getMe() async throws -> User`
+- [x] 2.8.1 Add `login(username:password:) async throws -> TokenPair` ✅
+- [x] 2.8.2 Add `register(username:password:email:) async throws -> TokenPair` ✅
+- [x] 2.8.3 Add `refreshToken(refreshToken:) async throws -> AccessToken` ✅
+- [x] 2.8.4 Add `getMe() async throws -> User` ✅
 - [ ] 2.8.5 Add `submitLibrary(...)` method using `MultipartFormData` (we'll flesh this out
   in Step 9, just add the signature for now)
 - [ ] 2.8.6 Add `reportLibrary(slug:reason:details:photo:)` method signature
