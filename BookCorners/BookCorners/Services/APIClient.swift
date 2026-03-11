@@ -7,7 +7,7 @@
 
 import Foundation
 
-class APIClient {
+class APIClient: APIClientProtocol {
     let baseURL: URL
     var accessToken: String?
 

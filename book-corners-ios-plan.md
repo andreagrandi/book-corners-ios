@@ -482,20 +482,19 @@ Methods for endpoints that require authentication or use multipart encoding.
 - [x] 2.8.2 Add `register(username:password:email:) async throws -> TokenPair` ✅
 - [x] 2.8.3 Add `refreshToken(refreshToken:) async throws -> AccessToken` ✅
 - [x] 2.8.4 Add `getMe() async throws -> User` ✅
-- [ ] 2.8.5 Add `submitLibrary(...)` method using `MultipartFormData` (we'll flesh this out
-  in Step 9, just add the signature for now)
-- [ ] 2.8.6 Add `reportLibrary(slug:reason:details:photo:)` method signature
-- [ ] 2.8.7 Add `addPhoto(slug:photo:caption:)` method signature
+- [x] 2.8.5 Add `submitLibrary(...)` method using `MultipartFormData` ✅
+- [x] 2.8.6 Add `reportLibrary(slug:reason:details:photo:)` ✅
+- [x] 2.8.7 Add `addPhoto(slug:photo:caption:)` ✅
 
 ### 2.9 Create mock/preview support
 
 SwiftUI previews need data without hitting the network. Create sample data and a mock client.
 
-- [ ] 2.9.1 Create `Preview Content/SampleData.swift` with static sample `Library`, `User`,
+- [x] 2.9.1 Create `Preview Content/SampleData.swift` with static sample `Library`, `User`, ✅
   etc. instances for use in SwiftUI previews
-- [ ] 2.9.2 Extract `APIClientProtocol` protocol from `APIClient` (lists all public methods)
+- [x] 2.9.2 Extract `APIClientProtocol` protocol from `APIClient` (lists all public methods) ✅
   — this enables dependency injection and mocking
-- [ ] 2.9.3 Create `Preview Content/MockAPIClient.swift` that conforms to `APIClientProtocol`
+- [x] 2.9.3 Create `Preview Content/MockAPIClient.swift` that conforms to `APIClientProtocol` ✅
   and returns sample data immediately
 
 > **Protocols in Swift** are like Go interfaces — they define a set of methods without
