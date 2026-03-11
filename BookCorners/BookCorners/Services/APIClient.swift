@@ -137,4 +137,23 @@ class APIClient {
 
         return try await request(path: "libraries/", queryItems: items)
     }
+
+    func login(username: String, password: String) async throws -> TokenPair {
+        try await request(path: "auth/login", method: "POST", body: LoginRequest(username: username, password: password))
+    }
+
+    func register(username: String, password: String, email: String) async throws -> TokenPair {
+        try await request(
+            path: "auth/register", method: "POST",
+            body: RegisterRequest(username: username, password: password, email: email),
+        )
+    }
+
+    func refreshToken(refreshToken: String) async throws -> AccessToken {
+        try await request(path: "auth/refresh", method: "POST", body: RefreshRequest(refresh: refreshToken))
+    }
+
+    func getMe() async throws -> User {
+        try await request(path: "auth/me", method: "GET")
+    }
 }
