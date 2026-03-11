@@ -532,10 +532,10 @@ test patterns, parameterized tests.
 
 Xcode should have created a `BookCornersTests` target when we set up the project.
 
-- [ ] 3.1.1 Open the Test Navigator in Xcode (`Cmd+6`) — you should see the
+- [x] 3.1.1 Open the Test Navigator in Xcode (`Cmd+6`) — you should see the ✅
   `BookCornersTests` target with the stub test file
-- [ ] 3.1.2 Run the existing stub test with `Cmd+U` to verify the test infrastructure works
-- [ ] 3.1.3 Check that `BookCornersTests.swift` uses `import Testing` and `@testable import
+- [x] 3.1.2 Run the existing stub test with `Cmd+U` to verify the test infrastructure works ✅
+- [x] 3.1.3 Check that `BookCornersTests.swift` uses `import Testing` and `@testable import ✅
   BookCorners` — `@testable` gives tests access to `internal` types (everything we wrote
   in Step 2 is internal by default)
 
@@ -556,13 +556,13 @@ for XCTest. If you've used `pytest`, many concepts will feel familiar.
 | `deinit` | `tearDown()` | `teardown_method()` | `t.Cleanup()` |
 | `@Test(arguments:)` | N/A | `@pytest.mark.parametrize` | table-driven tests |
 
-- [ ] 3.2.1 Read through the comparison table above
-- [ ] 3.2.2 Understand `#expect` vs `#require`:
+- [x] 3.2.1 Read through the comparison table above ✅
+- [x] 3.2.2 Understand `#expect` vs `#require`: ✅
   - `#expect(condition)` — records failure but continues (like pytest's `assert`)
   - `try #require(value)` — stops the test immediately if it fails (like unwrapping
     an optional — if nil, the test can't continue). Use when subsequent code depends
     on the value existing.
-- [ ] 3.2.3 Understand `init`/`deinit` for setup/teardown:
+- [x] 3.2.3 Understand `init`/`deinit` for setup/teardown: ✅
   - Swift Testing creates a **new instance** of the test suite struct for each test
   - `init()` runs before each test — set up your test fixtures here
   - `deinit` runs after each test — clean up here (must be synchronous)
@@ -576,7 +576,7 @@ To test `APIClient` without hitting the real network, we intercept HTTP requests
 Think of it as monkey-patching `requests.Session` in Python, or replacing the HTTP
 transport in Go's `http.Client`.
 
-- [ ] 3.3.1 Create `BookCornersTests/MockURLProtocol.swift`:
+- [x] 3.3.1 Create `BookCornersTests/MockURLProtocol.swift`: ✅
   - Subclass `URLProtocol`
   - Add a static `requestHandler` property: a closure that receives a `URLRequest` and
     returns `(HTTPURLResponse, Data)` — this is what the test sets up to control responses
@@ -586,7 +586,7 @@ transport in Go's `http.Client`.
     back through `client?` methods
   - Override `stopLoading()` as empty
 
-- [ ] 3.3.2 Create a helper function or property to build a `URLSession` configured with
+- [x] 3.3.2 Create a helper function or property to build a `URLSession` configured with ✅
   `MockURLProtocol`:
   - Use `URLSessionConfiguration.ephemeral` (no caching)
   - Set `config.protocolClasses = [MockURLProtocol.self]`
@@ -596,7 +596,7 @@ transport in Go's `http.Client`.
 
 Sample JSON strings that match real API responses, for testing decoding.
 
-- [ ] 3.4.1 Create `BookCornersTests/Fixtures.swift` with static JSON strings:
+- [x] 3.4.1 Create `BookCornersTests/Fixtures.swift` with static JSON strings: ✅
   - `libraryJSON` — a single library object as the API returns it
   - `libraryListJSON` — a paginated list response with items and pagination
   - `latestLibrariesJSON` — a latest libraries response
