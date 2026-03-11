@@ -523,20 +523,149 @@ and write tests for the networking layer built in Step 2.
 Xcode 26, mocking with protocols, `URLProtocol` for intercepting network requests, async
 test patterns, parameterized tests.
 
-- [ ] 3.1 Add a test target to the Xcode project (if not already present)
-- [ ] 3.2 Understand Swift Testing framework (`@Test`, `@Suite`, `#expect`, `#require`, `init`/`deinit` for setup/teardown)
-- [ ] 3.3 Understand how Swift Testing differs from XCTest (no class inheritance, uses macros, parameterized tests via `@Test(arguments:)`)
-- [ ] 3.4 Extract `APIClientProtocol` from `APIClient` for testability
-- [ ] 3.5 Create `MockURLProtocol` to intercept and stub network requests
-- [ ] 3.6 Write tests for JSON decoding (Library, TokenPair, etc. from sample JSON)
-- [ ] 3.7 Write tests for `APIClient` methods (success, error, 401 handling)
-- [ ] 3.8 Write tests for `MultipartFormData` encoding
-- [ ] 3.9 Establish test patterns (fixtures, helpers) for reuse in later steps
-
 > **Note:** We use **Swift Testing** exclusively — Apple's modern framework that replaces
 > XCTest. It uses `@Test` instead of `test*` method naming, `#expect` instead of
 > `XCTAssertEqual`, and structs instead of classes. From this point on, each step should
 > include tests for new ViewModels and services.
+
+### 3.1 Verify the test target exists
+
+Xcode should have created a `BookCornersTests` target when we set up the project.
+
+- [ ] 3.1.1 Open the Test Navigator in Xcode (`Cmd+6`) — you should see the
+  `BookCornersTests` target with the stub test file
+- [ ] 3.1.2 Run the existing stub test with `Cmd+U` to verify the test infrastructure works
+- [ ] 3.1.3 Check that `BookCornersTests.swift` uses `import Testing` and `@testable import
+  BookCorners` — `@testable` gives tests access to `internal` types (everything we wrote
+  in Step 2 is internal by default)
+
+### 3.2 Understand Swift Testing framework
+
+Before writing tests, understand the key concepts. Swift Testing is Apple's modern replacement
+for XCTest. If you've used `pytest`, many concepts will feel familiar.
+
+**Key differences from XCTest (and comparisons to Python/Go):**
+
+| Swift Testing | XCTest | pytest | Go testing |
+|---|---|---|---|
+| `@Test func anyName()` | `func testSomething()` | `def test_something():` | `func TestSomething(t)` |
+| `@Suite struct` | `class: XCTestCase` | `class TestFoo:` | file-level |
+| `#expect(a == b)` | `XCTAssertEqual(a, b)` | `assert a == b` | `if a != b { t.Error() }` |
+| `#require(x)` | `XCTUnwrap(x)` | N/A | `t.Fatal()` |
+| `init()` | `setUp()` | `setup_method()` | N/A |
+| `deinit` | `tearDown()` | `teardown_method()` | `t.Cleanup()` |
+| `@Test(arguments:)` | N/A | `@pytest.mark.parametrize` | table-driven tests |
+
+- [ ] 3.2.1 Read through the comparison table above
+- [ ] 3.2.2 Understand `#expect` vs `#require`:
+  - `#expect(condition)` — records failure but continues (like pytest's `assert`)
+  - `try #require(value)` — stops the test immediately if it fails (like unwrapping
+    an optional — if nil, the test can't continue). Use when subsequent code depends
+    on the value existing.
+- [ ] 3.2.3 Understand `init`/`deinit` for setup/teardown:
+  - Swift Testing creates a **new instance** of the test suite struct for each test
+  - `init()` runs before each test — set up your test fixtures here
+  - `deinit` runs after each test — clean up here (must be synchronous)
+  - This is like pytest fixtures or Go's test helper setup
+
+### 3.3 Create MockURLProtocol
+
+To test `APIClient` without hitting the real network, we intercept HTTP requests using
+`URLProtocol` — a Foundation class that lets you control what `URLSession` returns.
+
+Think of it as monkey-patching `requests.Session` in Python, or replacing the HTTP
+transport in Go's `http.Client`.
+
+- [ ] 3.3.1 Create `BookCornersTests/MockURLProtocol.swift`:
+  - Subclass `URLProtocol`
+  - Add a static `requestHandler` property: a closure that receives a `URLRequest` and
+    returns `(HTTPURLResponse, Data)` — this is what the test sets up to control responses
+  - Override `canInit(with:)` to return `true` (intercept all requests)
+  - Override `canonicalRequest(for:)` to return the request as-is
+  - Override `startLoading()` to call `requestHandler` and feed the response/data
+    back through `client?` methods
+  - Override `stopLoading()` as empty
+
+- [ ] 3.3.2 Create a helper function or property to build a `URLSession` configured with
+  `MockURLProtocol`:
+  - Use `URLSessionConfiguration.ephemeral` (no caching)
+  - Set `config.protocolClasses = [MockURLProtocol.self]`
+  - Create `URLSession(configuration: config)`
+
+### 3.4 Create test JSON fixtures
+
+Sample JSON strings that match real API responses, for testing decoding.
+
+- [ ] 3.4.1 Create `BookCornersTests/Fixtures.swift` with static JSON strings:
+  - `libraryJSON` — a single library object as the API returns it
+  - `libraryListJSON` — a paginated list response with items and pagination
+  - `latestLibrariesJSON` — a latest libraries response
+  - `tokenPairJSON` — login/register response
+  - `userJSON` — /auth/me response
+  - `statisticsJSON` — statistics response
+  - `apiErrorJSON` — error response with message and details
+  - Use realistic field names and values matching the actual API
+
+### 3.5 Write tests for JSON decoding
+
+Test that our model structs correctly decode from JSON. These are the most basic tests —
+if decoding is broken, nothing else works.
+
+- [ ] 3.5.1 Create `BookCornersTests/ModelDecodingTests.swift` with a `@Suite`:
+  - Set up a `JSONDecoder` with `.convertFromSnakeCase` and `.iso8601` in `init()`
+  - Test decoding `Library` from `libraryJSON`
+  - Test decoding `LibraryListResponse` from `libraryListJSON`
+  - Test decoding `LatestLibrariesResponse` from `latestLibrariesJSON`
+  - Test decoding `TokenPair` from `tokenPairJSON`
+  - Test decoding `User` from `userJSON`
+  - Test decoding `Statistics` from `statisticsJSON`
+  - Test decoding `APIErrorResponse` from `apiErrorJSON`
+  - For each: decode the JSON, then `#expect` specific field values match
+
+- [ ] 3.5.2 Test edge cases:
+  - Library with null `capacity`, `isIndoor`, `isLit` fields
+  - Library with empty string fields (`name`, `photoUrl`, etc.)
+  - Invalid JSON (missing required field) — expect decoding to throw
+
+### 3.6 Write tests for APIClient methods
+
+Test the `APIClient` with mocked network responses using `MockURLProtocol`.
+
+- [ ] 3.6.1 Create `BookCornersTests/APIClientTests.swift` with a `@Suite`:
+  - In `init()`, create an `APIClient` with the mock `URLSession`
+  - Test `getLatestLibraries()` — set up `MockURLProtocol` to return valid JSON,
+    verify the decoded result
+  - Test `getLibrary(slug:)` — verify correct URL path is requested
+  - Test `getLibraries()` with query parameters — verify query items in the URL
+
+- [ ] 3.6.2 Test error handling:
+  - 404 response → expect `APIClientError.httpError`
+  - 401 response → expect `APIClientError.unauthorized`
+  - 429 response with retry_after → expect `APIClientError.rateLimited`
+  - Invalid JSON response → expect `APIClientError.decodingError`
+  - Network failure → expect `APIClientError.networkError`
+
+- [ ] 3.6.3 Test auth header:
+  - When `accessToken` is set, verify the `Authorization` header is sent
+  - When `accessToken` is nil, verify no `Authorization` header
+
+### 3.7 Write tests for MultipartFormData
+
+Test that the multipart encoder produces correct output.
+
+- [ ] 3.7.1 Create `BookCornersTests/MultipartFormDataTests.swift`:
+  - Test `addField` — verify the encoded body contains the field name and value
+    with correct boundary separators
+  - Test `addFile` — verify the encoded body contains filename, mime type, and data
+  - Test `contentType` — verify it includes the boundary string
+  - Test multiple fields + file — verify all parts are present and properly separated
+  - Test `encode()` — verify the closing boundary is appended
+
+### 3.8 Run all tests and verify
+
+- [ ] 3.8.1 Run all tests with `Cmd+U`
+- [ ] 3.8.2 All tests should pass — fix any failures
+- [ ] 3.8.3 Commit the test foundation
 
 ---
 
