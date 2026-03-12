@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct APIErrorResponse: Codable {
+nonisolated struct APIErrorResponse: Codable {
     let message: String
     let details: [String: String]?
 }

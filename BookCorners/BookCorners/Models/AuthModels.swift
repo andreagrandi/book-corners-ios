@@ -7,32 +7,32 @@
 
 import Foundation
 
-struct TokenPair: Codable {
+nonisolated struct TokenPair: Codable {
     let access: String
     let refresh: String
 }
 
-struct AccessToken: Codable {
+nonisolated struct AccessToken: Codable {
     let access: String
 }
 
-struct User: Codable, Identifiable {
+nonisolated struct User: Codable, Identifiable {
     let id: Int
     let username: String
     let email: String
 }
 
-struct LoginRequest: Encodable {
+nonisolated struct LoginRequest: Encodable {
     let username: String
     let password: String
 }
 
-struct RegisterRequest: Encodable {
+nonisolated struct RegisterRequest: Encodable {
     let username: String
     let password: String
     let email: String
 }
 
-struct RefreshRequest: Encodable {
+nonisolated struct RefreshRequest: Encodable {
     let refresh: String
 }

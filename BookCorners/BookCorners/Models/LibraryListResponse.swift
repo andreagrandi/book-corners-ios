@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct LibraryListResponse: Codable {
+nonisolated struct LibraryListResponse: Codable {
     let items: [Library]
     let pagination: PaginationMeta
 }
 
-struct PaginationMeta: Codable {
+nonisolated struct PaginationMeta: Codable {
     let page: Int
     let pageSize: Int
     let total: Int

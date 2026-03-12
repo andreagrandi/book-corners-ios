@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum ReportReason: String, Codable, CaseIterable {
+nonisolated enum ReportReason: String, Codable, CaseIterable {
     case damaged
     case missing
     case incorrectInfo = "incorrect_info"
@@ -15,7 +15,7 @@ enum ReportReason: String, Codable, CaseIterable {
     case other
 }
 
-struct Report: Codable, Identifiable {
+nonisolated struct Report: Codable, Identifiable {
     let id: Int
     let reason: String
     let createdAt: Date

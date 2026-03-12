@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct LibraryPhoto: Codable, Identifiable {
+nonisolated struct LibraryPhoto: Codable, Identifiable {
     let id: Int
     let caption: String
     let status: String

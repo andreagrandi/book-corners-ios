@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Library: Codable, Identifiable {
+nonisolated struct Library: Codable, Identifiable {
     let id: Int
     let slug: String
     let name: String

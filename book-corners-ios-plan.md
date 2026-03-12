@@ -611,7 +611,7 @@ Sample JSON strings that match real API responses, for testing decoding.
 Test that our model structs correctly decode from JSON. These are the most basic tests —
 if decoding is broken, nothing else works.
 
-- [ ] 3.5.1 Create `BookCornersTests/ModelDecodingTests.swift` with a `@Suite`:
+- [x] 3.5.1 Create `BookCornersTests/ModelDecodingTests.swift` with a `@Suite`: ✅
   - Set up a `JSONDecoder` with `.convertFromSnakeCase` and `.iso8601` in `init()`
   - Test decoding `Library` from `libraryJSON`
   - Test decoding `LibraryListResponse` from `libraryListJSON`
@@ -622,7 +622,7 @@ if decoding is broken, nothing else works.
   - Test decoding `APIErrorResponse` from `apiErrorJSON`
   - For each: decode the JSON, then `#expect` specific field values match
 
-- [ ] 3.5.2 Test edge cases:
+- [x] 3.5.2 Test edge cases: ✅
   - Library with null `capacity`, `isIndoor`, `isLit` fields
   - Library with empty string fields (`name`, `photoUrl`, etc.)
   - Invalid JSON (missing required field) — expect decoding to throw
@@ -631,21 +631,21 @@ if decoding is broken, nothing else works.
 
 Test the `APIClient` with mocked network responses using `MockURLProtocol`.
 
-- [ ] 3.6.1 Create `BookCornersTests/APIClientTests.swift` with a `@Suite`:
+- [x] 3.6.1 Create `BookCornersTests/APIClientTests.swift` with a `@Suite`: ✅
   - In `init()`, create an `APIClient` with the mock `URLSession`
   - Test `getLatestLibraries()` — set up `MockURLProtocol` to return valid JSON,
     verify the decoded result
   - Test `getLibrary(slug:)` — verify correct URL path is requested
   - Test `getLibraries()` with query parameters — verify query items in the URL
 
-- [ ] 3.6.2 Test error handling:
+- [x] 3.6.2 Test error handling: ✅
   - 404 response → expect `APIClientError.httpError`
   - 401 response → expect `APIClientError.unauthorized`
   - 429 response with retry_after → expect `APIClientError.rateLimited`
   - Invalid JSON response → expect `APIClientError.decodingError`
   - Network failure → expect `APIClientError.networkError`
 
-- [ ] 3.6.3 Test auth header:
+- [x] 3.6.3 Test auth header: ✅
   - When `accessToken` is set, verify the `Authorization` header is sent
   - When `accessToken` is nil, verify no `Authorization` header
 

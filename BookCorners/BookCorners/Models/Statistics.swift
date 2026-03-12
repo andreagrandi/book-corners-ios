@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Statistics: Codable {
+nonisolated struct Statistics: Codable {
     let totalApproved: Int
     let totalWithImage: Int
     let topCountries: [CountryCount]
@@ -15,14 +15,14 @@ struct Statistics: Codable {
     let granularity: String
 }
 
-struct CountryCount: Codable {
+nonisolated struct CountryCount: Codable {
     let countryCode: String
     let countryName: String
     let flagEmoji: String
     let count: Int
 }
 
-struct CumulativeEntry: Codable {
+nonisolated struct CumulativeEntry: Codable {
     let period: String
     let cumulativeCount: Int
 }

@@ -7,6 +7,6 @@
 
 import Foundation
 
-struct LatestLibrariesResponse: Codable {
+nonisolated struct LatestLibrariesResponse: Codable {
     let items: [Library]
 }
