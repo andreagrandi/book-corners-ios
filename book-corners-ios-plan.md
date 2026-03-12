@@ -653,7 +653,7 @@ Test the `APIClient` with mocked network responses using `MockURLProtocol`.
 
 Test that the multipart encoder produces correct output.
 
-- [ ] 3.7.1 Create `BookCornersTests/MultipartFormDataTests.swift`:
+- [x] 3.7.1 Create `BookCornersTests/MultipartFormDataTests.swift`: ✅
   - Test `addField` — verify the encoded body contains the field name and value
     with correct boundary separators
   - Test `addFile` — verify the encoded body contains filename, mime type, and data
@@ -663,9 +663,9 @@ Test that the multipart encoder produces correct output.
 
 ### 3.8 Run all tests and verify
 
-- [ ] 3.8.1 Run all tests with `Cmd+U`
-- [ ] 3.8.2 All tests should pass — fix any failures
-- [ ] 3.8.3 Commit the test foundation
+- [x] 3.8.1 Run all tests with `Cmd+U` ✅
+- [x] 3.8.2 All tests should pass — fix any failures ✅
+- [x] 3.8.3 Commit the test foundation ✅
 
 ---
 
