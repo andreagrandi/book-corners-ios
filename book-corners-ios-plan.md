@@ -893,14 +893,13 @@ This avoids making the user log in every time they open the app.
 **Python analogy:** Like checking `request.session` for an existing session cookie on
 each request, then validating it's still good.
 
-- [ ] 4.9.1 Implement `restoreSession() async`:
-  - Load access + refresh tokens from Keychain
-  - If no tokens found, return silently (user isn't logged in)
-  - Set tokens on self and `apiClient`
-  - Try `apiClient.getMe()` — if successful, set `currentUser`
-  - If 401 (access token expired), try `refreshAccessToken()`, then retry `getMe()`
-  - If refresh also fails, call `logout()` (tokens are stale, user must re-login)
-  - Wrap in `isLoading = true/false` so the app can show a loading state
+- [x] 4.9.1 Implement `restoreSession() async`: ✅
+  - Load tokens from Keychain with `try?` (ignore errors)
+  - If either token missing, return silently
+  - `setTokens` with loaded values
+  - Nested do/catch: try `getMe()`, if fail try `refreshAccessToken()` +
+    `getMe()`, if both fail `logout()`
+  - `defer { isLoading = false }` for loading state
 
 ### 4.10 Build `LoginView`
 

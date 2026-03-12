@@ -40,6 +40,13 @@ class AuthService {
         apiClient.accessToken = access
     }
 
+    private func handleAuthSuccess(_ tokenPair: TokenPair) async throws {
+        setTokens(access: tokenPair.access, refresh: tokenPair.refresh)
+        try keychainService.saveString(tokenPair.access, forKey: KeychainService.accessTokenKey)
+        try keychainService.saveString(tokenPair.refresh, forKey: KeychainService.refreshTokenKey)
+        currentUser = try await apiClient.getMe()
+    }
+
     private func mapError(_ error: Error) -> String {
         guard let apiError = error as? APIClientError else {
             return "Something went wrong. Please try again."
@@ -61,17 +68,11 @@ class AuthService {
     func login(username: String, password: String) async {
         isLoading = true
         errorMessage = nil
-
         defer { isLoading = false }
 
         do {
             let tokenPair = try await apiClient.login(username: username, password: password)
-            setTokens(access: tokenPair.access, refresh: tokenPair.refresh)
-
-            try keychainService.saveString(tokenPair.access, forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString(tokenPair.refresh, forKey: KeychainService.refreshTokenKey)
-
-            currentUser = try await apiClient.getMe()
+            try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
         }
@@ -80,17 +81,11 @@ class AuthService {
     func register(username: String, password: String, email: String) async {
         isLoading = true
         errorMessage = nil
-
         defer { isLoading = false }
 
         do {
             let tokenPair = try await apiClient.register(username: username, password: password, email: email)
-            setTokens(access: tokenPair.access, refresh: tokenPair.refresh)
-
-            try keychainService.saveString(tokenPair.access, forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString(tokenPair.refresh, forKey: KeychainService.refreshTokenKey)
-
-            currentUser = try await apiClient.getMe()
+            try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
         }
@@ -123,5 +118,34 @@ class AuthService {
         try? keychainService.delete(forKey: KeychainService.accessTokenKey)
         try? keychainService.delete(forKey: KeychainService.refreshTokenKey)
         errorMessage = nil
+    }
+
+    func restoreSession() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        // 1. Load tokens from Keychain
+        let access = try? keychainService.loadString(forKey: KeychainService.accessTokenKey)
+        let refresh = try? keychainService.loadString(forKey: KeychainService.refreshTokenKey)
+
+        // 2. If none, return
+        if access == nil || refresh == nil {
+            return
+        }
+
+        // 3. setTokens
+        setTokens(access: access, refresh: refresh)
+
+        // 4. Nested do/catch: try getMe, if fail try refresh + getMe, if fail logout
+        do {
+            currentUser = try await apiClient.getMe()
+        } catch {
+            do {
+                _ = try await refreshAccessToken()
+                currentUser = try await apiClient.getMe()
+            } catch {
+                logout()
+            }
+        }
     }
 }
