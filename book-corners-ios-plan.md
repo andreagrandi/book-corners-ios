@@ -679,17 +679,351 @@ and auth state management across the app. Email/password only for now — social
 state, SwiftUI sheets, Swift 6.2 concurrency (`@concurrent` for background work, default
 main actor isolation).
 
-- [ ] 4.1 Create `KeychainService` — save/load/delete data in the iOS Keychain
-- [ ] 4.2 Create `AuthService` (`@Observable`) — manages `isAuthenticated`, `currentUser`, tokens
-- [ ] 4.3 Implement login flow (API call → save tokens → fetch /auth/me → update state)
-- [ ] 4.4 Implement registration flow with error handling (username taken, weak password)
-- [ ] 4.5 Implement token refresh with concurrency guard (prevent parallel refresh calls)
-- [ ] 4.6 Add automatic 401 retry in `APIClient` (refresh token, retry request once)
-- [ ] 4.7 Implement logout (clear Keychain, clear state)
-- [ ] 4.8 Build `LoginView` — form with username/password, error display
-- [ ] 4.9 Build `RegisterView` — form with username/email/password/confirm
-- [ ] 4.10 Inject `AuthService` into SwiftUI environment
-- [ ] 4.11 Restore session on app launch (load tokens from Keychain, verify with /auth/me)
+**Architecture overview:** Three layers, bottom to top:
+
+```
+┌─────────────────────────────────────────────┐
+│  LoginView / RegisterView  (UI)             │  SwiftUI forms — collect input, show errors
+├─────────────────────────────────────────────┤
+│  AuthService  (@Observable)                 │  Single source of truth for auth state
+├──────────────────┬──────────────────────────┤
+│  KeychainService │  APIClient (existing)    │  Storage + Network
+└──────────────────┴──────────────────────────┘
+```
+
+- **KeychainService** wraps the C-era Keychain API (`SecItemAdd` etc.) into a clean
+  Swift interface. Stores JWT tokens (access + refresh) as encrypted data.
+- **AuthService** is `@Observable` — it coordinates login/logout/refresh by calling
+  `APIClient` and `KeychainService`, and exposes `isAuthenticated` / `currentUser`
+  that views react to automatically.
+- **LoginView / RegisterView** are SwiftUI forms presented as sheets. They call
+  `AuthService` methods and display errors.
+
+### 4.1 Create `KeychainService`
+
+The iOS Keychain is a system-level encrypted database for storing small secrets — think
+of it as Python's `keyring` library or a per-app credential vault. It persists across
+app launches and survives app updates (but not uninstalls).
+
+The API is C-era Apple code — you interact with it through dictionaries of `CFString`
+keys and `Any` values, then call `SecItem*` functions that return `OSStatus` codes.
+We'll wrap this ugliness in a clean Swift service.
+
+**Python analogy:**
+```python
+keyring.set_password("bookcorners", "access_token", "eyJhb...")
+token = keyring.get_password("bookcorners", "access_token")
+keyring.delete_password("bookcorners", "access_token")
+```
+
+**Key concepts:**
+- Each keychain item has a **class** (`kSecClassGenericPassword` for arbitrary secrets),
+  a **service** name (our app identifier), and an **account** name (the key, e.g.
+  `"access_token"`)
+- `SecItemAdd` → create, `SecItemCopyMatching` → read, `SecItemUpdate` → update,
+  `SecItemDelete` → delete
+- All functions return `OSStatus` — check for `errSecSuccess`, `errSecItemNotFound`, etc.
+- **Important:** `SecItemCopyMatching` blocks the calling thread. In Swift 6.2 (where
+  code defaults to main actor), we mark the class `nonisolated` to opt it out of
+  main actor isolation. (`@concurrent` only works on `async` methods — these are
+  synchronous C calls, so `nonisolated` is the correct approach. Keychain ops are
+  fast enough that the brief blocking is fine for our use case.)
+
+- [x] 4.1.1 Create `Services/KeychainService.swift` ✅
+- [x] 4.1.2 Define a `KeychainError` enum: `duplicateItem`, `itemNotFound`, ✅
+  `unexpectedStatus(OSStatus)`, `dataConversionError`
+- [x] 4.1.3 Implement `save(data:forKey:)` — builds a query dictionary with ✅
+  `kSecClassGenericPassword`, service name, account (key), and value data.
+  Calls `SecItemAdd`. If `errSecDuplicateItem`, falls through to update instead.
+- [x] 4.1.4 Implement `load(forKey:) -> Data?` — builds a search query with ✅
+  `kSecReturnData: true` and `kSecMatchLimit: kSecMatchLimitOne`. Calls
+  `SecItemCopyMatching`. Returns nil for `errSecItemNotFound`.
+- [x] 4.1.5 Implement `delete(forKey:)` — builds a query and calls `SecItemDelete`. ✅
+  Ignores `errSecItemNotFound` (deleting something already gone is fine).
+- [x] 4.1.6 Add convenience methods that work with `String` instead of `Data`: ✅
+  `saveString(_:forKey:)` and `loadString(forKey:) -> String?`
+- [x] 4.1.7 Mark the class `nonisolated` so Keychain I/O doesn't run on the main ✅
+  actor (remember: Swift 6.2 defaults to main actor isolation; `@concurrent` is
+  only for `async` methods, so `nonisolated` is correct for synchronous C calls)
+- [x] 4.1.8 Define string constants for our keys: `"access_token"`, `"refresh_token"` ✅
+
+> **Why not UserDefaults?** `UserDefaults` stores data as **plaintext** in a plist
+> file — anyone with device access (or a backup) can read it. Keychain data is
+> encrypted by the Secure Enclave. Never put tokens in UserDefaults.
+
+### 4.2 Write tests for KeychainService
+
+Test the Keychain wrapper before building on top of it. These tests will hit the
+real Keychain (there's no good way to mock `SecItem*` functions), but that's fine —
+the test runner has Keychain access.
+
+- [x] 4.2.1 Create `BookCornersTests/KeychainServiceTests.swift` with a `@Suite` ✅
+- [x] 4.2.2 Use `init()` to create a `KeychainService` with a unique test service ✅
+  name (e.g. `"it.andreagrandi.BookCorners.tests.\(UUID())"`) so tests don't collide
+- [x] 4.2.3 ~~Use `deinit` to clean up~~ — not needed; UUID-based service names ✅
+  ensure no collisions between test runs
+- [x] 4.2.4 Test save + load round-trip: save a string, load it back, `#expect` equal ✅
+- [x] 4.2.5 Test overwrite: save a value, save a different value for the same key, ✅
+  load should return the new value
+- [x] 4.2.6 Test load missing key: `#expect` returns nil ✅
+- [x] 4.2.7 Test delete: save a value, delete it, load should return nil ✅
+- [x] 4.2.8 Test delete missing key: should not throw ✅
+
+### 4.3 Create `AuthService` (`@Observable`)
+
+The central auth coordinator. This is the **single source of truth** for "is the user
+logged in?" across the entire app. Every view that cares about auth state reads from
+this one object.
+
+**Python analogy:** Like a Django middleware that checks the session on every request,
+but reactive — any SwiftUI view reading `authService.isAuthenticated` automatically
+re-renders when auth state changes.
+
+**Go analogy:** Like a context value that's threaded through all handlers, but instead
+of passing it explicitly, SwiftUI's environment system injects it automatically.
+
+- [x] 4.3.1 Create `Services/AuthService.swift` as an `@Observable` class ✅
+- [x] 4.3.2 Properties: ✅
+  - `isAuthenticated: Bool` (computed: true when `accessToken` is non-nil)
+  - `currentUser: User?` (the logged-in user's profile)
+  - `isLoading: Bool` (true during login/register/restore operations)
+  - `errorMessage: String?` (user-facing error for display in views)
+  - `private(set) accessToken: String?`, `private refreshToken: String?`
+- [x] 4.3.3 Dependencies (injected via init): ✅
+  - `apiClient: APIClient` (for network calls)
+  - `keychainService: KeychainService` (for token persistence)
+- [x] 4.3.4 `setTokens(access:refresh:)` helper keeps `accessToken`, ✅
+  `refreshToken`, and `apiClient.accessToken` in sync (`didSet` doesn't
+  work with `@Observable` — the macro rewrites property storage)
+
+> **`@Observable` vs `ObservableObject`:** `@Observable` (iOS 17+) is the modern
+> replacement. With `ObservableObject`, you had to mark every property with `@Published`.
+> With `@Observable`, **all** stored properties are automatically tracked — SwiftUI
+> detects exactly which properties each view reads and only re-renders when those
+> specific properties change. It's more efficient and less boilerplate.
+>
+> In Python terms: `ObservableObject` is like manually calling `self.notify_observers()`
+> after each mutation. `@Observable` is like Python's `__setattr__` hook — the framework
+> intercepts all writes automatically.
+
+### 4.4 Implement login flow
+
+The sequence: call API → save tokens to Keychain → set tokens on AuthService →
+fetch user profile → update `currentUser`.
+
+- [x] 4.4.1 Implement `login(username:password:) async`: ✅
+  - Set `isLoading = true`, clear `errorMessage`
+  - Call `apiClient.login(username:password:)` → get `TokenPair`
+  - Save access + refresh tokens to Keychain via `keychainService`
+  - Call `setTokens()` to update in-memory state + `apiClient`
+  - Call `apiClient.getMe()` → get `User`, set `currentUser`
+  - `defer { isLoading = false }` ensures cleanup on all paths
+  - Wrapped in do/catch — on error, set `errorMessage` via `mapError()`
+- [x] 4.4.2 `mapError()` helper maps API errors to user-friendly messages: ✅
+  - `unauthorized` → "Invalid username or password"
+  - `rateLimited` → "Too many attempts. Please try again later."
+  - `networkError` → "Unable to connect. Check your internet connection."
+  - Other → "Something went wrong. Please try again."
+
+### 4.5 Implement registration flow
+
+Similar to login, but with different validation errors from the backend.
+
+- [x] 4.5.1 Implement `register(username:password:email:) async`: ✅
+  - Same flow as login: call API → save tokens → fetch profile → update state
+  - Use `apiClient.register(username:password:email:)`
+- [x] 4.5.2 Map registration-specific errors: ✅
+  - `httpError(400, message)` → pass through backend message directly
+  - Other errors → same `mapError()` as login
+
+### 4.6 Implement token refresh
+
+When the access token expires, use the refresh token to get a new one. A concurrency
+guard prevents multiple simultaneous refresh calls (imagine two API calls failing with
+401 at the same time — without a guard, both would try to refresh).
+
+**Go analogy:** Like `sync.Once` or a mutex — ensure the refresh operation runs exactly
+once even if triggered from multiple goroutines.
+
+- [x] 4.6.1 Add a private `refreshTask: Task<String, Error>?` property on `AuthService` ✅
+  — this is the concurrency guard
+- [x] 4.6.2 Implement `refreshAccessToken() async throws -> String`: ✅
+  - If `refreshTask` already exists, `await` its result (piggyback)
+  - Otherwise, create a new `Task` that:
+    - `guard let` unwraps refreshToken (throws `.unauthorized` if nil)
+    - Calls `apiClient.refreshToken(refreshToken:)`
+    - Saves the new access token to Keychain
+    - Calls `setTokens` with new access + existing refresh
+    - Returns the new token string
+  - `defer { refreshTask = nil }` clears on both success and failure
+  - TODO: call `logout()` on refresh failure (will wire up after 4.8)
+
+### 4.7 Add automatic 401 retry in `APIClient`
+
+When an API call gets a 401, automatically attempt a token refresh and retry once.
+This requires `APIClient` to know about `AuthService` — we'll use a callback/delegate
+pattern to avoid a circular dependency.
+
+- [ ] 4.7.1 Define a `tokenRefresher` closure property on `APIClient`:
+  `var tokenRefresher: (() async throws -> String)?`
+  — `AuthService` will set this to its `refreshAccessToken()` method
+- [ ] 4.7.2 Modify the `request()` method in `APIClient`:
+  - When receiving a 401 **and** `tokenRefresher` is set:
+    - Call `tokenRefresher!()` to get a new access token
+    - Update `self.accessToken` with the new token
+    - Retry the original request **once**
+    - If the retry also fails with 401, throw `unauthorized` (don't loop)
+  - When receiving a 401 without a `tokenRefresher`, throw `unauthorized` as before
+- [ ] 4.7.3 Wire it up: in `AuthService.init`, set
+  `apiClient.tokenRefresher = { [weak self] in try await self!.refreshAccessToken() }`
+
+> **Why a closure instead of a protocol?** A closure avoids introducing a new protocol
+> and prevents a retain cycle (with `[weak self]`). It's the same pattern as passing
+> a callback function in Python/Go. The APIClient doesn't need to know about AuthService
+> at all — it just knows "here's a function I can call to get a new token."
+
+### 4.8 Implement logout
+
+- [ ] 4.8.1 Implement `logout()`:
+  - Delete access + refresh tokens from Keychain
+  - Set `accessToken = nil`, `refreshToken = nil` (also clears `apiClient.accessToken`)
+  - Set `currentUser = nil`
+  - Clear `errorMessage`
+
+### 4.9 Restore session on app launch
+
+When the app starts, check if we have saved tokens and try to resume the session.
+This avoids making the user log in every time they open the app.
+
+**Python analogy:** Like checking `request.session` for an existing session cookie on
+each request, then validating it's still good.
+
+- [ ] 4.9.1 Implement `restoreSession() async`:
+  - Load access + refresh tokens from Keychain
+  - If no tokens found, return silently (user isn't logged in)
+  - Set tokens on self and `apiClient`
+  - Try `apiClient.getMe()` — if successful, set `currentUser`
+  - If 401 (access token expired), try `refreshAccessToken()`, then retry `getMe()`
+  - If refresh also fails, call `logout()` (tokens are stale, user must re-login)
+  - Wrap in `isLoading = true/false` so the app can show a loading state
+
+### 4.10 Build `LoginView`
+
+A SwiftUI form presented as a sheet. Uses `SecureField` for the password (shows dots
+instead of text, like `<input type="password">`).
+
+**Key SwiftUI concepts:**
+- `@State` — local view state (like a local variable that SwiftUI tracks). When it
+  changes, the view re-renders. Unlike `@Observable` which is for shared state,
+  `@State` is private to one view.
+- `@Environment` — reads values from the SwiftUI environment (dependency injection).
+  We'll use this to access `AuthService`.
+- `Form` — a container that automatically styles its children as a settings-like form.
+  In iOS 26, Form sections get Liquid Glass styling automatically.
+- `SecureField` — a text field that hides input (for passwords).
+- `.sheet` — presents a modal view that slides up from the bottom.
+
+- [ ] 4.10.1 Create `Views/Auth/LoginView.swift`
+- [ ] 4.10.2 Add `@State` properties for `username` and `password` (local form state)
+- [ ] 4.10.3 Access `AuthService` from the environment
+- [ ] 4.10.4 Build the form:
+  - `TextField` for username (with `.textContentType(.username)` and
+    `.autocorrectionDisabled()`)
+  - `SecureField` for password (with `.textContentType(.password)`)
+  - Login `Button` — disabled when fields are empty or `authService.isLoading`
+  - Error display: show `authService.errorMessage` if present (red text)
+  - Loading indicator: show `ProgressView` when `authService.isLoading`
+- [ ] 4.10.5 On login button tap: `Task { await authService.login(username:password:) }`
+- [ ] 4.10.6 Dismiss the sheet on successful login (when `authService.isAuthenticated`
+  becomes true) — use `.onChange(of:)` modifier or `@Environment(\.dismiss)`
+- [ ] 4.10.7 Add a "Don't have an account? Register" link/button that navigates to
+  `RegisterView`
+
+> **`.textContentType` hints:** These tell iOS what kind of data the field expects.
+> With `.username` and `.password`, iOS offers to AutoFill from the Keychain and
+> suggests saving new credentials. This is a free UX win.
+
+### 4.11 Build `RegisterView`
+
+Similar to `LoginView` but with additional fields and client-side validation.
+
+- [ ] 4.11.1 Create `Views/Auth/RegisterView.swift`
+- [ ] 4.11.2 Add `@State` properties for `username`, `email`, `password`,
+  `confirmPassword`
+- [ ] 4.11.3 Client-side validation (before hitting the API):
+  - Username: not empty, reasonable length
+  - Email: basic format check (contains `@`)
+  - Password: not empty, minimum length (match backend requirements)
+  - Confirm password: matches password
+- [ ] 4.11.4 Show inline validation messages (e.g. "Passwords don't match")
+- [ ] 4.11.5 On register button tap: call `authService.register(username:password:email:)`
+- [ ] 4.11.6 Dismiss on success, same pattern as LoginView
+- [ ] 4.11.7 Add an "Already have an account? Login" link/button
+
+### 4.12 Inject `AuthService` into the SwiftUI environment
+
+Wire everything together in the app entry point.
+
+**Key concept: SwiftUI Environment.**
+The environment is SwiftUI's dependency injection system. You create an object at the
+top of the view hierarchy, and any descendant view can access it via `@Environment`.
+
+**Python analogy:** Like Flask's `g` object or Django's request context — a bag of
+objects available to all views/templates without explicitly passing them through every
+layer.
+
+**Go analogy:** Like `context.WithValue()` — attach a value to the context at the top,
+read it anywhere below.
+
+- [ ] 4.12.1 In `BookCornersApp.swift`, create `AuthService` as a `@State` property
+- [ ] 4.12.2 Pass it into the environment using `.environment(authService)`
+- [ ] 4.12.3 Add a `.task` modifier on `ContentView` to call
+  `authService.restoreSession()` on app launch
+- [ ] 4.12.4 Optionally show a loading/splash state while `authService.isLoading`
+  during session restore
+
+> **`@State` in the App struct:** We use `@State` to create the `AuthService` because
+> the `App` struct owns its lifecycle. SwiftUI guarantees `@State` properties are
+> created once and persist across `body` re-evaluations. This is different from
+> `@State` in a View — same concept, but at the app level.
+
+### 4.13 Write tests for AuthService
+
+Test the auth flows with mocked dependencies.
+
+- [ ] 4.13.1 Create `BookCornersTests/AuthServiceTests.swift` with a `@Suite`
+- [ ] 4.13.2 Create a mock `KeychainService` for testing (in-memory dictionary
+  instead of real Keychain) — or use a test-specific service name
+- [ ] 4.13.3 Test login success: mock API returns `TokenPair` + `User` →
+  `isAuthenticated` is true, `currentUser` is set, tokens saved
+- [ ] 4.13.4 Test login failure: mock API throws `unauthorized` →
+  `isAuthenticated` is false, `errorMessage` is set
+- [ ] 4.13.5 Test logout: after login, call logout → `isAuthenticated` is false,
+  `currentUser` is nil, tokens deleted from keychain
+- [ ] 4.13.6 Test session restore: tokens pre-saved in keychain, mock API returns
+  `User` → `isAuthenticated` is true after `restoreSession()`
+- [ ] 4.13.7 Test session restore with expired token: first `getMe()` throws 401,
+  refresh succeeds, second `getMe()` succeeds → ends up authenticated
+- [ ] 4.13.8 Test session restore with expired refresh: both calls fail →
+  ends up logged out, tokens cleared
+
+### 4.14 Integration smoke test
+
+Verify everything works end-to-end before moving on.
+
+- [ ] 4.14.1 Temporarily add a login button to `ContentView` that presents `LoginView`
+  as a sheet
+- [ ] 4.14.2 Build and run on simulator — test login with valid credentials against
+  the production API (use a test account)
+- [ ] 4.14.3 Verify: login succeeds, sheet dismisses, user info is available
+- [ ] 4.14.4 Kill and relaunch the app — verify session restores automatically
+  (no login required)
+- [ ] 4.14.5 Test logout — verify state clears, next launch requires login
+- [ ] 4.14.6 Test error cases: wrong password, empty fields, no network
+- [ ] 4.14.7 Revert `ContentView` to its original state (login UI will be properly
+  integrated in Step 5)
+- [ ] 4.14.8 Run all tests with `Cmd+U` — all must pass
+- [ ] 4.14.9 Commit
 
 ---
 

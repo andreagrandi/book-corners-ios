@@ -34,7 +34,7 @@ struct MultipartFormData {
     }
 
     func encode() -> Data {
-        var bodyCopy = body
+        let bodyCopy = body
         return bodyCopy + Data("--\(boundary)--\r\n".utf8)
     }
 }
