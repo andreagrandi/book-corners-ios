@@ -27,6 +27,11 @@ class AuthService {
     init(apiClient: APIClient, keychainService: KeychainService) {
         self.apiClient = apiClient
         self.keychainService = keychainService
+
+        self.apiClient.tokenRefresher = { [weak self] in
+            guard let self else { throw APIClientError.unauthorized }
+            return try await refreshAccessToken()
+        }
     }
 
     private func setTokens(access: String?, refresh: String?) {
@@ -110,5 +115,13 @@ class AuthService {
 
         defer { refreshTask = nil }
         return try await refreshTask!.value
+    }
+
+    func logout() {
+        setTokens(access: nil, refresh: nil)
+        currentUser = nil
+        try? keychainService.delete(forKey: KeychainService.accessTokenKey)
+        try? keychainService.delete(forKey: KeychainService.refreshTokenKey)
+        errorMessage = nil
     }
 }

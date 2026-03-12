@@ -864,18 +864,13 @@ When an API call gets a 401, automatically attempt a token refresh and retry onc
 This requires `APIClient` to know about `AuthService` — we'll use a callback/delegate
 pattern to avoid a circular dependency.
 
-- [ ] 4.7.1 Define a `tokenRefresher` closure property on `APIClient`:
+- [x] 4.7.1 Define a `tokenRefresher` closure property on `APIClient`: ✅
   `var tokenRefresher: (() async throws -> String)?`
-  — `AuthService` will set this to its `refreshAccessToken()` method
-- [ ] 4.7.2 Modify the `request()` method in `APIClient`:
-  - When receiving a 401 **and** `tokenRefresher` is set:
-    - Call `tokenRefresher!()` to get a new access token
-    - Update `self.accessToken` with the new token
-    - Retry the original request **once**
-    - If the retry also fails with 401, throw `unauthorized` (don't loop)
-  - When receiving a 401 without a `tokenRefresher`, throw `unauthorized` as before
-- [ ] 4.7.3 Wire it up: in `AuthService.init`, set
-  `apiClient.tokenRefresher = { [weak self] in try await self!.refreshAccessToken() }`
+- [x] 4.7.2 Modify `request()` in `APIClient`: intercept 401 before the ✅
+  existing guard, refresh token, rebuild request with new auth header,
+  retry once, return retry result or throw
+- [x] 4.7.3 Wire it up in `AuthService.init` with `[weak self]` to avoid ✅
+  retain cycle (AuthService → APIClient → closure → AuthService)
 
 > **Why a closure instead of a protocol?** A closure avoids introducing a new protocol
 > and prevents a retain cycle (with `[weak self]`). It's the same pattern as passing
@@ -884,10 +879,10 @@ pattern to avoid a circular dependency.
 
 ### 4.8 Implement logout
 
-- [ ] 4.8.1 Implement `logout()`:
-  - Delete access + refresh tokens from Keychain
-  - Set `accessToken = nil`, `refreshToken = nil` (also clears `apiClient.accessToken`)
-  - Set `currentUser = nil`
+- [x] 4.8.1 Implement `logout()`: ✅
+  - `setTokens(access: nil, refresh: nil)` clears in-memory + apiClient
+  - `currentUser = nil`
+  - `try?` delete both tokens from Keychain (ignore errors)
   - Clear `errorMessage`
 
 ### 4.9 Restore session on app launch
