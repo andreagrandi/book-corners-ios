@@ -1017,7 +1017,7 @@ Verify everything works end-to-end before moving on.
 - [x] 4.14.7 Revert `ContentView` to its original state (login UI will be properly ✅
   integrated in Step 5)
 - [x] 4.14.8 Run all tests with `Cmd+U` — all must pass ✅
-- [ ] 4.14.9 Commit
+- [x] 4.14.9 Commit ✅
 
 ---
 
@@ -1042,9 +1042,9 @@ You reference them by name (e.g., `"books.vertical"`, `"map"`, `"plus.circle"`,
 **Python analogy:** Think of `TabView` like a Django URL router — each "tab" maps
 to a different view, and the tab bar is the navigation menu.
 
-- [ ] 5.1.1 Research the iOS 26 `Tab` API — use the new `Tab("Title", systemImage:)` syntax
+- [x] 5.1.1 Research the iOS 26 `Tab` API — use the new `Tab("Title", systemImage:)` syntax ✅
   rather than the older `tabItem` modifier
-- [ ] 5.1.2 Plan four tabs: **Nearby** (book list), **Map** (map view),
+- [x] 5.1.2 Plan four tabs: **Nearby** (book list), **Map** (map view), ✅
   **Submit** (new library form), **Profile** (user info/login)
 
 ### 5.2 Create placeholder views for each tab
@@ -1052,45 +1052,52 @@ to a different view, and the tab bar is the navigation menu.
 Before wiring up the tab bar, create simple placeholder views so each tab has
 something to display.
 
-- [ ] 5.2.1 Create `Views/Libraries/LibraryListView.swift` — placeholder with
+- [x] 5.2.1 Create `Views/Libraries/LibraryListView.swift` — placeholder with ✅
   `Text("Nearby Libraries")` and a book icon
-- [ ] 5.2.2 Create `Views/Map/MapTabView.swift` — placeholder with
+- [x] 5.2.2 Create `Views/Map/MapTabView.swift` — placeholder with ✅
   `Text("Map View")` and a map icon
-- [ ] 5.2.3 Create `Views/Submit/SubmitLibraryView.swift` — placeholder with
+- [x] 5.2.3 Create `Views/Submit/SubmitLibraryView.swift` — placeholder with ✅
   `Text("Submit Library")` and a plus icon
 
 ### 5.3 Build `ContentView` with `TabView`
 
 Replace the "Hello, world!" ContentView with a proper tab-based layout.
 
-- [ ] 5.3.1 Rewrite `ContentView` to use `TabView` with four `Tab` items:
-  - **Nearby**: `Tab("Nearby", systemImage: "books.vertical")` → `LibraryListView()`
-  - **Map**: `Tab("Map", systemImage: "map")` → `MapTabView()`
-  - **Submit**: `Tab("Submit", systemImage: "plus.circle")` → `SubmitLibraryView()`
-  - **Profile**: `Tab("Profile", systemImage: "person")` → `ProfileView()`
-- [ ] 5.3.2 Add `@State private var selectedTab = 0` to track selection
-- [ ] 5.3.3 Read `AuthService` from the environment in ContentView
+- [x] 5.3.1 Add `@State private var selectedTab = 0` to track which tab is active ✅
+- [x] 5.3.2 Replace `body` with `TabView(selection: $selectedTab)` containing four `Tab` items: ✅
+  - Tab 0 **Nearby**: `Tab("Nearby", systemImage: "books.vertical", value: 0)` → `LibraryListView()`
+  - Tab 1 **Map**: `Tab("Map", systemImage: "map", value: 1)` → `MapTabView()`
+  - Tab 2 **Submit**: `Tab("Submit", systemImage: "plus.circle", value: 2)` → `SubmitLibraryView()`
+  - Tab 3 **Profile**: `Tab("Profile", systemImage: "person", value: 3)` → `Text("Profile")` placeholder for now
+- [ ] 5.3.3 Read `AuthService` from the environment using `@Environment(AuthService.self)`
+  — needed later for auth-gating the Submit tab
 
 ### 5.4 Build `ProfileView`
 
 The Profile tab shows different content depending on whether the user is logged in.
 
-- [ ] 5.4.1 Create `Views/Tabs/ProfileView.swift`
-- [ ] 5.4.2 When **authenticated**: show username, email, and a Logout button
-- [ ] 5.4.3 When **not authenticated**: show a "Login" button and a "Register" button
-  that present the respective sheets
-- [ ] 5.4.4 Use `@Environment(AuthService.self)` to read auth state
-- [ ] 5.4.5 Wrap in `NavigationStack` with `.navigationTitle("Profile")`
+- [ ] 5.4.1 Create `Views/Tabs/ProfileView.swift` with `@Environment(AuthService.self)`
+- [ ] 5.4.2 Wrap content in `NavigationStack` with `.navigationTitle("Profile")`
+- [ ] 5.4.3 When **authenticated**: show user info (username, email) in a `Section`,
+  and a "Logout" `Button` that calls `authService.logout()`
+- [ ] 5.4.4 When **not authenticated**: show a "Login" `Button` and a "Register" `Button`
+  that each set a `@State` bool to present the corresponding sheet
+- [ ] 5.4.5 Add `.sheet(isPresented:)` modifiers to present `LoginView` and `RegisterView`
+- [ ] 5.4.6 Wire `ProfileView` into ContentView's Tab 3 (replace `Text("Profile")` placeholder)
 
 ### 5.5 Handle auth-gated tabs
 
 The Submit tab requires authentication. If the user taps it while logged out,
 present the login sheet instead of the form.
 
-- [ ] 5.5.1 In ContentView, detect when the Submit tab is selected while not
-  authenticated
-- [ ] 5.5.2 Present `LoginView` as a sheet and revert to the previous tab
-- [ ] 5.5.3 If login succeeds, navigate to the Submit tab automatically
+- [ ] 5.5.1 Add `@State private var previousTab = 0` to remember the last non-Submit tab
+- [ ] 5.5.2 Add `@State private var showLoginSheet = false` to control the login sheet
+- [ ] 5.5.3 Use `.onChange(of: selectedTab)` to detect when Submit (tab 2) is selected
+  while `!authService.isAuthenticated` — set `showLoginSheet = true` and revert
+  `selectedTab` to `previousTab`
+- [ ] 5.5.4 Add `.sheet(isPresented: $showLoginSheet)` presenting `LoginView`
+- [ ] 5.5.5 Use `.onChange(of: authService.isAuthenticated)` — when it becomes true
+  while `showLoginSheet` was triggered, set `selectedTab = 2` to navigate to Submit
 
 ### 5.6 Tab bar configuration
 
