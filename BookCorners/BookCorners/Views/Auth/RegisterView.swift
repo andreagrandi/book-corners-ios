@@ -1,16 +1,17 @@
 //
-//  LoginView.swift
+//  RegisterView.swift
 //  BookCorners
 //
-//  Created by Andrea Grandi on 12/03/26.
+//  Created by Andrea Grandi on 13/03/26.
 //
 
 import SwiftUI
 
-struct LoginView: View {
+struct RegisterView: View {
     @State private var username = ""
     @State private var password = ""
-    @State private var showingRegister = false
+    @State private var email = ""
+    @State private var confirmPassword = ""
 
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
@@ -22,7 +23,12 @@ struct LoginView: View {
                     TextField("Username", text: $username)
                         .textContentType(.username)
                         .autocorrectionDisabled()
+                    TextField("Email", text: $email)
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
                     SecureField("Password", text: $password)
+                        .textContentType(.password)
+                    SecureField("Confirm Password", text: $confirmPassword)
                         .textContentType(.password)
                 }
 
@@ -31,21 +37,26 @@ struct LoginView: View {
                         .foregroundStyle(.red)
                 }
 
+                if !confirmPassword.isEmpty, password != confirmPassword {
+                    Text("Passwords don't match")
+                        .foregroundStyle(.red)
+                }
+
                 if authService.isLoading {
                     ProgressView()
                 }
 
                 Section {
-                    Button("Login") {
-                        Task { await authService.login(username: username, password: password) }
+                    Button("Register") {
+                        Task { await authService.register(username: username, password: password, email: email) }
                     }
-                    .disabled(username.isEmpty || password.isEmpty || authService.isLoading)
+                    .disabled(username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword ||
+                        authService.isLoading)
                 }
 
-                Button("Don't have an account? Register") { showingRegister = true }
-                    .sheet(isPresented: $showingRegister) { RegisterView() }
+                Button("Already have an account? Login") { dismiss() }
             }
-            .navigationTitle("Login")
+            .navigationTitle("Register")
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
                 if isAuthenticated { dismiss() }
             }
@@ -54,7 +65,7 @@ struct LoginView: View {
 }
 
 #Preview {
-    LoginView()
+    RegisterView()
         .environment(AuthService(
             apiClient: APIClient(),
             keychainService: KeychainService(),
