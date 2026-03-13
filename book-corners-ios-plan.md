@@ -1005,18 +1005,18 @@ Test the auth flows with mocked dependencies.
 
 Verify everything works end-to-end before moving on.
 
-- [ ] 4.14.1 Temporarily add a login button to `ContentView` that presents `LoginView`
+- [x] 4.14.1 Temporarily add a login button to `ContentView` that presents `LoginView` ✅
   as a sheet
-- [ ] 4.14.2 Build and run on simulator — test login with valid credentials against
+- [x] 4.14.2 Build and run on simulator — test login with valid credentials against ✅
   the production API (use a test account)
-- [ ] 4.14.3 Verify: login succeeds, sheet dismisses, user info is available
-- [ ] 4.14.4 Kill and relaunch the app — verify session restores automatically
+- [x] 4.14.3 Verify: login succeeds, sheet dismisses, user info is available ✅
+- [x] 4.14.4 Kill and relaunch the app — verify session restores automatically ✅
   (no login required)
-- [ ] 4.14.5 Test logout — verify state clears, next launch requires login
-- [ ] 4.14.6 Test error cases: wrong password, empty fields, no network
-- [ ] 4.14.7 Revert `ContentView` to its original state (login UI will be properly
+- [x] 4.14.5 Test logout — verify state clears, next launch requires login ✅
+- [x] 4.14.6 Test error cases: wrong password, empty fields, no network ✅
+- [x] 4.14.7 Revert `ContentView` to its original state (login UI will be properly ✅
   integrated in Step 5)
-- [ ] 4.14.8 Run all tests with `Cmd+U` — all must pass
+- [x] 4.14.8 Run all tests with `Cmd+U` — all must pass ✅
 - [ ] 4.14.9 Commit
 
 ---
@@ -1029,12 +1029,85 @@ Verify everything works end-to-end before moving on.
 SF Symbols, `@State`/`@SceneStorage` for tab selection, `tabBarMinimizeBehavior`,
 conditional UI based on auth state.
 
-- [ ] 5.1 Create `ContentView` with `TabView` using `Tab` API (Nearby, Map, Submit, Profile)
-- [ ] 5.2 Create placeholder views for each tab
-- [ ] 5.3 Handle auth-gated tabs (Submit shows login sheet if unauthenticated)
-- [ ] 5.4 Build `ProfileView` — conditional content based on auth state
-- [ ] 5.5 Configure tab bar — Liquid Glass styling is automatic; explore `tabBarMinimizeBehavior`
-- [ ] 5.6 Persist selected tab with `@SceneStorage`
+### 5.1 Understand `TabView` in iOS 26
+
+iOS 26 introduced a new `TabView` API using the `Tab` type. Each tab has a title,
+an SF Symbol icon, and a content view. The tab bar gets Liquid Glass styling
+automatically — translucent, blurred background.
+
+**SF Symbols** are Apple's icon library — thousands of vector icons built into iOS.
+You reference them by name (e.g., `"books.vertical"`, `"map"`, `"plus.circle"`,
+`"person"`). Browse them in the SF Symbols app (free download from Apple).
+
+**Python analogy:** Think of `TabView` like a Django URL router — each "tab" maps
+to a different view, and the tab bar is the navigation menu.
+
+- [ ] 5.1.1 Research the iOS 26 `Tab` API — use the new `Tab("Title", systemImage:)` syntax
+  rather than the older `tabItem` modifier
+- [ ] 5.1.2 Plan four tabs: **Nearby** (book list), **Map** (map view),
+  **Submit** (new library form), **Profile** (user info/login)
+
+### 5.2 Create placeholder views for each tab
+
+Before wiring up the tab bar, create simple placeholder views so each tab has
+something to display.
+
+- [ ] 5.2.1 Create `Views/Libraries/LibraryListView.swift` — placeholder with
+  `Text("Nearby Libraries")` and a book icon
+- [ ] 5.2.2 Create `Views/Map/MapTabView.swift` — placeholder with
+  `Text("Map View")` and a map icon
+- [ ] 5.2.3 Create `Views/Submit/SubmitLibraryView.swift` — placeholder with
+  `Text("Submit Library")` and a plus icon
+
+### 5.3 Build `ContentView` with `TabView`
+
+Replace the "Hello, world!" ContentView with a proper tab-based layout.
+
+- [ ] 5.3.1 Rewrite `ContentView` to use `TabView` with four `Tab` items:
+  - **Nearby**: `Tab("Nearby", systemImage: "books.vertical")` → `LibraryListView()`
+  - **Map**: `Tab("Map", systemImage: "map")` → `MapTabView()`
+  - **Submit**: `Tab("Submit", systemImage: "plus.circle")` → `SubmitLibraryView()`
+  - **Profile**: `Tab("Profile", systemImage: "person")` → `ProfileView()`
+- [ ] 5.3.2 Add `@State private var selectedTab = 0` to track selection
+- [ ] 5.3.3 Read `AuthService` from the environment in ContentView
+
+### 5.4 Build `ProfileView`
+
+The Profile tab shows different content depending on whether the user is logged in.
+
+- [ ] 5.4.1 Create `Views/Tabs/ProfileView.swift`
+- [ ] 5.4.2 When **authenticated**: show username, email, and a Logout button
+- [ ] 5.4.3 When **not authenticated**: show a "Login" button and a "Register" button
+  that present the respective sheets
+- [ ] 5.4.4 Use `@Environment(AuthService.self)` to read auth state
+- [ ] 5.4.5 Wrap in `NavigationStack` with `.navigationTitle("Profile")`
+
+### 5.5 Handle auth-gated tabs
+
+The Submit tab requires authentication. If the user taps it while logged out,
+present the login sheet instead of the form.
+
+- [ ] 5.5.1 In ContentView, detect when the Submit tab is selected while not
+  authenticated
+- [ ] 5.5.2 Present `LoginView` as a sheet and revert to the previous tab
+- [ ] 5.5.3 If login succeeds, navigate to the Submit tab automatically
+
+### 5.6 Tab bar configuration
+
+- [ ] 5.6.1 Verify Liquid Glass styling applies automatically (no extra code needed)
+- [ ] 5.6.2 Explore `tabBarMinimizeBehavior` — this iOS 26 feature lets the tab
+  bar shrink when scrolling content, giving more screen space
+- [ ] 5.6.3 Persist selected tab across app launches using `@SceneStorage("selectedTab")`
+  — this saves the value to the system and restores it when the app relaunches
+
+### 5.7 Smoke test and commit
+
+- [ ] 5.7.1 Build and run on simulator — verify all four tabs appear with icons
+- [ ] 5.7.2 Verify tab switching works
+- [ ] 5.7.3 Verify Profile tab shows login/logout correctly
+- [ ] 5.7.4 Verify Submit tab gate works (shows login if not authenticated)
+- [ ] 5.7.5 Run all tests — all must pass
+- [ ] 5.7.6 Commit
 
 ---
 
