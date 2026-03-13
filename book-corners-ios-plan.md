@@ -930,7 +930,7 @@ instead of text, like `<input type="password">`).
 - [x] 4.10.5 On login button tap: `Task { await authService.login(username:password:) }` ✅
 - [x] 4.10.6 Dismiss the sheet on successful login (when `authService.isAuthenticated` ✅
   becomes true) — use `.onChange(of:)` modifier or `@Environment(\.dismiss)`
-- [ ] 4.10.7 Add a "Don't have an account? Register" link/button that navigates to
+- [x] 4.10.7 Add a "Don't have an account? Register" link/button that navigates to ✅
   `RegisterView`
 
 > **`.textContentType` hints:** These tell iOS what kind of data the field expects.
@@ -941,18 +941,18 @@ instead of text, like `<input type="password">`).
 
 Similar to `LoginView` but with additional fields and client-side validation.
 
-- [ ] 4.11.1 Create `Views/Auth/RegisterView.swift`
-- [ ] 4.11.2 Add `@State` properties for `username`, `email`, `password`,
+- [x] 4.11.1 Create `Views/Auth/RegisterView.swift` ✅
+- [x] 4.11.2 Add `@State` properties for `username`, `email`, `password`, ✅
   `confirmPassword`
-- [ ] 4.11.3 Client-side validation (before hitting the API):
+- [x] 4.11.3 Client-side validation (before hitting the API): ✅
   - Username: not empty, reasonable length
   - Email: basic format check (contains `@`)
   - Password: not empty, minimum length (match backend requirements)
   - Confirm password: matches password
-- [ ] 4.11.4 Show inline validation messages (e.g. "Passwords don't match")
-- [ ] 4.11.5 On register button tap: call `authService.register(username:password:email:)`
-- [ ] 4.11.6 Dismiss on success, same pattern as LoginView
-- [ ] 4.11.7 Add an "Already have an account? Login" link/button
+- [x] 4.11.4 Show inline validation messages (e.g. "Passwords don't match") ✅
+- [x] 4.11.5 On register button tap: call `authService.register(username:password:email:)` ✅
+- [x] 4.11.6 Dismiss on success, same pattern as LoginView ✅
+- [x] 4.11.7 Add an "Already have an account? Login" link/button ✅
 
 ### 4.12 Inject `AuthService` into the SwiftUI environment
 
@@ -969,9 +969,9 @@ layer.
 **Go analogy:** Like `context.WithValue()` — attach a value to the context at the top,
 read it anywhere below.
 
-- [ ] 4.12.1 In `BookCornersApp.swift`, create `AuthService` as a `@State` property
-- [ ] 4.12.2 Pass it into the environment using `.environment(authService)`
-- [ ] 4.12.3 Add a `.task` modifier on `ContentView` to call
+- [x] 4.12.1 In `BookCornersApp.swift`, create `AuthService` as a `@State` property ✅
+- [x] 4.12.2 Pass it into the environment using `.environment(authService)` ✅
+- [x] 4.12.3 Add a `.task` modifier on `ContentView` to call ✅
   `authService.restoreSession()` on app launch
 - [ ] 4.12.4 Optionally show a loading/splash state while `authService.isLoading`
   during session restore
@@ -985,20 +985,20 @@ read it anywhere below.
 
 Test the auth flows with mocked dependencies.
 
-- [ ] 4.13.1 Create `BookCornersTests/AuthServiceTests.swift` with a `@Suite`
-- [ ] 4.13.2 Create a mock `KeychainService` for testing (in-memory dictionary
+- [x] 4.13.1 Create `BookCornersTests/AuthServiceTests.swift` with a `@Suite` ✅
+- [x] 4.13.2 Create a mock `KeychainService` for testing (in-memory dictionary ✅
   instead of real Keychain) — or use a test-specific service name
-- [ ] 4.13.3 Test login success: mock API returns `TokenPair` + `User` →
+- [x] 4.13.3 Test login success: mock API returns `TokenPair` + `User` → ✅
   `isAuthenticated` is true, `currentUser` is set, tokens saved
-- [ ] 4.13.4 Test login failure: mock API throws `unauthorized` →
+- [x] 4.13.4 Test login failure: mock API throws `unauthorized` → ✅
   `isAuthenticated` is false, `errorMessage` is set
-- [ ] 4.13.5 Test logout: after login, call logout → `isAuthenticated` is false,
+- [x] 4.13.5 Test logout: after login, call logout → `isAuthenticated` is false, ✅
   `currentUser` is nil, tokens deleted from keychain
-- [ ] 4.13.6 Test session restore: tokens pre-saved in keychain, mock API returns
+- [x] 4.13.6 Test session restore: tokens pre-saved in keychain, mock API returns ✅
   `User` → `isAuthenticated` is true after `restoreSession()`
-- [ ] 4.13.7 Test session restore with expired token: first `getMe()` throws 401,
+- [x] 4.13.7 Test session restore with expired token: first `getMe()` throws 401, ✅
   refresh succeeds, second `getMe()` succeeds → ends up authenticated
-- [ ] 4.13.8 Test session restore with expired refresh: both calls fail →
+- [x] 4.13.8 Test session restore with expired refresh: both calls fail → ✅
   ends up logged out, tokens cleared
 
 ### 4.14 Integration smoke test

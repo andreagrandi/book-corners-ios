@@ -69,7 +69,8 @@ class APIClient: APIClientProtocol {
             )
         }
 
-        if httpResponse.statusCode == 401, let refresher = tokenRefresher {
+        let isAuthEndpoint = url.path.contains("auth/refresh") || url.path.contains("auth/login") || url.path.contains("auth/register")
+        if httpResponse.statusCode == 401, let refresher = tokenRefresher, !isAuthEndpoint {
             let newToken = try await refresher()
             accessToken = newToken
 
