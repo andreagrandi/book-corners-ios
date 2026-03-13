@@ -917,18 +917,18 @@ instead of text, like `<input type="password">`).
 - `SecureField` — a text field that hides input (for passwords).
 - `.sheet` — presents a modal view that slides up from the bottom.
 
-- [ ] 4.10.1 Create `Views/Auth/LoginView.swift`
-- [ ] 4.10.2 Add `@State` properties for `username` and `password` (local form state)
-- [ ] 4.10.3 Access `AuthService` from the environment
-- [ ] 4.10.4 Build the form:
+- [x] 4.10.1 Create `Views/Auth/LoginView.swift` ✅
+- [x] 4.10.2 Add `@State` properties for `username` and `password` (local form state) ✅
+- [x] 4.10.3 Access `AuthService` from the environment ✅
+- [x] 4.10.4 Build the form: ✅
   - `TextField` for username (with `.textContentType(.username)` and
     `.autocorrectionDisabled()`)
   - `SecureField` for password (with `.textContentType(.password)`)
   - Login `Button` — disabled when fields are empty or `authService.isLoading`
   - Error display: show `authService.errorMessage` if present (red text)
   - Loading indicator: show `ProgressView` when `authService.isLoading`
-- [ ] 4.10.5 On login button tap: `Task { await authService.login(username:password:) }`
-- [ ] 4.10.6 Dismiss the sheet on successful login (when `authService.isAuthenticated`
+- [x] 4.10.5 On login button tap: `Task { await authService.login(username:password:) }` ✅
+- [x] 4.10.6 Dismiss the sheet on successful login (when `authService.isAuthenticated` ✅
   becomes true) — use `.onChange(of:)` modifier or `@Environment(\.dismiss)`
 - [ ] 4.10.7 Add a "Don't have an account? Register" link/button that navigates to
   `RegisterView`
