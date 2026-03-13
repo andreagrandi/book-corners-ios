@@ -1076,14 +1076,14 @@ Replace the "Hello, world!" ContentView with a proper tab-based layout.
 
 The Profile tab shows different content depending on whether the user is logged in.
 
-- [ ] 5.4.1 Create `Views/Tabs/ProfileView.swift` with `@Environment(AuthService.self)`
-- [ ] 5.4.2 Wrap content in `NavigationStack` with `.navigationTitle("Profile")`
-- [ ] 5.4.3 When **authenticated**: show user info (username, email) in a `Section`,
+- [x] 5.4.1 Create `Views/Tabs/ProfileView.swift` with `@Environment(AuthService.self)` ✅
+- [x] 5.4.2 Wrap content in `NavigationStack` with `.navigationTitle("Profile")` ✅
+- [x] 5.4.3 When **authenticated**: show user info (username, email) in a `Section`, ✅
   and a "Logout" `Button` that calls `authService.logout()`
-- [ ] 5.4.4 When **not authenticated**: show a "Login" `Button` and a "Register" `Button`
+- [x] 5.4.4 When **not authenticated**: show a "Login" `Button` and a "Register" `Button` ✅
   that each set a `@State` bool to present the corresponding sheet
-- [ ] 5.4.5 Add `.sheet(isPresented:)` modifiers to present `LoginView` and `RegisterView`
-- [ ] 5.4.6 Wire `ProfileView` into ContentView's Tab 3 (replace `Text("Profile")` placeholder)
+- [x] 5.4.5 Add `.sheet(isPresented:)` modifiers to present `LoginView` and `RegisterView` ✅
+- [x] 5.4.6 Wire `ProfileView` into ContentView's Tab 3 (replace `Text("Profile")` placeholder) ✅
 
 ### 5.5 Handle auth-gated tabs
 

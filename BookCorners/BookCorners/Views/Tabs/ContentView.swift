@@ -25,7 +25,7 @@ struct ContentView: View {
             }
 
             Tab("Profile", systemImage: "person", value: 3) {
-                Text("Profile")
+                ProfileView()
             }
         }
     }
@@ -33,4 +33,8 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environment(AuthService(
+            apiClient: APIClient(),
+            keychainService: KeychainService(),
+        ))
 }
