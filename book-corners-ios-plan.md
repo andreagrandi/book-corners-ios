@@ -1069,7 +1069,7 @@ Replace the "Hello, world!" ContentView with a proper tab-based layout.
   - Tab 1 **Map**: `Tab("Map", systemImage: "map", value: 1)` → `MapTabView()`
   - Tab 2 **Submit**: `Tab("Submit", systemImage: "plus.circle", value: 2)` → `SubmitLibraryView()`
   - Tab 3 **Profile**: `Tab("Profile", systemImage: "person", value: 3)` → `Text("Profile")` placeholder for now
-- [ ] 5.3.3 Read `AuthService` from the environment using `@Environment(AuthService.self)`
+- [x] 5.3.3 Read `AuthService` from the environment using `@Environment(AuthService.self)` ✅
   — needed later for auth-gating the Submit tab
 
 ### 5.4 Build `ProfileView`
@@ -1090,30 +1090,29 @@ The Profile tab shows different content depending on whether the user is logged 
 The Submit tab requires authentication. If the user taps it while logged out,
 present the login sheet instead of the form.
 
-- [ ] 5.5.1 Add `@State private var previousTab = 0` to remember the last non-Submit tab
-- [ ] 5.5.2 Add `@State private var showLoginSheet = false` to control the login sheet
-- [ ] 5.5.3 Use `.onChange(of: selectedTab)` to detect when Submit (tab 2) is selected
+- [x] 5.5.1 Add `@State private var previousTab = .nearby` to remember the last non-Submit tab ✅
+- [x] 5.5.2 Add `@State private var showLoginSheet = false` to control the login sheet ✅
+- [x] 5.5.3 Use `.onChange(of: selectedTab)` to detect when Submit is selected ✅
   while `!authService.isAuthenticated` — set `showLoginSheet = true` and revert
-  `selectedTab` to `previousTab`
-- [ ] 5.5.4 Add `.sheet(isPresented: $showLoginSheet)` presenting `LoginView`
-- [ ] 5.5.5 Use `.onChange(of: authService.isAuthenticated)` — when it becomes true
-  while `showLoginSheet` was triggered, set `selectedTab = 2` to navigate to Submit
+  `selectedTab` to `previousTab`. Refactored tab IDs from magic ints to `AppTab` enum.
+- [x] 5.5.4 Add `.sheet(isPresented: $showLoginSheet)` presenting `LoginView` ✅
+- [x] 5.5.5 Use `.onChange(of: authService.isAuthenticated)` — when it becomes true ✅
+  while `showLoginSheet` was triggered, set `selectedTab = .submit` to navigate to Submit
 
 ### 5.6 Tab bar configuration
 
-- [ ] 5.6.1 Verify Liquid Glass styling applies automatically (no extra code needed)
-- [ ] 5.6.2 Explore `tabBarMinimizeBehavior` — this iOS 26 feature lets the tab
-  bar shrink when scrolling content, giving more screen space
-- [ ] 5.6.3 Persist selected tab across app launches using `@SceneStorage("selectedTab")`
-  — this saves the value to the system and restores it when the app relaunches
+- [x] 5.6.1 Verify Liquid Glass styling applies automatically (no extra code needed) ✅
+- [x] 5.6.2 Added `.tabBarMinimizeBehavior(.onScrollDown)` — tab bar shrinks when scrolling ✅
+- [x] 5.6.3 Persist selected tab across app launches using `@SceneStorage("selectedTab")` ✅
+  — changed `AppTab` from `Hashable` to `String` raw value for `RawRepresentable` conformance
 
 ### 5.7 Smoke test and commit
 
-- [ ] 5.7.1 Build and run on simulator — verify all four tabs appear with icons
-- [ ] 5.7.2 Verify tab switching works
-- [ ] 5.7.3 Verify Profile tab shows login/logout correctly
-- [ ] 5.7.4 Verify Submit tab gate works (shows login if not authenticated)
-- [ ] 5.7.5 Run all tests — all must pass
+- [x] 5.7.1 Build and run on simulator — verify all four tabs appear with icons ✅
+- [x] 5.7.2 Verify tab switching works ✅
+- [x] 5.7.3 Verify Profile tab shows login/logout correctly ✅
+- [x] 5.7.4 Verify Submit tab gate works (shows login if not authenticated) ✅
+- [x] 5.7.5 Run all tests — all must pass (37 passed, 0 failed) ✅
 - [ ] 5.7.6 Commit
 
 ---
