@@ -13,12 +13,17 @@ struct BookCornersApp: App {
         apiClient: APIClient(),
         keychainService: KeychainService(),
     )
+    @State private var locationService = LocationService()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environment(authService)
-                .task { await authService.restoreSession() }
+                .environment(locationService)
+                .task {
+                    await authService.restoreSession()
+                    locationService.startMonitoring()
+                }
         }
     }
 }

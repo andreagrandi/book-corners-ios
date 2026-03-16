@@ -1113,7 +1113,7 @@ present the login sheet instead of the form.
 - [x] 5.7.3 Verify Profile tab shows login/logout correctly ✅
 - [x] 5.7.4 Verify Submit tab gate works (shows login if not authenticated) ✅
 - [x] 5.7.5 Run all tests — all must pass (37 passed, 0 failed) ✅
-- [ ] 5.7.6 Commit
+- [x] 5.7.6 Commit ✅
 
 ---
 
@@ -1126,16 +1126,231 @@ and pagination.
 permissions, `List`, `LazyVStack`, `.task`, `.refreshable`, pagination, `AsyncImage`,
 distance computation.
 
-- [ ] 6.1 Create `LocationService` (`@Observable`) — use `CLLocationUpdate.liveUpdates()` async sequence, `CLServiceSession` for authorization
-- [ ] 6.2 Inject `LocationService` into the environment
-- [ ] 6.3 Create `LibraryListViewModel` — load/refresh/paginate libraries
-- [ ] 6.4 Compute client-side distance (`CLLocation.distance(from:)`), sort by proximity
-- [ ] 6.5 Build `LibraryCardView` — reusable row (thumbnail, name, city, distance)
-- [ ] 6.6 Build `LibraryListView` — `List` with `.task` and `.refreshable`
-- [ ] 6.7 Implement pagination (load more on scroll to bottom)
-- [ ] 6.8 Handle location permission states (not determined, denied, authorized)
-- [ ] 6.9 Handle empty state ("No book corners found nearby")
-- [ ] 6.10 Handle loading and error states with reusable components
+### 6.1 Understand CoreLocation in iOS 26
+
+Before writing code, understand how location works on iOS. There are two sides:
+**authorization** (asking the user for permission) and **getting updates** (receiving
+lat/lng values).
+
+**Old way (pre-iOS 17):** You created a `CLLocationManager`, set a delegate, called
+`requestWhenInUseAuthorization()`, then received callbacks via delegate methods like
+`locationManager(_:didUpdateLocations:)`. Very callback-heavy — like Go's old HTTP
+handlers before context was added.
+
+**Modern way (iOS 17+):** Two separate APIs:
+- `CLServiceSession(authorization: .whenInUse)` — creating this object triggers the
+  permission dialog. As long as it's alive, the app has authorization. Drop the
+  reference → authorization reverts. Think of it like a Python context manager or
+  Go's `defer` — scoped lifecycle.
+- `CLLocationUpdate.liveUpdates()` — an `AsyncSequence` of location updates. You
+  `for await` over it, just like iterating an async generator in Python. Each
+  iteration yields a `CLLocationUpdate` with a `.location` property (a `CLLocation`
+  with `coordinate.latitude` and `coordinate.longitude`).
+
+**Python analogy:**
+```python
+# Old way (delegate/callback)
+class LocationHandler:
+    def did_update_locations(self, locations): ...
+
+# Modern way (async generator)
+async for update in location_updates():
+    lat, lng = update.location.latitude, update.location.longitude
+```
+
+- [x] 6.1.1 Read the concepts above — understand `CLServiceSession` vs `CLLocationUpdate` ✅
+- [x] 6.1.2 Understand that `CLServiceSession` only needs to exist (be retained) to ✅
+  maintain authorization — you don't call methods on it, just keep it alive
+
+### 6.2 Create `LocationService` (`@Observable`)
+
+An `@Observable` class that manages location authorization and provides the current
+location as a reactive property. Any view reading `locationService.currentLocation`
+will automatically re-render when the location changes.
+
+- [x] 6.2.1 Create `Services/LocationService.swift` as an `@Observable` class ✅
+- [x] 6.2.2 Properties: `currentLocation` (private(set)), `serviceSession`, `updatesTask` ✅
+- [x] 6.2.3 Implement `startMonitoring()` — creates session + launches liveUpdates loop ✅
+- [x] 6.2.4 Implement `stopMonitoring()` — cancels task + nils session ✅
+- [x] 6.2.5 Add `import CoreLocation` ✅
+- [x] 6.2.6 Runs on main actor by default — fine for lightweight property updates ✅
+
+> **Important:** `CLServiceSession` replaces the old `CLLocationManager.requestWhenInUseAuthorization()`.
+> You don't need a `CLLocationManager` at all for basic location in iOS 17+.
+> The session handles authorization state; `CLLocationUpdate.liveUpdates()` handles
+> position updates. Two simple APIs instead of one complex delegate.
+
+### 6.3 Inject `LocationService` into the environment
+
+Wire it up in the app entry point, same pattern as `AuthService`.
+
+- [x] 6.3.1 In `BookCornersApp.swift`, create `LocationService` as a `@State` property ✅
+- [x] 6.3.2 Pass it into the environment using `.environment(locationService)` ✅
+- [x] 6.3.3 Call `locationService.startMonitoring()` in the existing `.task` modifier ✅
+
+### 6.4 Create `LibraryListViewModel`
+
+The ViewModel for the Nearby tab. It loads libraries from the API, handles pagination,
+and reacts to location changes.
+
+**Architecture:**
+```
+LocationService (location updates)
+        │
+        ▼
+LibraryListViewModel (loads libraries, computes distances, manages pagination)
+        │
+        ▼
+LibraryListView (displays the list)
+```
+
+- [ ] 6.4.1 Create `ViewModels/LibraryListViewModel.swift` as an `@Observable` class
+- [ ] 6.4.2 Dependencies (injected via init):
+  - `apiClient: any APIClientProtocol` — for API calls
+- [ ] 6.4.3 Published state properties:
+  - `libraries: [Library]` — the loaded libraries
+  - `isLoading: Bool` — true during initial load
+  - `isLoadingMore: Bool` — true during pagination (loading next page)
+  - `errorMessage: String?` — user-facing error
+  - `hasMorePages: Bool` — whether there are more pages to load
+- [ ] 6.4.4 Private state:
+  - `currentPage: Int` — tracks which page we're on for pagination
+  - `pageSize: Int` — how many items per page (e.g. 20)
+
+### 6.5 Implement load/refresh/paginate in ViewModel
+
+- [ ] 6.5.1 Implement `loadLibraries(lat:lng:)` async:
+  - Reset to page 1, set `isLoading = true`, clear `errorMessage`
+  - Call `apiClient.getLibraries(page: 1, lat: lat, lng: lng, radiusKm: 50)`
+  - On success: set `libraries`, update `hasMorePages` from pagination metadata,
+    set `currentPage = 1`
+  - On failure: set `errorMessage` with user-friendly message
+  - `defer { isLoading = false }`
+- [ ] 6.5.2 Implement `loadMore(lat:lng:)` async:
+  - Guard: return early if `isLoadingMore` or `!hasMorePages`
+  - Set `isLoadingMore = true`
+  - Call `apiClient.getLibraries(page: currentPage + 1, lat: lat, lng: lng, radiusKm: 50)`
+  - On success: **append** new items to `libraries`, update `hasMorePages`,
+    increment `currentPage`
+  - On failure: set `errorMessage`
+  - `defer { isLoadingMore = false }`
+- [ ] 6.5.3 Implement `refresh(lat:lng:)` async — same as `loadLibraries` but used
+  by pull-to-refresh (SwiftUI's `.refreshable` handles the loading indicator)
+
+### 6.6 Compute client-side distance and sort
+
+The API returns libraries sorted by distance when lat/lng are provided, so server-side
+sorting is handled. But we still want to **display** the distance to the user.
+
+- [ ] 6.6.1 Create `Extensions/CLLocation+Distance.swift` with a helper:
+  - Extension on `Library` (or a free function) that computes distance from a
+    `CLLocation` using `CLLocation(latitude:longitude:).distance(from:)`
+  - Returns distance in meters (Double)
+- [ ] 6.6.2 Create a distance formatting helper:
+  - `< 1000m` → display as meters (e.g. "350 m")
+  - `>= 1000m` → display as km with one decimal (e.g. "2.3 km")
+  - This is a good candidate for an extension on `CLLocationDistance` (which is
+    just a `Double` typealias)
+
+### 6.7 Build `LibraryCardView`
+
+A reusable row component for displaying a library in a list. Will also be used in
+the Map view later (Step 8).
+
+- [ ] 6.7.1 Create `Views/Components/LibraryCardView.swift`
+- [ ] 6.7.2 Properties: `library: Library`, `distance: CLLocationDistance?` (optional
+  — nil when location is unavailable)
+- [ ] 6.7.3 Layout as an `HStack`:
+  - **Left:** `AsyncImage(url:)` for the thumbnail (use `thumbnailUrl`). Show a
+    placeholder icon (`books.vertical`) while loading or if URL is empty.
+    Size: ~60x60 with rounded corners.
+  - **Right (VStack):**
+    - Library name (bold, `.headline` font)
+    - City + country (`.subheadline`, `.secondary` color)
+    - Distance if available (`.caption`, `.secondary`)
+- [ ] 6.7.4 Handle empty `thumbnailUrl` — show the placeholder icon, don't try to
+  load an empty URL
+
+> **`AsyncImage`** is SwiftUI's built-in image loader — it downloads and caches images
+> from a URL. It handles loading states automatically. Think of it like an `<img>` tag
+> in HTML that shows a placeholder while the image downloads.
+
+### 6.8 Build `LibraryListView`
+
+Replace the placeholder view from Step 5 with the real list.
+
+- [ ] 6.8.1 Update `Views/Libraries/LibraryListView.swift`:
+  - Read `LocationService` from the environment
+  - Create `LibraryListViewModel` as a `@State` property
+  - Wrap in `NavigationStack` with `.navigationTitle("Nearby")`
+- [ ] 6.8.2 Main content: `List` of `LibraryCardView` items
+  - Use `ForEach(viewModel.libraries)` — `Library` already conforms to `Identifiable`
+  - Each row computes distance from `locationService.currentLocation`
+- [ ] 6.8.3 Add `.task` modifier to trigger initial load:
+  - Call `viewModel.loadLibraries(lat:lng:)` with coordinates from `locationService`
+  - If location is nil, load without coordinates (the API returns results globally)
+- [ ] 6.8.4 Add `.refreshable` modifier for pull-to-refresh:
+  - Call `viewModel.refresh(lat:lng:)` — SwiftUI automatically shows/hides the
+    refresh spinner
+- [ ] 6.8.5 React to location changes: use `.onChange(of: locationService.currentLocation)`
+  to reload when location first becomes available (important: only reload on the
+  **first** location fix, not every GPS update — use a flag or check if libraries
+  are empty)
+
+### 6.9 Implement pagination
+
+Load more libraries when the user scrolls near the bottom.
+
+- [ ] 6.9.1 Add a pagination trigger: when the last (or second-to-last) item appears
+  on screen, call `viewModel.loadMore(lat:lng:)`. Use `.onAppear` on the last item
+  or check item identity in `ForEach`.
+- [ ] 6.9.2 Show a `ProgressView` at the bottom of the list when `isLoadingMore`
+  is true — this gives visual feedback that more items are loading
+
+### 6.10 Handle location permission states
+
+Show appropriate UI based on whether the user has granted location permission.
+
+- [ ] 6.10.1 When location is available: show the list sorted by distance (default)
+- [ ] 6.10.2 When location is nil (not yet determined or denied): still show the list
+  but without distance labels, and show a subtle banner or message encouraging the
+  user to enable location for better results
+- [ ] 6.10.3 Don't block the UI on location — load libraries without lat/lng if
+  location isn't available yet. The API still returns results, just not sorted by
+  proximity.
+
+### 6.11 Handle empty and error states
+
+- [ ] 6.11.1 Create `Views/Components/ErrorView.swift` — reusable error display with
+  a message and optional "Retry" button. Properties: `message: String`,
+  `retryAction: (() -> Void)?`
+- [ ] 6.11.2 Create `Views/Components/EmptyStateView.swift` — shown when the list
+  has no results. Properties: `icon: String` (SF Symbol name), `title: String`,
+  `message: String`
+- [ ] 6.11.3 Show `ErrorView` when `viewModel.errorMessage` is set
+- [ ] 6.11.4 Show `EmptyStateView` when loading is done and `viewModel.libraries`
+  is empty — e.g. icon `"books.vertical"`, title `"No Libraries Found"`,
+  message `"No book corners found nearby. Try zooming out or searching a different area."`
+- [ ] 6.11.5 Show a centered `ProgressView` during initial load (`viewModel.isLoading`)
+
+### 6.12 Write tests for LibraryListViewModel
+
+- [ ] 6.12.1 Create `BookCornersTests/LibraryListViewModelTests.swift`
+- [ ] 6.12.2 Use `MockAPIClient` to test `loadLibraries()` — verify libraries are set,
+  `isLoading` transitions, `hasMorePages` is correct
+- [ ] 6.12.3 Test `loadMore()` — verify items are appended, page increments
+- [ ] 6.12.4 Test `loadMore()` when no more pages — verify it returns early
+- [ ] 6.12.5 Test error handling — mock API throws, verify `errorMessage` is set
+
+### 6.13 Smoke test and commit
+
+- [ ] 6.13.1 Build and run on simulator
+- [ ] 6.13.2 Grant location permission — verify libraries load sorted by distance
+- [ ] 6.13.3 Pull to refresh — verify list updates
+- [ ] 6.13.4 Scroll to bottom — verify pagination loads more items
+- [ ] 6.13.5 Test with location denied — verify list still loads (without distances)
+- [ ] 6.13.6 Run all tests — all must pass
+- [ ] 6.13.7 Commit
 
 ---
 
