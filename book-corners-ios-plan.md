@@ -1204,38 +1204,16 @@ LibraryListViewModel (loads libraries, computes distances, manages pagination)
 LibraryListView (displays the list)
 ```
 
-- [ ] 6.4.1 Create `ViewModels/LibraryListViewModel.swift` as an `@Observable` class
-- [ ] 6.4.2 Dependencies (injected via init):
-  - `apiClient: any APIClientProtocol` — for API calls
-- [ ] 6.4.3 Published state properties:
-  - `libraries: [Library]` — the loaded libraries
-  - `isLoading: Bool` — true during initial load
-  - `isLoadingMore: Bool` — true during pagination (loading next page)
-  - `errorMessage: String?` — user-facing error
-  - `hasMorePages: Bool` — whether there are more pages to load
-- [ ] 6.4.4 Private state:
-  - `currentPage: Int` — tracks which page we're on for pagination
-  - `pageSize: Int` — how many items per page (e.g. 20)
+- [x] 6.4.1 Create `ViewModels/LibraryListViewModel.swift` as an `@Observable` class ✅
+- [x] 6.4.2 Dependencies: `apiClient: any APIClientProtocol` injected via init ✅
+- [x] 6.4.3 State properties: `libraries`, `isLoading`, `isLoadingMore`, `errorMessage`, `hasMorePages` ✅
+- [x] 6.4.4 Private state: `currentPage`, `pageSize` ✅
 
 ### 6.5 Implement load/refresh/paginate in ViewModel
 
-- [ ] 6.5.1 Implement `loadLibraries(lat:lng:)` async:
-  - Reset to page 1, set `isLoading = true`, clear `errorMessage`
-  - Call `apiClient.getLibraries(page: 1, lat: lat, lng: lng, radiusKm: 50)`
-  - On success: set `libraries`, update `hasMorePages` from pagination metadata,
-    set `currentPage = 1`
-  - On failure: set `errorMessage` with user-friendly message
-  - `defer { isLoading = false }`
-- [ ] 6.5.2 Implement `loadMore(lat:lng:)` async:
-  - Guard: return early if `isLoadingMore` or `!hasMorePages`
-  - Set `isLoadingMore = true`
-  - Call `apiClient.getLibraries(page: currentPage + 1, lat: lat, lng: lng, radiusKm: 50)`
-  - On success: **append** new items to `libraries`, update `hasMorePages`,
-    increment `currentPage`
-  - On failure: set `errorMessage`
-  - `defer { isLoadingMore = false }`
-- [ ] 6.5.3 Implement `refresh(lat:lng:)` async — same as `loadLibraries` but used
-  by pull-to-refresh (SwiftUI's `.refreshable` handles the loading indicator)
+- [x] 6.5.1 Implement `loadLibraries(lat:lng:)` async ✅
+- [x] 6.5.2 Implement `loadMore(lat:lng:)` async ✅
+- [x] 6.5.3 `refresh` will reuse `loadLibraries` — `.refreshable` handles the spinner ✅
 
 ### 6.6 Compute client-side distance and sort
 
