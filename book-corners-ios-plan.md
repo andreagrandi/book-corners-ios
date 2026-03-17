@@ -1220,11 +1220,11 @@ LibraryListView (displays the list)
 The API returns libraries sorted by distance when lat/lng are provided, so server-side
 sorting is handled. But we still want to **display** the distance to the user.
 
-- [ ] 6.6.1 Create `Extensions/CLLocation+Distance.swift` with a helper:
+- [x] 6.6.1 Create `Extensions/CLLocation+Distance.swift` with a helper ✅
   - Extension on `Library` (or a free function) that computes distance from a
     `CLLocation` using `CLLocation(latitude:longitude:).distance(from:)`
   - Returns distance in meters (Double)
-- [ ] 6.6.2 Create a distance formatting helper:
+- [x] 6.6.2 Create a distance formatting helper ✅
   - `< 1000m` → display as meters (e.g. "350 m")
   - `>= 1000m` → display as km with one decimal (e.g. "2.3 km")
   - This is a good candidate for an extension on `CLLocationDistance` (which is
