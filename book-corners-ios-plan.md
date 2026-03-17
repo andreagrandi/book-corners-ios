@@ -1235,10 +1235,10 @@ sorting is handled. But we still want to **display** the distance to the user.
 A reusable row component for displaying a library in a list. Will also be used in
 the Map view later (Step 8).
 
-- [ ] 6.7.1 Create `Views/Components/LibraryCardView.swift`
-- [ ] 6.7.2 Properties: `library: Library`, `distance: CLLocationDistance?` (optional
+- [x] 6.7.1 Create `Views/Components/LibraryCardView.swift` ✅
+- [x] 6.7.2 Properties: `library: Library`, `distance: CLLocationDistance?` (optional
   — nil when location is unavailable)
-- [ ] 6.7.3 Layout as an `HStack`:
+- [x] 6.7.3 Layout as an `HStack` ✅
   - **Left:** `AsyncImage(url:)` for the thumbnail (use `thumbnailUrl`). Show a
     placeholder icon (`books.vertical`) while loading or if URL is empty.
     Size: ~60x60 with rounded corners.
@@ -1246,7 +1246,7 @@ the Map view later (Step 8).
     - Library name (bold, `.headline` font)
     - City + country (`.subheadline`, `.secondary` color)
     - Distance if available (`.caption`, `.secondary`)
-- [ ] 6.7.4 Handle empty `thumbnailUrl` — show the placeholder icon, don't try to
+- [x] 6.7.4 Handle empty `thumbnailUrl` — show the placeholder icon, don't try to
   load an empty URL
 
 > **`AsyncImage`** is SwiftUI's built-in image loader — it downloads and caches images
