@@ -17,32 +17,51 @@ struct LibraryListView: View {
     var body: some View {
         NavigationStack {
             if let viewModel {
-                List {
-                    if locationService.currentLocation == nil {
-                        Label("Enable location for nearby results", systemImage: "location.slash")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                if viewModel.isLoading {
+                    ProgressView()
+                } else if let errorMessage = viewModel.errorMessage {
+                    ErrorView(message: errorMessage, retryAction: {
+                        Task {
+                            await viewModel.loadLibraries(
+                                lat: locationService.currentLocation?.coordinate.latitude,
+                                lng: locationService.currentLocation?.coordinate.longitude,
+                            )
+                        }
+                    })
+                } else if viewModel.libraries.isEmpty {
+                    EmptyStateView(
+                        message: "No book corners found nearby. Try pulling to refresh.",
+                        title: "No Libraries Found",
+                        icon: "books.vertical",
+                    )
+                } else {
+                    List {
+                        if locationService.currentLocation == nil {
+                            Label("Enable location for nearby results", systemImage: "location.slash")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
 
-                    ForEach(viewModel.libraries) { library in
-                        LibraryCardView(
-                            library: library,
-                            distance: distanceTo(library),
-                        )
-                        .onAppear {
-                            if library.id == viewModel.libraries.last?.id {
-                                Task {
-                                    await viewModel.loadMore(
-                                        lat: locationService.currentLocation?.coordinate.latitude,
-                                        lng: locationService.currentLocation?.coordinate.longitude,
-                                    )
+                        ForEach(viewModel.libraries) { library in
+                            LibraryCardView(
+                                library: library,
+                                distance: distanceTo(library),
+                            )
+                            .onAppear {
+                                if library.id == viewModel.libraries.last?.id {
+                                    Task {
+                                        await viewModel.loadMore(
+                                            lat: locationService.currentLocation?.coordinate.latitude,
+                                            lng: locationService.currentLocation?.coordinate.longitude,
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    if viewModel.isLoadingMore {
-                        ProgressView()
+                        if viewModel.isLoadingMore {
+                            ProgressView()
+                        }
                     }
                 }
             }

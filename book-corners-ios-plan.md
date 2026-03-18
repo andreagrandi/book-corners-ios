@@ -1299,17 +1299,17 @@ Show appropriate UI based on whether the user has granted location permission.
 
 ### 6.11 Handle empty and error states
 
-- [ ] 6.11.1 Create `Views/Components/ErrorView.swift` — reusable error display with
+- [x] 6.11.1 Create `Views/Components/ErrorView.swift` — reusable error display with ✅
   a message and optional "Retry" button. Properties: `message: String`,
   `retryAction: (() -> Void)?`
-- [ ] 6.11.2 Create `Views/Components/EmptyStateView.swift` — shown when the list
+- [x] 6.11.2 Create `Views/Components/EmptyStateView.swift` — shown when the list ✅
   has no results. Properties: `icon: String` (SF Symbol name), `title: String`,
   `message: String`
-- [ ] 6.11.3 Show `ErrorView` when `viewModel.errorMessage` is set
-- [ ] 6.11.4 Show `EmptyStateView` when loading is done and `viewModel.libraries`
-  is empty — e.g. icon `"books.vertical"`, title `"No Libraries Found"`,
-  message `"No book corners found nearby. Try zooming out or searching a different area."`
-- [ ] 6.11.5 Show a centered `ProgressView` during initial load (`viewModel.isLoading`)
+- [x] 6.11.3 Show `ErrorView` when `viewModel.errorMessage` is set ✅
+- [x] 6.11.4 Show `EmptyStateView` when loading is done and `viewModel.libraries` ✅
+  is empty — icon `"books.vertical"`, title `"No Libraries Found"`,
+  message `"No book corners found nearby. Try pulling to refresh."`
+- [x] 6.11.5 Show a centered `ProgressView` during initial load (`viewModel.isLoading`) ✅
 
 ### 6.12 Write tests for LibraryListViewModel
 
