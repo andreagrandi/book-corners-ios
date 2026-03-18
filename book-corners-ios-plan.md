@@ -1289,11 +1289,11 @@ Load more libraries when the user scrolls near the bottom.
 
 Show appropriate UI based on whether the user has granted location permission.
 
-- [ ] 6.10.1 When location is available: show the list sorted by distance (default)
-- [ ] 6.10.2 When location is nil (not yet determined or denied): still show the list
-  but without distance labels, and show a subtle banner or message encouraging the
+- [x] 6.10.1 When location is available: show the list sorted by distance (default) ✅
+- [x] 6.10.2 When location is nil (not yet determined or denied): still show the list ✅
+  but without distance labels, and show a subtle banner encouraging the
   user to enable location for better results
-- [ ] 6.10.3 Don't block the UI on location — load libraries without lat/lng if
+- [x] 6.10.3 Don't block the UI on location — load libraries without lat/lng if ✅
   location isn't available yet. The API still returns results, just not sorted by
   proximity.
 

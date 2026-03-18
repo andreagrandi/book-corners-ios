@@ -18,6 +18,12 @@ struct LibraryListView: View {
         NavigationStack {
             if let viewModel {
                 List {
+                    if locationService.currentLocation == nil {
+                        Label("Enable location for nearby results", systemImage: "location.slash")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+
                     ForEach(viewModel.libraries) { library in
                         LibraryCardView(
                             library: library,
