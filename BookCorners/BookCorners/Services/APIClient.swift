@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 class APIClient: APIClientProtocol {
     let baseURL: URL
@@ -294,4 +295,8 @@ class APIClient: APIClientProtocol {
 
         return try await multipartRequest(path: "libraries/\(slug)/photo/", multipart: multipart)
     }
+}
+
+extension EnvironmentValues {
+    @Entry var apiClient: APIClient = .init()
 }

@@ -1257,32 +1257,32 @@ the Map view later (Step 8).
 
 Replace the placeholder view from Step 5 with the real list.
 
-- [ ] 6.8.1 Update `Views/Libraries/LibraryListView.swift`:
+- [x] 6.8.1 Update `Views/Libraries/LibraryListView.swift`: ✅
   - Read `LocationService` from the environment
-  - Create `LibraryListViewModel` as a `@State` property
+  - Read `APIClient` from the environment (via custom `EnvironmentKey`)
+  - Create `LibraryListViewModel` as a `@State` optional property (created in `.task`
+    because environment values aren't available at init time)
   - Wrap in `NavigationStack` with `.navigationTitle("Nearby")`
-- [ ] 6.8.2 Main content: `List` of `LibraryCardView` items
+- [x] 6.8.2 Main content: `List` of `LibraryCardView` items ✅
   - Use `ForEach(viewModel.libraries)` — `Library` already conforms to `Identifiable`
   - Each row computes distance from `locationService.currentLocation`
-- [ ] 6.8.3 Add `.task` modifier to trigger initial load:
+- [x] 6.8.3 Add `.task` modifier to trigger initial load: ✅
   - Call `viewModel.loadLibraries(lat:lng:)` with coordinates from `locationService`
   - If location is nil, load without coordinates (the API returns results globally)
-- [ ] 6.8.4 Add `.refreshable` modifier for pull-to-refresh:
-  - Call `viewModel.refresh(lat:lng:)` — SwiftUI automatically shows/hides the
+- [x] 6.8.4 Add `.refreshable` modifier for pull-to-refresh: ✅
+  - Call `viewModel.loadLibraries(lat:lng:)` — SwiftUI automatically shows/hides the
     refresh spinner
-- [ ] 6.8.5 React to location changes: use `.onChange(of: locationService.currentLocation)`
+- [x] 6.8.5 React to location changes: use `.onChange(of: locationService.currentLocation)` ✅
   to reload when location first becomes available (important: only reload on the
-  **first** location fix, not every GPS update — use a flag or check if libraries
-  are empty)
+  **first** location fix, not every GPS update — use a `hasLoadedWithLocation` flag)
 
 ### 6.9 Implement pagination
 
 Load more libraries when the user scrolls near the bottom.
 
-- [ ] 6.9.1 Add a pagination trigger: when the last (or second-to-last) item appears
-  on screen, call `viewModel.loadMore(lat:lng:)`. Use `.onAppear` on the last item
-  or check item identity in `ForEach`.
-- [ ] 6.9.2 Show a `ProgressView` at the bottom of the list when `isLoadingMore`
+- [x] 6.9.1 Add a pagination trigger: `.onAppear` on each card checks if it's the ✅
+  last item, then calls `viewModel.loadMore(lat:lng:)` in a `Task`
+- [x] 6.9.2 Show a `ProgressView` at the bottom of the list when `isLoadingMore` ✅
   is true — this gives visual feedback that more items are loading
 
 ### 6.10 Handle location permission states
