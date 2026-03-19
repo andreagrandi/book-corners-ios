@@ -1313,22 +1313,22 @@ Show appropriate UI based on whether the user has granted location permission.
 
 ### 6.12 Write tests for LibraryListViewModel
 
-- [ ] 6.12.1 Create `BookCornersTests/LibraryListViewModelTests.swift`
-- [ ] 6.12.2 Use `MockAPIClient` to test `loadLibraries()` — verify libraries are set,
+- [x] 6.12.1 Create `BookCornersTests/LibraryListViewModelTests.swift` ✅
+- [x] 6.12.2 Use `StubAPIClient` to test `loadLibraries()` — verify libraries are set, ✅
   `isLoading` transitions, `hasMorePages` is correct
-- [ ] 6.12.3 Test `loadMore()` — verify items are appended, page increments
-- [ ] 6.12.4 Test `loadMore()` when no more pages — verify it returns early
-- [ ] 6.12.5 Test error handling — mock API throws, verify `errorMessage` is set
+- [x] 6.12.3 Test `loadMore()` — verify items are appended, page increments ✅
+- [x] 6.12.4 Test `loadMore()` when no more pages — verify it returns early ✅
+- [x] 6.12.5 Test error handling — mock API throws, verify `errorMessage` is set ✅
 
 ### 6.13 Smoke test and commit
 
-- [ ] 6.13.1 Build and run on simulator
-- [ ] 6.13.2 Grant location permission — verify libraries load sorted by distance
-- [ ] 6.13.3 Pull to refresh — verify list updates
-- [ ] 6.13.4 Scroll to bottom — verify pagination loads more items
-- [ ] 6.13.5 Test with location denied — verify list still loads (without distances)
-- [ ] 6.13.6 Run all tests — all must pass
-- [ ] 6.13.7 Commit
+- [x] 6.13.1 Build and run on simulator ✅
+- [x] 6.13.2 Grant location permission — verify libraries load sorted by distance ✅
+- [x] 6.13.3 Pull to refresh — verify list updates ✅
+- [x] 6.13.4 Scroll to bottom — verify pagination loads more items ✅
+- [x] 6.13.5 Test with location denied — verify list still loads (without distances) ✅
+- [x] 6.13.6 Run all tests — all must pass ✅
+- [x] 6.13.7 Commit ✅
 
 ---
 
