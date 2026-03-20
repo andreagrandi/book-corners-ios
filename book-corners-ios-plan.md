@@ -1332,39 +1332,434 @@ Show appropriate UI based on whether the user has granted location permission.
 
 ---
 
+## Step 6b — Search (Nearby tab)
+
+**Goal:** Add a search bar to the Nearby tab so users can find libraries by name, city, area,
+or postcode. This is the "simple search" — a single text field, equivalent to the web homepage's
+search box. Advanced multi-field filters come in Step 8.
+
+**Known limitation:** The API's `q` parameter only searches `name` and `description` fields
+(PostgreSQL full-text search). City/address/postal code searches won't return results until
+the backend adds a combined `search` parameter that ORs across all fields. See Option A in
+the discussion notes. **TODO: add `search` param to backend API.**
+
+**Concepts:** `.searchable()` modifier, debouncing with `Task` + `Task.sleep`, `onSubmit(of:)`,
+search state management, SwiftUI search suggestions.
+
+**How `.searchable()` works:**
+SwiftUI's `.searchable(text:)` modifier adds a native search bar to any `NavigationStack`. On
+iOS, it's **hidden by default** — the user pulls down on the list to reveal it (exactly like
+Contacts or Settings). When the user types, the bound `@State` string updates. You can react
+to changes immediately (search-as-you-type) or wait for the user to tap "Search" on the keyboard.
+
+**Python analogy:** Like adding a search box to a Django ListView — you read the `q` query
+parameter and filter the queryset. Here, SwiftUI handles the UI; you just react to the text.
+
+**Go analogy:** Like adding a search handler that reads `r.URL.Query().Get("q")` and passes
+it to your repository query — but the framework handles the input UI and binding.
+
+**Debouncing:** Without debouncing, every keystroke fires an API call — typing "Amsterdam"
+would make 9 requests. A debounce waits for the user to **stop typing** for a short period
+(e.g., 500ms) before making the call. We'll use `Task.sleep` + cancellation for this.
+
+### 6b.1 Add search support to `LibraryListViewModel`
+
+- [x] 6b.1.1 Add a `searchQuery: String` property (empty string = no search) ✅
+- [x] 6b.1.2 Modify `loadLibraries()` to pass `searchQuery` as the `query:` parameter ✅
+  to `apiClient.getLibraries()` (pass `nil` when empty)
+- [x] 6b.1.3 When searching (non-empty query), pass `lat: nil, lng: nil` so the API ✅
+  returns global results ranked by relevance, not filtered by proximity
+- [x] 6b.1.4 Add a `performSearch(query:)` method that sets `searchQuery` and calls ✅
+  `loadLibraries()` — this is what the view will call after debouncing
+- [x] 6b.1.5 Add a `clearSearch(lat:lng:)` method that resets `searchQuery` to `""` and ✅
+  reloads with proximity sorting (passes lat/lng again)
+- [x] 6b.1.6 Add private computed `isSearching` property for readability ✅
+- [x] 6b.1.7 Update `refresh()` and `loadMore()` to respect current `searchQuery` ✅
+
+### 6b.2 Add `.searchable()` to `LibraryListView`
+
+- [x] 6b.2.1 Add `@State private var searchText = ""` for the search bar binding ✅
+- [x] 6b.2.2 Add `.searchable(text: $searchText, prompt: "Search by city, area, or name")` ✅
+  to the `NavigationStack`
+- [x] 6b.2.3 Add `@State private var searchTask: Task<Void, Never>?` for debouncing ✅
+- [x] 6b.2.4 Add `.onChange(of: searchText)` with debounce: cancel previous task, ✅
+  sleep 500ms, check cancellation, then `performSearch`; or `clearSearch` if empty
+- [x] 6b.2.5 Add `.onSubmit(of: .search)` for immediate search when the user taps ✅
+  the keyboard's "Search" button (cancel debounce, search immediately)
+
+### 6b.3 Polish search UX
+
+- [x] 6b.3.1 When searching, hide the location permission banner (irrelevant during search) ✅
+- [x] 6b.3.2 Update the `EmptyStateView` message when search has no results: ✅
+  `"No libraries found for '(query)'."` vs the default
+  `"No libraries found nearby."`
+- [x] 6b.3.3 Navigation title changes to "Results" while searching ✅
+
+### 6b.4 Update tests
+
+- [x] 6b.4.1 Add test: `performSearch` passes query to API and clears lat/lng ✅
+- [x] 6b.4.2 Add test: `clearSearch` resets query and reloads with coordinates ✅
+- [x] 6b.4.3 Add test: search with no results sets empty `libraries` array ✅
+
+### 6b.5 Smoke test and commit
+
+- [ ] 6b.5.1 Build and run on simulator
+- [ ] 6b.5.2 Pull down on the list — search bar appears
+- [ ] 6b.5.3 Type a city name — results update after debounce delay
+- [ ] 6b.5.4 Tap "Search" on keyboard — results update immediately
+- [ ] 6b.5.5 Clear search text — list reverts to nearby results
+- [ ] 6b.5.6 Search for nonsense — empty state shows with appropriate message
+- [ ] 6b.5.7 Run all tests — all must pass
+- [ ] 6b.5.8 Commit
+
+---
+
 ## Step 7 — Library Detail
 
 **Goal:** Full detail view for a library — photo, description, address, mini map, metadata,
-and action buttons.
+and action buttons. Tapping a library in the Nearby list (or later, a map pin) navigates here.
 
 **Concepts:** `NavigationStack`, `NavigationLink`, `.navigationDestination`, `ScrollView` layout,
-inline `Map`, conditional sections.
+inline `Map`, `ShareLink`, conditional sections, `@Environment(AuthService.self)`.
 
-- [ ] 7.1 Create `LibraryDetailViewModel` — load library by slug
-- [ ] 7.2 Build `LibraryDetailView` — photo, name, description, address, mini map, metadata
-- [ ] 7.3 Add navigation from list to detail (`NavigationLink` + `.navigationDestination`)
-- [ ] 7.4 Add placeholder buttons (Get Directions, Report Issue, Add Photo)
-- [ ] 7.5 Handle optional fields gracefully (show sections only when data exists)
-- [ ] 7.6 Add `ShareLink` to share the library URL
-- [ ] 7.7 Show action buttons conditionally (Report/Photo only when authenticated)
+**Architecture:**
+```
+LibraryListView / MapTabView
+        │  (tap a library)
+        ▼
+NavigationLink → LibraryDetailView
+        │
+        ├── LibraryDetailViewModel (loads full library data by slug)
+        │
+        └── Sections: Photo, Info, Map, Metadata, Actions
+```
+
+**Navigation in SwiftUI** works differently from web routing. Instead of URL-based routes
+(like Django's `path("libraries/<slug>/", detail_view)`), SwiftUI uses a **navigation stack**
+with **value-based destinations**:
+
+1. `NavigationStack` is the container (like a browser's history stack)
+2. `NavigationLink(value:)` pushes a value onto the stack when tapped
+3. `.navigationDestination(for:)` maps value types to destination views
+
+**Python analogy:** Think of `NavigationStack` as Flask's URL router, `NavigationLink` as
+an `<a href>` tag, and `.navigationDestination` as the route handler that receives the URL
+parameter and returns a template.
+
+**Go analogy:** `NavigationStack` is like `http.ServeMux`, `NavigationLink` is the link the
+user clicks, and `.navigationDestination` is the handler registered for that path pattern.
+
+### 7.1 Create `LibraryDetailViewModel`
+
+The detail view can receive a `Library` object directly from the list (we already have the
+data), but may also need to **reload** it (e.g., after navigating from a deep link or to
+get fresh data). So the ViewModel supports both: display what we have, optionally refresh.
+
+- [ ] 7.1.1 Create `ViewModels/LibraryDetailViewModel.swift` as an `@Observable` class
+- [ ] 7.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init
+- [ ] 7.1.3 Properties:
+  - `library: Library` — the library to display (passed in at init)
+  - `isLoading: Bool` — true while refreshing
+  - `errorMessage: String?` — set on refresh failure
+- [ ] 7.1.4 Implement `refresh() async` — calls `apiClient.getLibrary(slug:)` to
+  reload the library data. On success, updates `library`. On failure, sets
+  `errorMessage` but keeps the existing data visible (don't blank the screen on
+  a refresh error).
+- [ ] 7.1.5 Init takes both `library: Library` and `apiClient: any APIClientProtocol`
+  — display is immediate, refresh is optional
+
+### 7.2 Build `LibraryDetailView` layout
+
+A `ScrollView` with distinct sections. Use `VStack` with spacing rather than `List`
+for a more freeform layout (List forces a uniform row style; ScrollView is more flexible).
+
+- [ ] 7.2.1 Create `Views/Libraries/LibraryDetailView.swift`
+- [ ] 7.2.2 Init takes a `Library` object; creates `LibraryDetailViewModel` as `@State`
+- [ ] 7.2.3 Read `APIClient` from environment for ViewModel init
+- [ ] 7.2.4 **Hero photo section:**
+  - `AsyncImage` for `library.photoUrl` — full width, capped height (~250pt)
+  - Use `.scaledToFill()` with `.clipped()` so the image fills the frame
+  - Placeholder: a large `books.vertical` icon on a gray background
+  - Handle empty `photoUrl` (show placeholder, don't load empty URL)
+- [ ] 7.2.5 **Info section** (below the photo, in a `VStack` with padding):
+  - Library name — `.title` font, bold
+  - Address line — `library.address`, `library.city`, `library.country`
+    formatted as a single line, `.subheadline`, `.secondary` color
+  - Description — `library.description`, `.body` font. Only show if non-empty.
+- [ ] 7.2.6 **Mini map section:**
+  - An inline `Map` showing the library's pin, ~200pt tall
+  - Use `Map(initialPosition:)` with a `MapCameraPosition` centered on the
+    library's coordinates
+  - Add a single `Marker` at the library's location with a book icon
+  - Disable interaction on this map (`.mapInteractionModes([])`) — it's just
+    for showing the location, not for exploring. Tapping "Get Directions" will
+    open Apple Maps for full navigation.
+- [ ] 7.2.7 **Metadata section** — grid or grouped rows showing:
+  - Wheelchair accessible (if not empty) — icon + text
+  - Capacity (if not nil) — icon + text
+  - Indoor/outdoor (if not nil) — icon + text
+  - Lit at night (if not nil) — icon + text
+  - Source — where this data came from (osm, user, etc.)
+  - Created date — formatted nicely
+- [ ] 7.2.8 Apply `.navigationTitle(library.name)` with `.navigationBarTitleDisplayMode(.inline)`
+  so the title shows in the nav bar but doesn't duplicate the large name in the body
+- [ ] 7.2.9 Add `.task` to optionally refresh library data from the API on appear
+
+### 7.3 Add navigation from list to detail
+
+Wire up the list so tapping a library pushes the detail view.
+
+- [ ] 7.3.1 In `LibraryListView`, wrap each `LibraryCardView` in a `NavigationLink`:
+  `NavigationLink(value: library)` where the label is the existing `LibraryCardView`
+- [ ] 7.3.2 Add `.navigationDestination(for: Library.self)` to the `List` or
+  `NavigationStack` that creates a `LibraryDetailView` for the pushed library
+- [ ] 7.3.3 `Library` must conform to `Hashable` for `NavigationLink(value:)` to work.
+  If it doesn't already, add `Hashable` conformance (since it's a struct with all
+  `Hashable` fields, Swift can auto-synthesize this — just add `: Hashable` to the
+  declaration). Check if `Identifiable` is already there; `Hashable` is separate.
+- [ ] 7.3.4 Verify: tap a library in the list → detail view pushes in from the right
+  with a back button. Swipe right to go back.
+
+### 7.4 Add action buttons
+
+Buttons at the bottom of the detail view for key actions. Some are placeholders for
+now (wired up in later steps), others work immediately.
+
+- [ ] 7.4.1 **Get Directions button** — prominent, full-width. For now, open Apple Maps
+  using `MKMapItem(placemark:).openInMaps(launchOptions:)` with walking directions.
+  This is a one-liner; we'll add Google Maps support in Step 12.
+- [ ] 7.4.2 **Report Issue button** — secondary style. Placeholder action for now
+  (will be wired to `ReportView` in Step 10). Show only when authenticated.
+- [ ] 7.4.3 **Add Photo button** — secondary style. Placeholder for Step 11. Show
+  only when authenticated.
+- [ ] 7.4.4 Group action buttons in a `VStack` or `HStack` at the bottom of the
+  scroll view, with appropriate spacing and padding
+
+### 7.5 Handle optional fields gracefully
+
+Many library fields can be empty strings or nil. Don't show empty sections.
+
+- [ ] 7.5.1 Description section: only show if `library.description` is non-empty
+- [ ] 7.5.2 Metadata rows: only show each row if the value is non-nil and non-empty
+  (e.g., don't show "Wheelchair: " with no value)
+- [ ] 7.5.3 Website: if non-empty, show as a tappable `Link` that opens in Safari
+- [ ] 7.5.4 Contact: if non-empty, show as text (or tappable if it's an email/phone)
+- [ ] 7.5.5 Create a helper view `MetadataRow(icon:label:value:)` to avoid repetition
+  — takes an SF Symbol name, a label, and a value string
+
+### 7.6 Add `ShareLink`
+
+`ShareLink` is a SwiftUI view that presents the system share sheet (like tapping the
+share icon in Safari). It lets users share the library via Messages, Mail, AirDrop, etc.
+
+**Python analogy:** No direct equivalent — this is a native mobile feature. Closest is
+generating a shareable URL that you'd put in a "Copy link" button on the web.
+
+- [ ] 7.6.1 Add a `ShareLink` in the toolbar (`.toolbar`):
+  `ShareLink(item: libraryURL)` where `libraryURL` is
+  `https://bookcorners.org/libraries/{slug}/`
+- [ ] 7.6.2 Use `ShareLink(item:subject:message:)` to include the library name as
+  the subject and a short message like "Check out this little library!"
+
+### 7.7 Show action buttons conditionally based on auth
+
+- [ ] 7.7.1 Read `AuthService` from the environment
+- [ ] 7.7.2 "Report Issue" and "Add Photo" buttons only appear when
+  `authService.isAuthenticated` is true
+- [ ] 7.7.3 "Get Directions" and "Share" are always available (no auth needed)
+- [ ] 7.7.4 When not authenticated, optionally show a subtle prompt:
+  "Log in to report issues or add photos"
+
+### 7.8 Write tests for LibraryDetailViewModel
+
+- [ ] 7.8.1 Create `BookCornersTests/LibraryDetailViewModelTests.swift`
+- [ ] 7.8.2 Test init: ViewModel exposes the library passed at init immediately
+- [ ] 7.8.3 Test refresh success: mock API returns updated library, ViewModel updates
+- [ ] 7.8.4 Test refresh failure: mock API throws, `errorMessage` is set, original
+  library data is preserved (not cleared)
+
+### 7.9 Smoke test and commit
+
+- [ ] 7.9.1 Build and run on simulator
+- [ ] 7.9.2 Tap a library in the list — detail view appears with photo, info, map
+- [ ] 7.9.3 Verify optional fields hide when empty (use a library with sparse data)
+- [ ] 7.9.4 Tap "Get Directions" — Apple Maps opens with the library location
+- [ ] 7.9.5 Tap the share button — share sheet appears with the library URL
+- [ ] 7.9.6 Verify auth-gated buttons show/hide based on login state
+- [ ] 7.9.7 Test the back navigation (swipe right or tap back button)
+- [ ] 7.9.8 Run all tests — all must pass
+- [ ] 7.9.9 Commit
 
 ---
 
 ## Step 8 — Map View
 
-**Goal:** Apple Maps with library pins. Tap pins to see details. Reload when the map moves.
+**Goal:** Apple Maps with library pins. Tap pins to see details. Reload when the visible region
+changes. Advanced search filters (city, country, radius) accessible from a filter sheet.
 
 **Concepts:** SwiftUI `Map` (`MapContentBuilder`), `Annotation`, `Marker`,
-`MapCameraPosition`, `.onMapCameraChange`, `.mapControls`, Liquid Glass styling, clustering.
+`MapCameraPosition`, `.onMapCameraChange`, `.mapControls`, Liquid Glass styling, clustering,
+`.sheet` for filters, shared filter state.
 
-- [ ] 8.1 Create `MapViewModel` — load libraries for visible region, track camera position
-- [ ] 8.2 Build `MapTabView` — `Map` with user location, controls (compass, scale, location button)
-- [ ] 8.3 Add library annotations/markers with book icon
-- [ ] 8.4 Handle annotation tap — show bottom sheet with library card + "View Details" button
-- [ ] 8.5 Reload libraries when map region changes (debounced)
-- [ ] 8.6 Handle location permission on map (default center if denied)
-- [ ] 8.7 Navigate from map to library detail
-- [ ] 8.8 Show user's location (blue dot)
+**Architecture:**
+```
+MapTabView
+  ├── Map (Apple Maps with annotations)
+  │     └── Annotation per library (book icon pins)
+  ├── MapViewModel (loads libraries for visible region, manages camera + filters)
+  ├── Bottom sheet (selected library card + "View Details")
+  └── Filter sheet (advanced search: city, country, radius, keywords, postal code)
+```
+
+**SwiftUI Map in iOS 26:**
+The modern `Map` view uses a builder pattern with `MapContentBuilder`. You declare
+annotations and overlays inside the `Map { ... }` closure, similar to how you build
+a `List` or `VStack`. The map gets Liquid Glass styling automatically (translucent
+controls, blurred backgrounds).
+
+**Python analogy:** Think of the `Map` view as embedding a Leaflet/Mapbox map in a
+Django template — you provide data points and the map library renders them as markers.
+The key difference is that SwiftUI's `Map` is declarative: you describe *what* should
+be on the map, not *how* to add/remove markers imperatively.
+
+### 8.1 Create `MapViewModel`
+
+- [ ] 8.1.1 Create `ViewModels/MapViewModel.swift` as an `@Observable` class
+- [ ] 8.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init
+- [ ] 8.1.3 Properties:
+  - `libraries: [Library]` — libraries visible on the map
+  - `isLoading: Bool`
+  - `errorMessage: String?`
+  - `selectedLibrary: Library?` — the library whose card is shown in the bottom sheet
+- [ ] 8.1.4 Implement `loadLibraries(lat:lng:radiusKm:)` — calls
+  `apiClient.getLibraries()` for the visible region. Uses a larger `pageSize`
+  (e.g., 50) since we want to show as many pins as possible.
+- [ ] 8.1.5 Add a debounce mechanism so rapid camera movements don't flood the API.
+  Use a `loadTask: Task<Void, Never>?` that cancels the previous request before
+  starting a new one, with a short delay (~300ms).
+
+### 8.2 Build the Map view
+
+- [ ] 8.2.1 Replace the placeholder `MapTabView` in `Views/Map/MapTabView.swift`
+- [ ] 8.2.2 Create the ViewModel as `@State`, same pattern as `LibraryListView`
+- [ ] 8.2.3 Add a `@State var cameraPosition: MapCameraPosition` — initialize to
+  `.userLocation(fallback: .automatic)` so it starts at the user's location
+  (or a world view if location is denied)
+- [ ] 8.2.4 Add `Map(position: $cameraPosition)` with map content inside the closure
+- [ ] 8.2.5 Add `.mapControls { MapUserLocationButton(); MapCompass(); MapScaleView() }`
+  for standard map controls. These get Liquid Glass styling automatically.
+- [ ] 8.2.6 Set `.mapStyle(.standard(elevation: .realistic))` for a clean look
+- [ ] 8.2.7 Wrap in `NavigationStack` with `.navigationTitle("Map")`
+
+### 8.3 Add library annotations
+
+- [ ] 8.3.1 Inside the `Map { ... }` closure, use `ForEach(viewModel.libraries)` to
+  create an `Annotation` for each library
+- [ ] 8.3.2 Each `Annotation` positioned at `CLLocationCoordinate2D(latitude:longitude:)`:
+  - Use a custom label: a small circle with a book icon (`Image(systemName: "book.fill")`)
+  - Or use `Marker(library.name, systemImage: "book.fill", coordinate:)` for simpler
+    default markers — decide based on which looks better
+- [ ] 8.3.3 Style the annotation/marker with the app's accent color
+
+### 8.4 Handle annotation tap — bottom sheet
+
+When the user taps a pin, show a card at the bottom with the library summary and a
+"View Details" button.
+
+- [ ] 8.4.1 Tapping an annotation sets `viewModel.selectedLibrary`
+- [ ] 8.4.2 Use `.sheet(item: $viewModel.selectedLibrary)` to present a bottom sheet —
+  or use `.safeAreaInset(edge: .bottom)` for an inline card that doesn't cover the map
+- [ ] 8.4.3 The card shows `LibraryCardView` (reusing the component from Step 6)
+  plus a "View Details" `NavigationLink` that pushes `LibraryDetailView`
+- [ ] 8.4.4 Add a dismiss button (X or swipe) to close the card
+
+### 8.5 Reload libraries when the map region changes
+
+- [ ] 8.5.1 Add `.onMapCameraChange(frequency: .onEnd)` modifier — fires when the user
+  stops dragging/zooming the map
+- [ ] 8.5.2 Extract the new center coordinates and visible span from the camera context
+- [ ] 8.5.3 Compute an approximate radius from the span (degrees → km)
+- [ ] 8.5.4 Call `viewModel.loadLibraries(lat:lng:radiusKm:)` — the debounce in the
+  ViewModel prevents rapid-fire calls
+- [ ] 8.5.5 On initial load (`.task`), also trigger a load for the starting region
+
+### 8.6 Handle location permission on map
+
+- [ ] 8.6.1 When location is available: center on user, load nearby libraries
+- [ ] 8.6.2 When location is denied: start with a wide view (Europe or world),
+  load libraries globally. The user can still pan and explore.
+- [ ] 8.6.3 The `MapUserLocationButton` control lets the user re-center on their
+  location at any time (if permission is granted)
+
+### 8.7 Navigate from map to library detail
+
+- [ ] 8.7.1 The "View Details" button in the bottom sheet card uses `NavigationLink`
+  to push `LibraryDetailView` (same as the list does in Step 7.3)
+- [ ] 8.7.2 Add `.navigationDestination(for: Library.self)` to `MapTabView`'s
+  `NavigationStack`
+
+### 8.8 Show user's location (blue dot)
+
+- [ ] 8.8.1 The standard blue dot appears automatically when using
+  `.mapControls { MapUserLocationButton() }` and the user has granted location
+  permission. No extra code needed — just verify it shows.
+
+### 8.9 Advanced search filters
+
+Add a filter sheet accessible from a toolbar button. This corresponds to the web's
+"Explore libraries" filter panel (keywords, city, country, radius, postal code).
+On mobile, it's presented as a **half-sheet** — tapping a funnel icon opens it,
+the user fills in filters, taps "Apply", and the map/list updates.
+
+- [ ] 8.9.1 Create a `FilterState` `@Observable` class or struct in `Models/`:
+  - `keywords: String` — text search (maps to API `query`)
+  - `city: String` — city filter
+  - `country: String` — country filter (ISO code, e.g. "DE")
+  - `postalCode: String` — postal code filter
+  - `radiusKm: Int` — radius in km (default from API: 50)
+  - Computed `isActive: Bool` — true if any filter is non-default
+  - Method `clear()` — resets all to defaults
+- [ ] 8.9.2 Add `postalCode` parameter to `APIClientProtocol.getLibraries()` and
+  `APIClient` — currently missing from the protocol but supported by the API
+  (`postal_code` query param)
+- [ ] 8.9.3 Create `Views/Components/FilterSheetView.swift`:
+  - `Form` with sections for each filter field
+  - `TextField` for keywords, city, postal code
+  - `Picker` for country (list of common countries, or free-text)
+  - `Stepper` or `Picker` for radius (5, 10, 25, 50, 100 km)
+  - "Apply filters" button — dismisses the sheet
+  - "Clear" button — resets all filters
+- [ ] 8.9.4 Add a filter button to `MapTabView`'s toolbar:
+  `Button(action: { showFilters = true }) { Label("Filter", systemImage: "line.3.horizontal.decrease.circle") }`
+- [ ] 8.9.5 Show a badge on the filter icon when `filterState.isActive` — use
+  `.badge` or change the icon to `.fill` variant when filters are active
+- [ ] 8.9.6 Wire `FilterState` into `MapViewModel.loadLibraries()` — pass filter
+  values as query parameters to the API
+- [ ] 8.9.7 When filters change (Apply tapped), reload the map with new results
+- [ ] 8.9.8 Show active filter count or summary below the map or in a chip bar:
+  e.g., "Filtered: Berlin, DE, 10 km" — tappable to re-open the filter sheet
+
+### 8.10 Write tests for MapViewModel
+
+- [ ] 8.10.1 Create `BookCornersTests/MapViewModelTests.swift`
+- [ ] 8.10.2 Test `loadLibraries` success — libraries populated
+- [ ] 8.10.3 Test `loadLibraries` with error — `errorMessage` set
+- [ ] 8.10.4 Test `selectedLibrary` — set and clear
+
+### 8.11 Smoke test and commit
+
+- [ ] 8.11.1 Build and run on simulator
+- [ ] 8.11.2 Map tab shows Apple Maps centered on user location (or world if denied)
+- [ ] 8.11.3 Library pins appear on the map
+- [ ] 8.11.4 Tap a pin — bottom card appears with library info
+- [ ] 8.11.5 Tap "View Details" — navigates to library detail
+- [ ] 8.11.6 Pan the map — new libraries load for the visible region
+- [ ] 8.11.7 Tap filter icon — filter sheet opens
+- [ ] 8.11.8 Apply filters (e.g., country = "DE") — map updates with filtered results
+- [ ] 8.11.9 Clear filters — map reverts to unfiltered view
+- [ ] 8.11.10 Filter icon shows active indicator when filters are applied
+- [ ] 8.11.11 Run all tests — all must pass
+- [ ] 8.11.12 Commit
 
 ---
 
@@ -1525,10 +1920,12 @@ Step 3 (Testing)
 Step 4 (Auth)
   │
 Step 5 (Tabs)
-  ├────────────────┐
-Step 6 (List)      Step 8 (Map)
-  │                  │
-  └──── Step 7 (Detail) ───┘
+  ├─────────────────────┐
+Step 6 (List)           Step 8 (Map + Advanced Filters)
+  │                       │
+Step 6b (Search)          │
+  │                       │
+  └──── Step 7 (Detail) ──┘
            │
      ┌─────┼──────────┐
   Step 9   Step 10  Step 11
@@ -1544,8 +1941,10 @@ Step 17 (Polish) ── continuous, finish last
 ```
 
 Steps 1–5 are strictly sequential. After Step 5, Steps 6 and 8 can be built in either order.
-Step 7 is shared by both list and map. Steps 9–11 require auth (Step 4) and the detail view
-(Step 7). Steps 14–16 are blocked on backend work and should be deferred.
+Step 6b (simple search) follows Step 6 and is a prerequisite for nothing — it can be done
+before or after Step 7. Step 7 is shared by both list and map. Steps 9–11 require auth
+(Step 4) and the detail view (Step 7). Step 8 includes advanced filters (8.9). Steps 14–16
+are blocked on backend work and should be deferred.
 
 ---
 

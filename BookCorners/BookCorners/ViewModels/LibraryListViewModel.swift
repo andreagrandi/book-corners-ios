@@ -16,6 +16,7 @@ class LibraryListViewModel {
     var isLoadingMore: Bool = false
     var errorMessage: String?
     var hasMorePages: Bool = false
+    var searchQuery: String = ""
 
     private var currentPage: Int = 1
     private var pageSize: Int = 20
@@ -24,17 +25,39 @@ class LibraryListViewModel {
         apiClient = client
     }
 
+    private var isSearching: Bool {
+        !searchQuery.isEmpty
+    }
+
+    func performSearch(query: String) async {
+        searchQuery = query
+        await loadLibraries()
+    }
+
+    func clearSearch(lat: Double? = nil, lng: Double? = nil) async {
+        searchQuery = ""
+        await loadLibraries(lat: lat, lng: lng)
+    }
+
     func loadLibraries(lat: Double? = nil, lng: Double? = nil) async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
-            let response = try await apiClient.getLibraries(
-                page: 1, pageSize: pageSize,
-                query: nil, city: nil, country: nil,
-                lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
-            )
+            let response: LibraryListResponse = if isSearching {
+                try await apiClient.getLibraries(
+                    page: 1, pageSize: pageSize,
+                    query: searchQuery, city: nil, country: nil,
+                    lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
+                )
+            } else {
+                try await apiClient.getLibraries(
+                    page: 1, pageSize: pageSize,
+                    query: nil, city: nil, country: nil,
+                    lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
+                )
+            }
 
             libraries = response.items
             hasMorePages = response.pagination.hasNext
@@ -48,11 +71,19 @@ class LibraryListViewModel {
         errorMessage = nil
 
         do {
-            let response = try await apiClient.getLibraries(
-                page: 1, pageSize: pageSize,
-                query: nil, city: nil, country: nil,
-                lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
-            )
+            let response: LibraryListResponse = if isSearching {
+                try await apiClient.getLibraries(
+                    page: 1, pageSize: pageSize,
+                    query: searchQuery, city: nil, country: nil,
+                    lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
+                )
+            } else {
+                try await apiClient.getLibraries(
+                    page: 1, pageSize: pageSize,
+                    query: nil, city: nil, country: nil,
+                    lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
+                )
+            }
 
             libraries = response.items
             hasMorePages = response.pagination.hasNext
@@ -72,11 +103,19 @@ class LibraryListViewModel {
         defer { isLoadingMore = false }
 
         do {
-            let response = try await apiClient.getLibraries(
-                page: currentPage + 1, pageSize: pageSize,
-                query: nil, city: nil, country: nil,
-                lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
-            )
+            let response: LibraryListResponse = if isSearching {
+                try await apiClient.getLibraries(
+                    page: currentPage + 1, pageSize: pageSize,
+                    query: searchQuery, city: nil, country: nil,
+                    lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
+                )
+            } else {
+                try await apiClient.getLibraries(
+                    page: currentPage + 1, pageSize: pageSize,
+                    query: nil, city: nil, country: nil,
+                    lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
+                )
+            }
 
             libraries.append(contentsOf: response.items)
             hasMorePages = response.pagination.hasNext

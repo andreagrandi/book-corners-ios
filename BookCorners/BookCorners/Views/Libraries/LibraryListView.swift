@@ -13,6 +13,8 @@ struct LibraryListView: View {
     @Environment(LocationService.self) private var locationService: LocationService
     @State private var viewModel: LibraryListViewModel?
     @State private var hasLoadedWithLocation = false
+    @State private var searchText: String = ""
+    @State private var searchTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
@@ -29,14 +31,22 @@ struct LibraryListView: View {
                         }
                     })
                 } else if viewModel.libraries.isEmpty {
-                    EmptyStateView(
-                        message: "No book corners found nearby. Try pulling to refresh.",
-                        title: "No Libraries Found",
-                        icon: "books.vertical",
-                    )
+                    if searchText.isEmpty {
+                        EmptyStateView(
+                            message: "No libraries found nearby. Try pulling to refresh.",
+                            title: "No Libraries Found",
+                            icon: "books.vertical",
+                        )
+                    } else {
+                        EmptyStateView(
+                            message: "No libraries found for \"\(searchText)\".",
+                            title: "No Libraries Found",
+                            icon: "books.vertical",
+                        )
+                    }
                 } else {
                     List {
-                        if locationService.currentLocation == nil {
+                        if locationService.currentLocation == nil, searchText.isEmpty {
                             Label("Enable location for nearby results", systemImage: "location.slash")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -66,7 +76,7 @@ struct LibraryListView: View {
                 }
             }
         }
-        .navigationTitle("Nearby")
+        .navigationTitle(searchText.isEmpty ? "Nearby" : "Results")
         .task {
             if viewModel == nil {
                 viewModel = LibraryListViewModel(client: apiClient)
@@ -90,6 +100,34 @@ struct LibraryListView: View {
                     lat: newValue.coordinate.latitude,
                     lng: newValue.coordinate.longitude,
                 )
+            }
+        }
+        .searchable(text: $searchText, prompt: "Search by city, area, or name")
+        .onChange(of: searchText) {
+            searchTask?.cancel() // always cancel previous
+
+            if searchText.isEmpty {
+                Task {
+                    await viewModel?.clearSearch(
+                        lat: locationService.currentLocation?.coordinate.latitude,
+                        lng: locationService.currentLocation?.coordinate.longitude,
+                    )
+                }
+            } else {
+                searchTask = Task {
+                    try? await Task.sleep(for: .milliseconds(500))
+                    guard !Task.isCancelled else { return }
+                    await viewModel?.performSearch(query: searchText)
+                }
+            }
+        }
+        .onSubmit(of: .search) {
+            searchTask?.cancel()
+
+            if !searchText.isEmpty {
+                Task {
+                    await viewModel?.performSearch(query: searchText)
+                }
             }
         }
     }

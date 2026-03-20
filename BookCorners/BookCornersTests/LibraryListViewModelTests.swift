@@ -13,13 +13,14 @@ import Testing
 class StubAPIClient: APIClientProtocol {
     var accessToken: String?
 
-    /// Each test sets this closure to control the response
-    var getLibrariesHandler: ((Int, Int, Double?, Double?) throws -> LibraryListResponse)?
+    /// Each test sets this closure to control the response.
+    /// Parameters: (page, pageSize, query, lat, lng)
+    var getLibrariesHandler: ((Int, Int, String?, Double?, Double?) throws -> LibraryListResponse)?
 
     func getLibraries(
         page: Int,
         pageSize: Int,
-        query _: String?,
+        query: String?,
         city _: String?,
         country _: String?,
         lat: Double?,
@@ -30,7 +31,7 @@ class StubAPIClient: APIClientProtocol {
         guard let handler = getLibrariesHandler else {
             fatalError("getLibrariesHandler not set — configure it in your test")
         }
-        return try handler(page, pageSize, lat, lng)
+        return try handler(page, pageSize, query, lat, lng)
     }
 
     /// Stubs for protocol conformance — not used in these tests
@@ -93,7 +94,7 @@ struct LibraryListViewModelTests {
     }
 
     @Test func `load libraries success`() async {
-        stubClient.getLibrariesHandler = { _, _, _, _ in
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
             LibraryListResponse(
                 items: SampleData.libraries,
                 pagination: PaginationMeta(
@@ -113,7 +114,7 @@ struct LibraryListViewModelTests {
     }
 
     @Test func `load libraries sets has more pages`() async {
-        stubClient.getLibrariesHandler = { _, _, _, _ in
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
             LibraryListResponse(
                 items: [SampleData.library],
                 pagination: PaginationMeta(
@@ -131,7 +132,7 @@ struct LibraryListViewModelTests {
 
     @Test func `load more appends items`() async {
         // First load — page 1, more pages available
-        stubClient.getLibrariesHandler = { page, _, _, _ in
+        stubClient.getLibrariesHandler = { page, _, _, _, _ in
             if page == 1 {
                 LibraryListResponse(
                     items: [SampleData.libraries[0]],
@@ -165,7 +166,7 @@ struct LibraryListViewModelTests {
 
     @Test func `load more does nothing when no more pages`() async {
         // Load with hasNext = false
-        stubClient.getLibrariesHandler = { _, _, _, _ in
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
             LibraryListResponse(
                 items: SampleData.libraries,
                 pagination: PaginationMeta(
@@ -181,7 +182,7 @@ struct LibraryListViewModelTests {
         // loadMore should return early — handler would crash if called
         // with an unexpected page, so no call = success
         var loadMoreCalled = false
-        stubClient.getLibrariesHandler = { _, _, _, _ in
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
             loadMoreCalled = true
             fatalError("Should not be called")
         }
@@ -192,7 +193,7 @@ struct LibraryListViewModelTests {
     }
 
     @Test func `load libraries error sets message`() async {
-        stubClient.getLibrariesHandler = { _, _, _, _ in
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
             throw APIClientError.networkError(
                 URLError(.notConnectedToInternet),
             )
@@ -207,7 +208,7 @@ struct LibraryListViewModelTests {
 
     @Test func `load more error sets message`() async {
         // First load succeeds
-        stubClient.getLibrariesHandler = { page, _, _, _ in
+        stubClient.getLibrariesHandler = { page, _, _, _, _ in
             if page == 1 {
                 return LibraryListResponse(
                     items: [SampleData.library],
@@ -237,7 +238,7 @@ struct LibraryListViewModelTests {
         var receivedLat: Double?
         var receivedLng: Double?
 
-        stubClient.getLibrariesHandler = { _, _, lat, lng in
+        stubClient.getLibrariesHandler = { _, _, _, lat, lng in
             receivedLat = lat
             receivedLng = lng
             return LibraryListResponse(
@@ -253,5 +254,91 @@ struct LibraryListViewModelTests {
 
         #expect(receivedLat == 52.37)
         #expect(receivedLng == 4.90)
+    }
+
+    @Test func `perform search passes query and clears coordinates`() async {
+        var receivedQuery: String?
+        var receivedLat: Double?
+        var receivedLng: Double?
+
+        stubClient.getLibrariesHandler = { _, _, query, lat, lng in
+            receivedQuery = query
+            receivedLat = lat
+            receivedLng = lng
+            return LibraryListResponse(
+                items: [SampleData.library],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 1, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+
+        await viewModel.performSearch(query: "Berlin")
+
+        #expect(receivedQuery == "Berlin")
+        #expect(receivedLat == nil)
+        #expect(receivedLng == nil)
+        #expect(viewModel.searchQuery == "Berlin")
+        #expect(viewModel.libraries.count == 1)
+    }
+
+    @Test func `clear search resets query and reloads with coordinates`() async {
+        // First, put the VM in search mode
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
+            LibraryListResponse(
+                items: [SampleData.library],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 1, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+        await viewModel.performSearch(query: "Berlin")
+        #expect(viewModel.searchQuery == "Berlin")
+
+        // Now clear search with coordinates
+        var receivedQuery: String?
+        var receivedLat: Double?
+        var receivedLng: Double?
+
+        stubClient.getLibrariesHandler = { _, _, query, lat, lng in
+            receivedQuery = query
+            receivedLat = lat
+            receivedLng = lng
+            return LibraryListResponse(
+                items: SampleData.libraries,
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 3, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+
+        await viewModel.clearSearch(lat: 52.37, lng: 4.90)
+
+        #expect(viewModel.searchQuery == "")
+        #expect(receivedQuery == nil)
+        #expect(receivedLat == 52.37)
+        #expect(receivedLng == 4.90)
+        #expect(viewModel.libraries.count == 3)
+    }
+
+    @Test func `search with no results sets empty libraries`() async {
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
+            LibraryListResponse(
+                items: [],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 0, totalPages: 0,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+
+        await viewModel.performSearch(query: "xyznonexistent")
+
+        #expect(viewModel.libraries.isEmpty)
+        #expect(viewModel.errorMessage == nil)
+        #expect(viewModel.searchQuery == "xyznonexistent")
     }
 }
