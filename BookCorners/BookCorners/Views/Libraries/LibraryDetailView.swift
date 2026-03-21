@@ -49,9 +49,11 @@ struct LibraryDetailView: View {
 
                 VStack {
                     Button("Get Directions") {
-                        let placemark = MKPlacemark(coordinate: libraryCoordinate)
-                        let mapItem = MKMapItem(placemark: placemark)
-                        mapItem.name = library.name
+                        let mapItem = MKMapItem(
+                            location: CLLocation(latitude: library.lat, longitude: library.lng),
+                            address: nil,
+                        )
+                        mapItem.name = library.displayName
                         mapItem.openInMaps(launchOptions: [
                             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,
                         ])
