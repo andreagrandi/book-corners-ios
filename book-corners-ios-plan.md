@@ -1532,13 +1532,13 @@ now (wired up in later steps), others work immediately.
 
 Many library fields can be empty strings or nil. Don't show empty sections.
 
-- [ ] 7.5.1 Description section: only show if `library.description` is non-empty
-- [ ] 7.5.2 Metadata rows: only show each row if the value is non-nil and non-empty
-  (e.g., don't show "Wheelchair: " with no value)
+- [x] 7.5.1 Description section: only show if `library.description` is non-empty ✅
+- [x] 7.5.2 Metadata rows: only show each row if the value is non-nil and non-empty ✅
 - [ ] 7.5.3 Website: if non-empty, show as a tappable `Link` that opens in Safari
 - [ ] 7.5.4 Contact: if non-empty, show as text (or tappable if it's an email/phone)
-- [ ] 7.5.5 Create a helper view `MetadataRow(icon:label:value:)` to avoid repetition
-  — takes an SF Symbol name, a label, and a value string
+- [x] 7.5.5 Create a helper view `MetadataRow(icon:label:value:)` to avoid repetition ✅
+- [ ] 7.5.6 Handle empty library name: show "Neighborhood Library" as fallback in
+  both `LibraryDetailView` and `LibraryCardView` when `library.name` is empty
 
 ### 7.6 Add `ShareLink`
 
