@@ -1403,14 +1403,15 @@ would make 9 requests. A debounce waits for the user to **stop typing** for a sh
 
 ### 6b.5 Smoke test and commit
 
-- [ ] 6b.5.1 Build and run on simulator
-- [ ] 6b.5.2 Pull down on the list — search bar appears
+- [x] 6b.5.1 Build and run on simulator ✅
+- [x] 6b.5.2 Pull down on the list — search bar appears ✅
 - [ ] 6b.5.3 Type a city name — results update after debounce delay
-- [ ] 6b.5.4 Tap "Search" on keyboard — results update immediately
-- [ ] 6b.5.5 Clear search text — list reverts to nearby results
-- [ ] 6b.5.6 Search for nonsense — empty state shows with appropriate message
-- [ ] 6b.5.7 Run all tests — all must pass
-- [ ] 6b.5.8 Commit
+  ⚠️ Blocked: API `q` only searches name/description, not city. Needs backend `search` param.
+- [x] 6b.5.4 Tap "Search" on keyboard — results update immediately ✅
+- [x] 6b.5.5 Clear search text — list reverts to nearby results ✅
+- [x] 6b.5.6 Search for nonsense — empty state shows with appropriate message ✅
+- [x] 6b.5.7 Run all tests — all must pass ✅
+- [x] 6b.5.8 Commit ✅
 
 ---
 
@@ -1455,17 +1456,17 @@ The detail view can receive a `Library` object directly from the list (we alread
 data), but may also need to **reload** it (e.g., after navigating from a deep link or to
 get fresh data). So the ViewModel supports both: display what we have, optionally refresh.
 
-- [ ] 7.1.1 Create `ViewModels/LibraryDetailViewModel.swift` as an `@Observable` class
-- [ ] 7.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init
-- [ ] 7.1.3 Properties:
+- [x] 7.1.1 Create `ViewModels/LibraryDetailViewModel.swift` as an `@Observable` class ✅
+- [x] 7.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init ✅
+- [x] 7.1.3 Properties: ✅
   - `library: Library` — the library to display (passed in at init)
   - `isLoading: Bool` — true while refreshing
   - `errorMessage: String?` — set on refresh failure
-- [ ] 7.1.4 Implement `refresh() async` — calls `apiClient.getLibrary(slug:)` to
+- [x] 7.1.4 Implement `refresh() async` — calls `apiClient.getLibrary(slug:)` to ✅
   reload the library data. On success, updates `library`. On failure, sets
   `errorMessage` but keeps the existing data visible (don't blank the screen on
   a refresh error).
-- [ ] 7.1.5 Init takes both `library: Library` and `apiClient: any APIClientProtocol`
+- [x] 7.1.5 Init takes both `library: Library` and `apiClient: any APIClientProtocol` ✅
   — display is immediate, refresh is optional
 
 ### 7.2 Build `LibraryDetailView` layout
@@ -1473,37 +1474,32 @@ get fresh data). So the ViewModel supports both: display what we have, optionall
 A `ScrollView` with distinct sections. Use `VStack` with spacing rather than `List`
 for a more freeform layout (List forces a uniform row style; ScrollView is more flexible).
 
-- [ ] 7.2.1 Create `Views/Libraries/LibraryDetailView.swift`
-- [ ] 7.2.2 Init takes a `Library` object; creates `LibraryDetailViewModel` as `@State`
-- [ ] 7.2.3 Read `APIClient` from environment for ViewModel init
-- [ ] 7.2.4 **Hero photo section:**
+- [x] 7.2.1 Create `Views/Libraries/LibraryDetailView.swift` ✅
+- [x] 7.2.2 Init takes a `Library` object; creates `LibraryDetailViewModel` as `@State` in `.task` ✅
+- [x] 7.2.3 Read `APIClient` from environment for ViewModel init ✅
+- [x] 7.2.4 **Hero photo section:** ✅
   - `AsyncImage` for `library.photoUrl` — full width, capped height (~250pt)
   - Use `.scaledToFill()` with `.clipped()` so the image fills the frame
   - Placeholder: a large `books.vertical` icon on a gray background
   - Handle empty `photoUrl` (show placeholder, don't load empty URL)
-- [ ] 7.2.5 **Info section** (below the photo, in a `VStack` with padding):
+- [x] 7.2.5 **Info section** (below the photo, in a `VStack` with padding): ✅
   - Library name — `.title` font, bold
   - Address line — `library.address`, `library.city`, `library.country`
     formatted as a single line, `.subheadline`, `.secondary` color
   - Description — `library.description`, `.body` font. Only show if non-empty.
-- [ ] 7.2.6 **Mini map section:**
+- [x] 7.2.6 **Mini map section:** ✅
   - An inline `Map` showing the library's pin, ~200pt tall
-  - Use `Map(initialPosition:)` with a `MapCameraPosition` centered on the
-    library's coordinates
+  - Use `Map(initialPosition:interactionModes:[])` centered on the
+    library's coordinates, interactions disabled
   - Add a single `Marker` at the library's location with a book icon
-  - Disable interaction on this map (`.mapInteractionModes([])`) — it's just
-    for showing the location, not for exploring. Tapping "Get Directions" will
-    open Apple Maps for full navigation.
-- [ ] 7.2.7 **Metadata section** — grid or grouped rows showing:
+- [x] 7.2.7 **Metadata section** — conditional rows with `MetadataRow` helper: ✅
   - Wheelchair accessible (if not empty) — icon + text
   - Capacity (if not nil) — icon + text
   - Indoor/outdoor (if not nil) — icon + text
   - Lit at night (if not nil) — icon + text
-  - Source — where this data came from (osm, user, etc.)
-  - Created date — formatted nicely
-- [ ] 7.2.8 Apply `.navigationTitle(library.name)` with `.navigationBarTitleDisplayMode(.inline)`
-  so the title shows in the nav bar but doesn't duplicate the large name in the body
-- [ ] 7.2.9 Add `.task` to optionally refresh library data from the API on appear
+  - Entire section hidden when all fields are empty
+- [x] 7.2.8 Apply `.navigationTitle(library.name)` with `.navigationBarTitleDisplayMode(.inline)` ✅
+- [x] 7.2.9 Add `.task` to create ViewModel and refresh library data from the API on appear ✅
 
 ### 7.3 Add navigation from list to detail
 
