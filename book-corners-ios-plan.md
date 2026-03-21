@@ -1568,15 +1568,15 @@ generating a shareable URL that you'd put in a "Copy link" button on the web.
 
 ### 7.9 Smoke test and commit
 
-- [ ] 7.9.1 Build and run on simulator
-- [ ] 7.9.2 Tap a library in the list — detail view appears with photo, info, map
-- [ ] 7.9.3 Verify optional fields hide when empty (use a library with sparse data)
-- [ ] 7.9.4 Tap "Get Directions" — Apple Maps opens with the library location
-- [ ] 7.9.5 Tap the share button — share sheet appears with the library URL
-- [ ] 7.9.6 Verify auth-gated buttons show/hide based on login state
-- [ ] 7.9.7 Test the back navigation (swipe right or tap back button)
-- [ ] 7.9.8 Run all tests — all must pass
-- [ ] 7.9.9 Commit
+- [x] 7.9.1 Build and run on simulator ✅
+- [x] 7.9.2 Tap a library in the list — detail view appears with photo, info, map ✅
+- [x] 7.9.3 Verify optional fields hide when empty (use a library with sparse data) ✅
+- [x] 7.9.4 Tap "Get Directions" — Apple Maps opens with the library location ✅
+- [x] 7.9.5 Tap the share button — share sheet appears with the library URL ✅
+- [x] 7.9.6 Verify auth-gated buttons show/hide based on login state ✅
+- [x] 7.9.7 Test the back navigation (swipe right or tap back button) ✅
+- [x] 7.9.8 Run all tests — all must pass (50 passed) ✅
+- [x] 7.9.9 Commit ✅
 
 ---
 
