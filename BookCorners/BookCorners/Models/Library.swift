@@ -7,7 +7,7 @@
 
 import Foundation
 
-nonisolated struct Library: Codable, Identifiable {
+nonisolated struct Library: Codable, Identifiable, Hashable {
     let id: Int
     let slug: String
     let name: String
@@ -30,6 +30,18 @@ nonisolated struct Library: Codable, Identifiable {
     let operatorName: String
     let brand: String
     let createdAt: Date
+
+    private static let mediaBaseURL = "https://bookcorners.org"
+
+    var fullPhotoUrl: URL? {
+        guard !photoUrl.isEmpty else { return nil }
+        return URL(string: "\(Self.mediaBaseURL)\(photoUrl)")
+    }
+
+    var fullThumbnailUrl: URL? {
+        guard !thumbnailUrl.isEmpty else { return nil }
+        return URL(string: "\(Self.mediaBaseURL)\(thumbnailUrl)")
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, slug, name, description, photoUrl, thumbnailUrl

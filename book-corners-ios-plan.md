@@ -1505,14 +1505,11 @@ for a more freeform layout (List forces a uniform row style; ScrollView is more 
 
 Wire up the list so tapping a library pushes the detail view.
 
-- [ ] 7.3.1 In `LibraryListView`, wrap each `LibraryCardView` in a `NavigationLink`:
+- [x] 7.3.1 In `LibraryListView`, wrap each `LibraryCardView` in a `NavigationLink`: ✅
   `NavigationLink(value: library)` where the label is the existing `LibraryCardView`
-- [ ] 7.3.2 Add `.navigationDestination(for: Library.self)` to the `List` or
-  `NavigationStack` that creates a `LibraryDetailView` for the pushed library
-- [ ] 7.3.3 `Library` must conform to `Hashable` for `NavigationLink(value:)` to work.
-  If it doesn't already, add `Hashable` conformance (since it's a struct with all
-  `Hashable` fields, Swift can auto-synthesize this — just add `: Hashable` to the
-  declaration). Check if `Identifiable` is already there; `Hashable` is separate.
+- [x] 7.3.2 Add `.navigationDestination(for: Library.self)` to the `List` that creates ✅
+  a `LibraryDetailView` for the pushed library
+- [x] 7.3.3 Add `Hashable` conformance to `Library` struct ✅
 - [ ] 7.3.4 Verify: tap a library in the list → detail view pushes in from the right
   with a back button. Swipe right to go back.
 

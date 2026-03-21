@@ -14,7 +14,7 @@ struct LibraryCardView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            if let thumbnailURL = URL(string: library.thumbnailUrl), !library.thumbnailUrl.isEmpty {
+            if let thumbnailURL = library.fullThumbnailUrl {
                 AsyncImage(url: thumbnailURL) { phase in
                     switch phase {
                     case .empty:

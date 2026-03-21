@@ -64,7 +64,7 @@ struct LibraryDetailView: View {
 
     @ViewBuilder
     private var heroPhoto: some View {
-        if let photoURL = URL(string: library.photoUrl), !library.photoUrl.isEmpty {
+        if let photoURL = library.fullPhotoUrl {
             AsyncImage(url: photoURL) { phase in
                 switch phase {
                 case .empty:
