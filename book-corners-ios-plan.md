@@ -1518,15 +1518,13 @@ Wire up the list so tapping a library pushes the detail view.
 Buttons at the bottom of the detail view for key actions. Some are placeholders for
 now (wired up in later steps), others work immediately.
 
-- [ ] 7.4.1 **Get Directions button** — prominent, full-width. For now, open Apple Maps
-  using `MKMapItem(placemark:).openInMaps(launchOptions:)` with walking directions.
-  This is a one-liner; we'll add Google Maps support in Step 12.
-- [ ] 7.4.2 **Report Issue button** — secondary style. Placeholder action for now
-  (will be wired to `ReportView` in Step 10). Show only when authenticated.
-- [ ] 7.4.3 **Add Photo button** — secondary style. Placeholder for Step 11. Show
-  only when authenticated.
-- [ ] 7.4.4 Group action buttons in a `VStack` or `HStack` at the bottom of the
-  scroll view, with appropriate spacing and padding
+- [x] 7.4.1 **Get Directions button** — `.borderedProminent`, opens Apple Maps ✅
+  with walking directions via `MKMapItem.openInMaps()`
+- [x] 7.4.2 **Report Issue button** — `.bordered`, placeholder. Visible only ✅
+  when `authService.isAuthenticated`
+- [x] 7.4.3 **Add Photo button** — `.bordered`, placeholder. Visible only ✅
+  when authenticated
+- [x] 7.4.4 Buttons grouped in `VStack` with `.padding(.horizontal)` ✅
 
 ### 7.5 Handle optional fields gracefully
 
@@ -1534,11 +1532,11 @@ Many library fields can be empty strings or nil. Don't show empty sections.
 
 - [x] 7.5.1 Description section: only show if `library.description` is non-empty ✅
 - [x] 7.5.2 Metadata rows: only show each row if the value is non-nil and non-empty ✅
-- [ ] 7.5.3 Website: if non-empty, show as a tappable `Link` that opens in Safari
-- [ ] 7.5.4 Contact: if non-empty, show as text (or tappable if it's an email/phone)
+- [x] 7.5.3 Website: if non-empty, show as tappable `Link` with globe icon ✅
+- [x] 7.5.4 Contact: if non-empty, show with envelope icon ✅
 - [x] 7.5.5 Create a helper view `MetadataRow(icon:label:value:)` to avoid repetition ✅
-- [ ] 7.5.6 Handle empty library name: show "Neighborhood Library" as fallback in
-  both `LibraryDetailView` and `LibraryCardView` when `library.name` is empty
+- [x] 7.5.6 Handle empty library name: `displayName` computed property returns ✅
+  "Neighborhood Library" as fallback, used in both detail and card views
 
 ### 7.6 Add `ShareLink`
 

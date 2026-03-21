@@ -20,7 +20,7 @@ struct LibraryDetailView: View {
                 heroPhoto
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(library.name)
+                    Text(library.displayName)
                         .font(.title)
                         .bold()
 
@@ -29,6 +29,17 @@ struct LibraryDetailView: View {
                         .foregroundStyle(.secondary)
                     if !library.description.isEmpty {
                         Text(library.description)
+                    }
+                    if let websiteURL = library.websiteURL {
+                        Link(destination: websiteURL) {
+                            Label(library.website, systemImage: "globe")
+                        }
+                        .font(.subheadline)
+                    }
+                    if !library.contact.isEmpty {
+                        Label(library.contact, systemImage: "envelope")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.horizontal)
@@ -58,7 +69,7 @@ struct LibraryDetailView: View {
                 .padding(.horizontal)
             }
         }
-        .navigationTitle(library.name)
+        .navigationTitle(library.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if viewModel == nil {

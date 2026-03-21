@@ -36,7 +36,7 @@ struct LibraryCardView: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(library.name)
+                Text(library.displayName)
                     .font(.headline)
 
                 Text("\(library.city), \(library.country)")

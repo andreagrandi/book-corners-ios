@@ -43,6 +43,15 @@ nonisolated struct Library: Codable, Identifiable, Hashable {
         return URL(string: "\(Self.mediaBaseURL)\(thumbnailUrl)")
     }
 
+    var displayName: String {
+        name.isEmpty ? "Neighborhood Library" : name
+    }
+
+    var websiteURL: URL? {
+        guard !website.isEmpty else { return nil }
+        return URL(string: website)
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, slug, name, description, photoUrl, thumbnailUrl
         case lat, lng, address, city, country, postalCode
