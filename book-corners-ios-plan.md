@@ -1560,10 +1560,10 @@ generating a shareable URL that you'd put in a "Copy link" button on the web.
 
 ### 7.8 Write tests for LibraryDetailViewModel
 
-- [ ] 7.8.1 Create `BookCornersTests/LibraryDetailViewModelTests.swift`
-- [ ] 7.8.2 Test init: ViewModel exposes the library passed at init immediately
-- [ ] 7.8.3 Test refresh success: mock API returns updated library, ViewModel updates
-- [ ] 7.8.4 Test refresh failure: mock API throws, `errorMessage` is set, original
+- [x] 7.8.1 Create `BookCornersTests/LibraryDetailViewModelTests.swift` ✅
+- [x] 7.8.2 Test init: ViewModel exposes the library passed at init immediately ✅
+- [x] 7.8.3 Test refresh success: mock API returns updated library, ViewModel updates ✅
+- [x] 7.8.4 Test refresh failure: mock API throws, `errorMessage` is set, original ✅
   library data is preserved (not cleared)
 
 ### 7.9 Smoke test and commit

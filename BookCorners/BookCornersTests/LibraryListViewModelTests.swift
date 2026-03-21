@@ -34,9 +34,14 @@ class StubAPIClient: APIClientProtocol {
         return try handler(page, pageSize, query, lat, lng)
     }
 
-    /// Stubs for protocol conformance — not used in these tests
-    func getLibrary(slug _: String) async throws -> Library {
-        SampleData.library
+    /// Each test can set this to control getLibrary() response
+    var getLibraryHandler: ((String) throws -> Library)?
+
+    func getLibrary(slug: String) async throws -> Library {
+        if let handler = getLibraryHandler {
+            return try handler(slug)
+        }
+        return SampleData.library
     }
 
     func getLatestLibraries(limit _: Int, hasPhoto _: Bool?) async throws -> LatestLibrariesResponse {
