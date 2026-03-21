@@ -12,6 +12,7 @@ struct LibraryDetailView: View {
     let library: Library
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: LibraryDetailViewModel?
+    @Environment(AuthService.self) private var authService
 
     var body: some View {
         ScrollView {
@@ -34,6 +35,27 @@ struct LibraryDetailView: View {
 
                 miniMap
                 metadataSection
+
+                VStack {
+                    Button("Get Directions") {
+                        let placemark = MKPlacemark(coordinate: libraryCoordinate)
+                        let mapItem = MKMapItem(placemark: placemark)
+                        mapItem.name = library.name
+                        mapItem.openInMaps(launchOptions: [
+                            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,
+                        ])
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    if authService.isAuthenticated {
+                        Button("Report Issue") {}
+                            .buttonStyle(.bordered)
+
+                        Button("Add Photo") {}
+                            .buttonStyle(.bordered)
+                    }
+                }
+                .padding(.horizontal)
             }
         }
         .navigationTitle(library.name)
@@ -146,4 +168,6 @@ private struct MetadataRow: View {
 
 #Preview {
     LibraryDetailView(library: SampleData.library)
+        .environment(AuthService(apiClient: APIClient(), keychainService: KeychainService()))
+        .environment(\.apiClient, APIClient())
 }
