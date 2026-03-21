@@ -27,6 +27,7 @@
 		65AA1F542F60B49600E72A8F /* BookCorners.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookCorners.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65AA1F612F60B49900E72A8F /* BookCornersTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookCornersTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		65AA1F6B2F60B49900E72A8F /* BookCornersUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookCornersUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		65AA1FF52F6E873F00E72A8F /* Florence.gpx */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Florence.gpx; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +76,7 @@
 		65AA1F4B2F60B49600E72A8F = {
 			isa = PBXGroup;
 			children = (
+				65AA1FF52F6E873F00E72A8F /* Florence.gpx */,
 				65AA1F562F60B49600E72A8F /* BookCorners */,
 				65AA1F642F60B49900E72A8F /* BookCornersTests */,
 				65AA1F6E2F60B49900E72A8F /* BookCornersUITests */,

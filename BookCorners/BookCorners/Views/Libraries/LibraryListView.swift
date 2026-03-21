@@ -53,17 +53,19 @@ struct LibraryListView: View {
                         }
 
                         ForEach(viewModel.libraries) { library in
-                            LibraryCardView(
-                                library: library,
-                                distance: distanceTo(library),
-                            )
-                            .onAppear {
-                                if library.id == viewModel.libraries.last?.id {
-                                    Task {
-                                        await viewModel.loadMore(
-                                            lat: locationService.currentLocation?.coordinate.latitude,
-                                            lng: locationService.currentLocation?.coordinate.longitude,
-                                        )
+                            NavigationLink(value: library) {
+                                LibraryCardView(
+                                    library: library,
+                                    distance: distanceTo(library),
+                                )
+                                .onAppear {
+                                    if library.id == viewModel.libraries.last?.id {
+                                        Task {
+                                            await viewModel.loadMore(
+                                                lat: locationService.currentLocation?.coordinate.latitude,
+                                                lng: locationService.currentLocation?.coordinate.longitude,
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -72,6 +74,9 @@ struct LibraryListView: View {
                         if viewModel.isLoadingMore {
                             ProgressView()
                         }
+                    }
+                    .navigationDestination(for: Library.self) { library in
+                        LibraryDetailView(library: library)
                     }
                 }
             }
