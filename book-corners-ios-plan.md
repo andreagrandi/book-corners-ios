@@ -1546,18 +1546,15 @@ share icon in Safari). It lets users share the library via Messages, Mail, AirDr
 **Python analogy:** No direct equivalent — this is a native mobile feature. Closest is
 generating a shareable URL that you'd put in a "Copy link" button on the web.
 
-- [ ] 7.6.1 Add a `ShareLink` in the toolbar (`.toolbar`):
-  `ShareLink(item: libraryURL)` where `libraryURL` is
-  `https://bookcorners.org/libraries/{slug}/`
-- [ ] 7.6.2 Use `ShareLink(item:subject:message:)` to include the library name as
-  the subject and a short message like "Check out this little library!"
+- [x] 7.6.1 Add a `ShareLink` in the toolbar (`.toolbar`) ✅
+- [x] 7.6.2 Use `ShareLink(item:subject:message:)` with library name and URL ✅
 
 ### 7.7 Show action buttons conditionally based on auth
 
-- [ ] 7.7.1 Read `AuthService` from the environment
-- [ ] 7.7.2 "Report Issue" and "Add Photo" buttons only appear when
+- [x] 7.7.1 Read `AuthService` from the environment ✅
+- [x] 7.7.2 "Report Issue" and "Add Photo" buttons only appear when ✅
   `authService.isAuthenticated` is true
-- [ ] 7.7.3 "Get Directions" and "Share" are always available (no auth needed)
+- [x] 7.7.3 "Get Directions" and "Share" are always available (no auth needed) ✅
 - [ ] 7.7.4 When not authenticated, optionally show a subtle prompt:
   "Log in to report issues or add photos"
 

@@ -73,6 +73,13 @@ struct LibraryDetailView: View {
         }
         .navigationTitle(library.displayName)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ShareLink(
+                item: URL(string: "https://bookcorners.org/libraries/\(library.slug)/")!,
+                subject: Text(library.displayName),
+                message: Text("Check out this little library!"),
+            )
+        }
         .task {
             if viewModel == nil {
                 viewModel = LibraryDetailViewModel(library: library, client: apiClient)
