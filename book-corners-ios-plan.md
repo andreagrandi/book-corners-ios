@@ -26,6 +26,10 @@ steps (browsing, maps, search). Switch to the local backend when we reach write 
 (submit, report, photos) to avoid polluting production data. The `APIClient` will support
 a configurable base URL.
 
+**Caching strategy:** API response caching is handled server-side via `Cache-Control` headers
+(Django) + Cloudflare edge caching. URLSession respects these headers automatically — no iOS
+caching code needed. See backend plan Phase 9 for details.
+
 ---
 
 ## Tech Stack
@@ -1612,85 +1616,79 @@ be on the map, not *how* to add/remove markers imperatively.
 
 ### 8.1 Create `MapViewModel`
 
-- [ ] 8.1.1 Create `ViewModels/MapViewModel.swift` as an `@Observable` class
-- [ ] 8.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init
-- [ ] 8.1.3 Properties:
+- [x] 8.1.1 Create `ViewModels/MapViewModel.swift` as an `@Observable` class ✅
+- [x] 8.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init ✅
+- [x] 8.1.3 Properties: ✅
   - `libraries: [Library]` — libraries visible on the map
   - `isLoading: Bool`
   - `errorMessage: String?`
   - `selectedLibrary: Library?` — the library whose card is shown in the bottom sheet
-- [ ] 8.1.4 Implement `loadLibraries(lat:lng:radiusKm:)` — calls
+- [x] 8.1.4 Implement `loadLibraries(lat:lng:radiusKm:)` — calls ✅
   `apiClient.getLibraries()` for the visible region. Uses a larger `pageSize`
   (e.g., 50) since we want to show as many pins as possible.
-- [ ] 8.1.5 Add a debounce mechanism so rapid camera movements don't flood the API.
+- [x] 8.1.5 Add a debounce mechanism so rapid camera movements don't flood the API. ✅
   Use a `loadTask: Task<Void, Never>?` that cancels the previous request before
   starting a new one, with a short delay (~300ms).
 
 ### 8.2 Build the Map view
 
-- [ ] 8.2.1 Replace the placeholder `MapTabView` in `Views/Map/MapTabView.swift`
-- [ ] 8.2.2 Create the ViewModel as `@State`, same pattern as `LibraryListView`
-- [ ] 8.2.3 Add a `@State var cameraPosition: MapCameraPosition` — initialize to
+- [x] 8.2.1 Replace the placeholder `MapTabView` in `Views/Map/MapTabView.swift` ✅
+- [x] 8.2.2 Create the ViewModel as `@State`, same pattern as `LibraryListView` ✅
+- [x] 8.2.3 Add a `@State var cameraPosition: MapCameraPosition` — initialize to ✅
   `.userLocation(fallback: .automatic)` so it starts at the user's location
   (or a world view if location is denied)
-- [ ] 8.2.4 Add `Map(position: $cameraPosition)` with map content inside the closure
-- [ ] 8.2.5 Add `.mapControls { MapUserLocationButton(); MapCompass(); MapScaleView() }`
+- [x] 8.2.4 Add `Map(position: $cameraPosition)` with map content inside the closure ✅
+- [x] 8.2.5 Add `.mapControls { MapUserLocationButton(); MapCompass(); MapScaleView() }` ✅
   for standard map controls. These get Liquid Glass styling automatically.
-- [ ] 8.2.6 Set `.mapStyle(.standard(elevation: .realistic))` for a clean look
-- [ ] 8.2.7 Wrap in `NavigationStack` with `.navigationTitle("Map")`
+- [x] 8.2.6 Set `.mapStyle(.standard(elevation: .realistic))` for a clean look ✅
+- [x] 8.2.7 Wrap in `NavigationStack` with `.navigationTitle("Map")` ✅
 
 ### 8.3 Add library annotations
 
-- [ ] 8.3.1 Inside the `Map { ... }` closure, use `ForEach(viewModel.libraries)` to
+- [x] 8.3.1 Inside the `Map { ... }` closure, use `ForEach(viewModel.libraries)` to ✅
   create an `Annotation` for each library
-- [ ] 8.3.2 Each `Annotation` positioned at `CLLocationCoordinate2D(latitude:longitude:)`:
-  - Use a custom label: a small circle with a book icon (`Image(systemName: "book.fill")`)
-  - Or use `Marker(library.name, systemImage: "book.fill", coordinate:)` for simpler
-    default markers — decide based on which looks better
-- [ ] 8.3.3 Style the annotation/marker with the app's accent color
+- [x] 8.3.2 Each `Annotation` positioned at `CLLocationCoordinate2D(latitude:longitude:)`: ✅
+  - Used custom `Annotation` with circle + book icon (bigger than default `Marker`)
+- [x] 8.3.3 Style the annotation with red background + white icon ✅
 
 ### 8.4 Handle annotation tap — bottom sheet
 
 When the user taps a pin, show a card at the bottom with the library summary and a
 "View Details" button.
 
-- [ ] 8.4.1 Tapping an annotation sets `viewModel.selectedLibrary`
-- [ ] 8.4.2 Use `.sheet(item: $viewModel.selectedLibrary)` to present a bottom sheet —
-  or use `.safeAreaInset(edge: .bottom)` for an inline card that doesn't cover the map
-- [ ] 8.4.3 The card shows `LibraryCardView` (reusing the component from Step 6)
-  plus a "View Details" `NavigationLink` that pushes `LibraryDetailView`
-- [ ] 8.4.4 Add a dismiss button (X or swipe) to close the card
+- [x] 8.4.1 Tapping an annotation sets `viewModel.selectedLibrary` ✅
+- [x] 8.4.2 Used `.sheet(item:)` with compact `.presentationDetents([.fraction(0.25)])` ✅
+- [x] 8.4.3 Sheet shows `LibraryCardView` (reusing component from Step 6) ✅
+- [x] 8.4.4 Dismiss via swipe down (built-in sheet behavior) ✅
 
 ### 8.5 Reload libraries when the map region changes
 
-- [ ] 8.5.1 Add `.onMapCameraChange(frequency: .onEnd)` modifier — fires when the user
+- [x] 8.5.1 Add `.onMapCameraChange(frequency: .onEnd)` modifier — fires when the user ✅
   stops dragging/zooming the map
-- [ ] 8.5.2 Extract the new center coordinates and visible span from the camera context
-- [ ] 8.5.3 Compute an approximate radius from the span (degrees → km)
-- [ ] 8.5.4 Call `viewModel.loadLibraries(lat:lng:radiusKm:)` — the debounce in the
+- [x] 8.5.2 Extract the new center coordinates and visible span from the camera context ✅
+- [x] 8.5.3 Compute an approximate radius from the span (degrees → km) ✅
+- [x] 8.5.4 Call `viewModel.loadLibraries(lat:lng:radiusKm:)` — the debounce in the ✅
   ViewModel prevents rapid-fire calls
-- [ ] 8.5.5 On initial load (`.task`), also trigger a load for the starting region
+- [x] 8.5.5 Initial load handled by `.onMapCameraChange` firing when map settles ✅
 
 ### 8.6 Handle location permission on map
 
-- [ ] 8.6.1 When location is available: center on user, load nearby libraries
-- [ ] 8.6.2 When location is denied: start with a wide view (Europe or world),
-  load libraries globally. The user can still pan and explore.
-- [ ] 8.6.3 The `MapUserLocationButton` control lets the user re-center on their
-  location at any time (if permission is granted)
+- [x] 8.6.1 When location is available: center on user, load nearby libraries ✅
+  (handled by `.userLocation(fallback: .automatic)` + `.onMapCameraChange`)
+- [x] 8.6.2 When location is denied: falls back to default view, loads libraries ✅
+  for the visible region (same `.onMapCameraChange` path, no special code)
+- [x] 8.6.3 `MapUserLocationButton` already in `.mapControls` ✅
 
 ### 8.7 Navigate from map to library detail
 
-- [ ] 8.7.1 The "View Details" button in the bottom sheet card uses `NavigationLink`
-  to push `LibraryDetailView` (same as the list does in Step 7.3)
-- [ ] 8.7.2 Add `.navigationDestination(for: Library.self)` to `MapTabView`'s
-  `NavigationStack`
+- [x] 8.7.1 "View Details" button in sheet dismisses and navigates programmatically ✅
+  (NavigationLink doesn't work inside sheets — used NavigationPath.append instead)
+- [x] 8.7.2 Added `.navigationDestination(for: Library.self)` to `MapTabView` ✅
 
 ### 8.8 Show user's location (blue dot)
 
-- [ ] 8.8.1 The standard blue dot appears automatically when using
-  `.mapControls { MapUserLocationButton() }` and the user has granted location
-  permission. No extra code needed — just verify it shows.
+- [x] 8.8.1 Blue dot appears automatically via `MapUserLocationButton` in ✅
+  `.mapControls` — no extra code needed, verified working.
 
 ### 8.9 Advanced search filters
 
