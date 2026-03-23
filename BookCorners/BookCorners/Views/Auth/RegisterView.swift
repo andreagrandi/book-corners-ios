@@ -22,6 +22,7 @@ struct RegisterView: View {
                 Section("Account") {
                     TextField("Username", text: $username)
                         .textContentType(.username)
+                        .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     TextField("Email", text: $email)
                         .textContentType(.emailAddress)

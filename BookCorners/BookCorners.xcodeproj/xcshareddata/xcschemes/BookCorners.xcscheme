@@ -74,6 +74,13 @@
             ReferencedContainer = "container:BookCorners.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "API_BASE_URL"
+            value = "http://localhost:8000/api/v1/"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <LocationScenarioReference
          identifier = "../../Florence.gpx"
          referenceType = "0">

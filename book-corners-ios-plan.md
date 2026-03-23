@@ -1718,18 +1718,18 @@ the user fills in filters, taps "Apply", and the map/list updates.
 
 ### 8.11 Smoke test and commit
 
-- [ ] 8.11.1 Build and run on simulator
-- [ ] 8.11.2 Map tab shows Apple Maps centered on user location (or world if denied)
-- [ ] 8.11.3 Library pins appear on the map
-- [ ] 8.11.4 Tap a pin — bottom card appears with library info
-- [ ] 8.11.5 Tap "View Details" — navigates to library detail
-- [ ] 8.11.6 Pan the map — new libraries load for the visible region
-- [ ] 8.11.7 Tap filter icon — filter sheet opens
-- [ ] 8.11.8 Apply filters (e.g., country = "DE") — map updates with filtered results
-- [ ] 8.11.9 Clear filters — map reverts to unfiltered view
-- [ ] 8.11.10 Filter icon shows active indicator when filters are applied
-- [ ] 8.11.11 Run all tests — all must pass
-- [ ] 8.11.12 Commit
+- [x] 8.11.1 Build and run on simulator ✅
+- [x] 8.11.2 Map tab shows Apple Maps centered on user location (or world if denied) ✅
+- [x] 8.11.3 Library pins appear on the map ✅
+- [x] 8.11.4 Tap a pin — bottom card appears with library info ✅
+- [x] 8.11.5 Tap "View Details" — navigates to library detail ✅
+- [x] 8.11.6 Pan the map — new libraries load for the visible region ✅
+- [x] 8.11.7 Tap filter icon — filter sheet opens ✅
+- [x] 8.11.8 Apply filters (e.g., country = "DE") — map updates with filtered results ✅
+- [x] 8.11.9 Clear filters — map reverts to unfiltered view ✅
+- [x] 8.11.10 Filter icon shows active indicator when filters are applied ✅
+- [x] 8.11.11 Run all tests — all must pass ✅
+- [x] 8.11.12 Commit ✅
 
 ---
 
@@ -1742,16 +1742,167 @@ the user fills in filters, taps "Apply", and the map/list updates.
 Glass sections, input validation, debounced search, `MKReverseGeocodingRequest` (replaces
 deprecated `CLGeocoder`).
 
-- [ ] 9.1 Create `SubmitLibraryViewModel` — all form state + submission logic
-- [ ] 9.2 Build photo picker with preview thumbnail
-- [ ] 9.3 Extract GPS coordinates from photo EXIF data (`CGImageSource`)
-- [ ] 9.4 Reverse geocode with `MKReverseGeocodingRequest` (iOS 26) or Nominatim API as fallback
-- [ ] 9.5 Create `PhotonService` — address autocomplete with debouncing
-- [ ] 9.6 Build the submission form (Photo, Location, Details, Accessibility sections)
-- [ ] 9.7 Implement country picker (ISO 3166-1 codes)
-- [ ] 9.8 Submit via multipart form-data
-- [ ] 9.9 Handle submission result (success confirmation, error display)
-- [ ] 9.10 Guard against unauthenticated access (present login sheet)
+### 9.1 Create `SubmitLibraryViewModel`
+
+- [x] 9.1.1 Create `ViewModels/SubmitLibraryViewModel.swift` as an `@Observable` class ✅
+- [x] 9.1.2 Dependencies: `apiClient: any APIClientProtocol` injected via init ✅
+- [x] 9.1.3 Photo state: ✅
+  - `selectedPhotoItem: PhotosPickerItem?` — the raw picker selection
+  - `photoData: Data?` — the loaded JPEG data ready for upload
+  - `photoThumbnail: Image?` — preview shown in the form
+- [x] 9.1.4 Location state (extracted from EXIF or entered manually): ✅
+  - `latitude: Double?`
+  - `longitude: Double?`
+  - `hasCoordinates: Bool` (computed)
+- [x] 9.1.5 Address fields (required): ✅
+  - `address: String` — street address
+  - `city: String`
+  - `country: String` — ISO 3166-1 alpha-2 code (e.g. "IT")
+- [x] 9.1.6 Optional fields: ✅
+  - `name: String` — library name
+  - `description: String`
+  - `postalCode: String`
+  - `wheelchairAccessible: String` — "yes" / "no" / "limited" / "" (unknown)
+  - `capacity: Int?`
+  - `isIndoor: Bool?`
+  - `isLit: Bool?`
+  - `website: String`
+  - `contact: String`
+  - `operatorName: String`
+  - `brand: String`
+- [x] 9.1.7 Submission state: ✅
+  - `isSubmitting: Bool`
+  - `errorMessage: String?`
+  - `submittedLibrary: Library?` — non-nil after successful submit
+- [x] 9.1.8 Computed `isValid: Bool` — true when all required fields are filled ✅
+  (photo, address, city, country, latitude, longitude)
+
+### 9.2 Photo picker with preview
+
+- [x] 9.2.1 Add `PhotosPicker` to the form ✅
+- [x] 9.2.2 `.onChange` triggers `loadPhoto()` ✅
+- [x] 9.2.3 Creates `UIImage` → `Image` thumbnail ✅
+- [x] 9.2.4 Shows thumbnail or "Select Photo" placeholder ✅
+
+### 9.3 Extract GPS from EXIF
+
+When the user picks a photo, extract the GPS coordinates from its EXIF metadata.
+This auto-fills latitude/longitude so the user doesn't have to type them.
+
+**Python analogy:** Like reading EXIF with `Pillow` — `image._getexif()[34853]` for GPS.
+In Swift, we use `CGImageSource` from `ImageIO` framework.
+
+- [x] 9.3.1 Create `Utilities/EXIFReader.swift` ✅
+- [x] 9.3.2 `CGImageSourceCreateWithData` → properties → GPS dictionary ✅
+- [x] 9.3.3 Parse lat/lng with hemisphere refs ✅
+- [x] 9.3.4 Called from `loadPhoto()`, populates coordinates ✅
+- [x] 9.3.5 Show coordinates + map preview in form ✅
+- [x] 9.3.6 No GPS → empty coordinates, user fills via autocomplete ✅
+
+### 9.3b Draggable pin for precise placement
+
+The user must be able to adjust the pin location on the map, whether coordinates came
+from EXIF or from address autocomplete. The address might geocode to a slightly wrong
+spot, or the EXIF GPS might be imprecise.
+
+- [x] 9.3b.1 Interactive `Map` in the Pin Location section ✅
+- [x] 9.3b.2 Fixed center pin overlay (user pans map underneath) ✅
+- [x] 9.3b.3 `.onMapCameraChange` updates lat/lng when user stops panning ✅
+- [x] 9.3b.4 Full pinch-to-zoom support ✅
+- [ ] 9.3b.5 Optionally re-run reverse geocoding after pin move — deferred
+
+### 9.4 Reverse geocoding
+
+When we have coordinates (from EXIF), auto-fill the address fields.
+
+- [x] 9.4.1 `MKReverseGeocodingRequest` (iOS 26) for coordinates → address ✅
+- [x] 9.4.2 Called from `loadPhoto()` after EXIF extraction ✅
+- [x] 9.4.3 Populates address, city, country (ISO), postalCode ✅
+- [x] 9.4.4 User can edit auto-filled fields (not locked) ✅
+
+### 9.5 Address autocomplete with Photon
+
+When the user types an address manually (no EXIF GPS), offer autocomplete suggestions
+from the Photon geocoding API (free, OSM-based). **Skip Photon when EXIF coordinates
+are available** — reverse geocoding (9.4) already fills the address. The user can still
+edit the auto-filled address fields manually.
+
+- [x] 9.5.1 Create `Services/PhotonService.swift` ✅
+- [x] 9.5.2 Create `Models/PhotonResult.swift` (GeoJSON decode, lng/lat order handled) ✅
+- [x] 9.5.3 Debounced search (500ms), skipped when EXIF coordinates exist ✅
+- [x] 9.5.4 Suggestions shown as tappable rows below address field ✅
+- [x] 9.5.5 `selectSuggestion()` fills all fields from Photon result ✅
+
+### 9.6 Build the submission form
+
+Replace the `SubmitLibraryView` stub in `Views/Submit/SubmitLibraryView.swift`.
+
+- [x] 9.6.1 ViewModel as `@State`, `apiClient` from environment ✅
+- [x] 9.6.2 Form with Photo, Location, Pin, Details, Accessibility, Contact sections ✅
+- [x] 9.6.3 Submit button disabled when `!isValid` or `isSubmitting` ✅
+- [x] 9.6.4 `ProgressView` shown while submitting ✅
+- [x] 9.6.5 `NavigationStack` with title ✅
+
+### 9.7 Country picker (all countries, searchable)
+
+Unlike the filter picker (which only needs countries with existing libraries), the
+submit form needs **all countries** — the user might be submitting from a new country.
+Use iOS `Locale` API to get the full ISO 3166-1 list with localized names.
+
+- [x] 9.7.1 `CountryPickerView` using `Locale.Region.isoRegions` for all countries ✅
+- [x] 9.7.2 Filterable list via TextField — type "it" → "Italy (IT)" ✅
+- [x] 9.7.3 Selection binds to viewModel country code ✅
+- [x] 9.7.4 Form row shows country name, not just code ✅
+
+### 9.7b Configurable API base URL
+
+The base URL is currently hardcoded to `https://bookcorners.org/api/v1/`. For write
+operations (Steps 9+), we need to point at the local backend during development.
+Read the base URL from a build configuration / environment variable.
+
+- [x] 9.7b.1–4 `API_BASE_URL` read from `ProcessInfo.processInfo.environment` ✅
+  with fallback to production URL
+- [x] 9.7b.5 `NSAppTransportSecurity` / Allows Local Networking enabled ✅
+
+### 9.8 Submit via multipart form-data
+
+- [x] 9.8.1 `submit()` method calls `apiClient.submitLibrary(...)` ✅
+- [x] 9.8.2 On success: `submittedLibrary` set ✅
+- [x] 9.8.3 On error: `errorMessage` set ✅
+
+### 9.9 Handle submission result
+
+- [x] 9.9.1 Success alert shown when `submittedLibrary` is non-nil ✅
+- [ ] 9.9.2 Offer a "View on Map" button — deferred
+- [x] 9.9.3 Form resets after dismissing success alert ✅
+
+### 9.10 Guard against unauthenticated access
+
+- [x] 9.10.1 Auth guard in `ContentView.onChange(of: selectedTab)` ✅
+- [x] 9.10.2 Login sheet presented when unauthenticated ✅
+- [x] 9.10.3 After login, navigates to Submit tab ✅
+  (fixed: sheet dismisses before switching tab)
+
+### 9.11 Write tests for SubmitLibraryViewModel
+
+- [x] 9.11.1 Create `BookCornersTests/SubmitLibraryViewModelTests.swift` ✅
+- [x] 9.11.2 Test `isValid` — 3 failure cases + 1 success case ✅
+- [x] 9.11.3 Test `submit` success — `submittedLibrary` set ✅
+- [x] 9.11.4 Test `submit` error — `errorMessage` set ✅
+- [x] 9.11.5 Test EXIF returns nil for data without GPS ✅
+- [x] 9.11.6 Test `reset()` clears all fields ✅
+
+### 9.12 Smoke test and commit
+
+- [x] 9.12.1 Build and run on simulator ✅
+- [x] 9.12.2 Submit tab requires authentication ✅
+- [x] 9.12.3 Photo picker opens and shows preview ✅
+- [x] 9.12.4 EXIF GPS auto-fills coordinates and address ✅
+- [x] 9.12.5 Address autocomplete shows Photon suggestions ✅
+- [x] 9.12.6 Form validates — Submit disabled until required fields filled ✅
+- [x] 9.12.7 Successful submission shows confirmation ✅
+- [x] 9.12.8 Run all tests — all pass ✅
+- [x] 9.12.9 Commit ✅
 
 ---
 

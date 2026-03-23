@@ -18,7 +18,9 @@ class APIClient: APIClientProtocol {
     private let encoder: JSONEncoder
 
     init(
-        baseURL: URL = URL(string: "https://bookcorners.org/api/v1/")!,
+        baseURL: URL = URL(
+            string: ProcessInfo.processInfo.environment["API_BASE_URL"] ?? "https://bookcorners.org/api/v1/",
+        )!,
         session: URLSession = .shared,
     ) {
         self.baseURL = baseURL

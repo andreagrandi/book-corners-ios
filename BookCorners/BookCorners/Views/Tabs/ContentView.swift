@@ -52,6 +52,7 @@ struct ContentView: View {
         }
         .onChange(of: authService.isAuthenticated) { _, newValue in
             if newValue == true, showLoginSheet {
+                showLoginSheet = false
                 selectedTab = .submit
             }
         }

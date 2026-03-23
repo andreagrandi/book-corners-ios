@@ -69,6 +69,8 @@ class StubAPIClient: APIClientProtocol {
         SampleData.user
     }
 
+    var submitLibraryHandler: (() throws -> Library)?
+
     func submitLibrary(
         address _: String, city _: String, country _: String,
         latitude _: Double, longitude _: Double, photo _: Data,
@@ -77,7 +79,10 @@ class StubAPIClient: APIClientProtocol {
         isLit _: Bool?, website _: String?, contact _: String?,
         operatorName _: String?, brand _: String?,
     ) async throws -> Library {
-        SampleData.library
+        if let handler = submitLibraryHandler {
+            return try handler()
+        }
+        return SampleData.library
     }
 
     func reportLibrary(slug _: String, reason _: String, details _: String?, photo _: Data?) async throws -> Report {

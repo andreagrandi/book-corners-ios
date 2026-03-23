@@ -21,6 +21,7 @@ struct LoginView: View {
                 Section("Account") {
                     TextField("Username", text: $username)
                         .textContentType(.username)
+                        .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     SecureField("Password", text: $password)
                         .textContentType(.password)

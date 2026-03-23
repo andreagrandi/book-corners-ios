@@ -29,9 +29,22 @@
 		65AA1F6B2F60B49900E72A8F /* BookCornersUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookCornersUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		65D474E12F71403E000D1B9B /* Exceptions for "BookCorners" folder in "BookCorners" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 65AA1F532F60B49600E72A8F /* BookCorners */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		65AA1F562F60B49600E72A8F /* BookCorners */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				65D474E12F71403E000D1B9B /* Exceptions for "BookCorners" folder in "BookCorners" target */,
+			);
 			path = BookCorners;
 			sourceTree = "<group>";
 		};
@@ -397,6 +410,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BookCorners/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
@@ -432,6 +446,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BookCorners/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
