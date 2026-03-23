@@ -23,6 +23,7 @@ class StubAPIClient: APIClientProtocol {
         query: String?,
         city _: String?,
         country _: String?,
+        postalCode _: String?,
         lat: Double?,
         lng: Double?,
         radiusKm _: Int?,

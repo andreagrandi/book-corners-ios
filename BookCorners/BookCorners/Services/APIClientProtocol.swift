@@ -15,6 +15,7 @@ protocol APIClientProtocol {
                       query: String?,
                       city: String?,
                       country: String?,
+                      postalCode: String?,
                       lat: Double?,
                       lng: Double?,
                       radiusKm: Int?,

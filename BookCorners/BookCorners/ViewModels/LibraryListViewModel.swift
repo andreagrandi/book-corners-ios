@@ -48,13 +48,13 @@ class LibraryListViewModel {
             let response: LibraryListResponse = if isSearching {
                 try await apiClient.getLibraries(
                     page: 1, pageSize: pageSize,
-                    query: searchQuery, city: nil, country: nil,
+                    query: searchQuery, city: nil, country: nil, postalCode: nil,
                     lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
                 )
             } else {
                 try await apiClient.getLibraries(
                     page: 1, pageSize: pageSize,
-                    query: nil, city: nil, country: nil,
+                    query: nil, city: nil, country: nil, postalCode: nil,
                     lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
                 )
             }
@@ -74,13 +74,13 @@ class LibraryListViewModel {
             let response: LibraryListResponse = if isSearching {
                 try await apiClient.getLibraries(
                     page: 1, pageSize: pageSize,
-                    query: searchQuery, city: nil, country: nil,
+                    query: searchQuery, city: nil, country: nil, postalCode: nil,
                     lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
                 )
             } else {
                 try await apiClient.getLibraries(
                     page: 1, pageSize: pageSize,
-                    query: nil, city: nil, country: nil,
+                    query: nil, city: nil, country: nil, postalCode: nil,
                     lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
                 )
             }
@@ -106,13 +106,13 @@ class LibraryListViewModel {
             let response: LibraryListResponse = if isSearching {
                 try await apiClient.getLibraries(
                     page: currentPage + 1, pageSize: pageSize,
-                    query: searchQuery, city: nil, country: nil,
+                    query: searchQuery, city: nil, country: nil, postalCode: nil,
                     lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
                 )
             } else {
                 try await apiClient.getLibraries(
                     page: currentPage + 1, pageSize: pageSize,
-                    query: nil, city: nil, country: nil,
+                    query: nil, city: nil, country: nil, postalCode: nil,
                     lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
                 )
             }

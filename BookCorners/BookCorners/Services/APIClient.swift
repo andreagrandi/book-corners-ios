@@ -176,6 +176,7 @@ class APIClient: APIClientProtocol {
         query: String? = nil,
         city: String? = nil,
         country: String? = nil,
+        postalCode: String? = nil,
         lat: Double? = nil,
         lng: Double? = nil,
         radiusKm: Int? = nil,
@@ -188,6 +189,7 @@ class APIClient: APIClientProtocol {
         if let query { items.append(URLQueryItem(name: "q", value: query)) }
         if let city { items.append(URLQueryItem(name: "city", value: city)) }
         if let country { items.append(URLQueryItem(name: "country", value: country)) }
+        if let postalCode { items.append(URLQueryItem(name: "postal_code", value: postalCode)) }
         if let lat { items.append(URLQueryItem(name: "lat", value: String(lat))) }
         if let lng { items.append(URLQueryItem(name: "lng", value: String(lng))) }
         if let radiusKm { items.append(URLQueryItem(name: "radius_km", value: String(radiusKm))) }

@@ -14,6 +14,8 @@ struct MapTabView: View {
     @State private var viewModel: MapViewModel?
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var navigationPath = NavigationPath()
+    @State private var filterState = FilterState()
+    @State private var showFilters = false
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -38,14 +40,22 @@ struct MapTabView: View {
                     }
                 }
             }
-            .navigationTitle("Map")
+            .toolbar {
+                Button {
+                    showFilters = true
+                } label: {
+                    Label("Filter", systemImage: filterState.isActive
+                        ? "line.3.horizontal.decrease.circle.fill"
+                        : "line.3.horizontal.decrease.circle")
+                }
+            }
             .mapControls { MapUserLocationButton(); MapCompass(); MapScaleView() }
             .mapStyle(.standard(elevation: .realistic))
             .onMapCameraChange(frequency: .onEnd) { context in
                 guard let viewModel else { return }
                 let center = context.camera.centerCoordinate
                 let radiusKm = Int(context.region.span.latitudeDelta * kmPerDegreeLatitude / 2)
-                viewModel.loadLibraries(lat: center.latitude, lng: center.longitude, radiusKm: max(radiusKm, 1))
+                viewModel.loadLibraries(lat: center.latitude, lng: center.longitude, radiusKm: max(radiusKm, 1), filters: filterState)
             }
             .sheet(item: Binding(
                 get: { viewModel?.selectedLibrary },
@@ -56,6 +66,17 @@ struct MapTabView: View {
                 Button("View Details") {
                     viewModel?.selectedLibrary = nil
                     navigationPath.append(library)
+                }
+            }
+            .sheet(isPresented: $showFilters) {
+                FilterSheetView(filterState: $filterState) {
+                    guard let viewModel else { return }
+                    Task {
+                        await viewModel.applyFilters(filterState)
+                        if filterState.isActive, let region = viewModel.regionForResults() {
+                            cameraPosition = .region(region)
+                        }
+                    }
                 }
             }
             .navigationDestination(for: Library.self) { library in

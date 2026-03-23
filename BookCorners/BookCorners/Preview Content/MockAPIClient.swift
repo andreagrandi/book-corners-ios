@@ -14,6 +14,7 @@ class MockAPIClient: APIClientProtocol {
         query _: String?,
         city _: String?,
         country _: String?,
+        postalCode _: String?,
         lat _: Double?,
         lng _: Double?,
         radiusKm _: Int?,

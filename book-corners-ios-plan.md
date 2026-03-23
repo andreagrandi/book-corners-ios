@@ -1697,40 +1697,24 @@ Add a filter sheet accessible from a toolbar button. This corresponds to the web
 On mobile, it's presented as a **half-sheet** — tapping a funnel icon opens it,
 the user fills in filters, taps "Apply", and the map/list updates.
 
-- [ ] 8.9.1 Create a `FilterState` `@Observable` class or struct in `Models/`:
-  - `keywords: String` — text search (maps to API `query`)
-  - `city: String` — city filter
-  - `country: String` — country filter (ISO code, e.g. "DE")
-  - `postalCode: String` — postal code filter
-  - `radiusKm: Int` — radius in km (default from API: 50)
-  - Computed `isActive: Bool` — true if any filter is non-default
-  - Method `clear()` — resets all to defaults
-- [ ] 8.9.2 Add `postalCode` parameter to `APIClientProtocol.getLibraries()` and
-  `APIClient` — currently missing from the protocol but supported by the API
-  (`postal_code` query param)
-- [ ] 8.9.3 Create `Views/Components/FilterSheetView.swift`:
-  - `Form` with sections for each filter field
-  - `TextField` for keywords, city, postal code
-  - `Picker` for country (list of common countries, or free-text)
-  - `Stepper` or `Picker` for radius (5, 10, 25, 50, 100 km)
-  - "Apply filters" button — dismisses the sheet
-  - "Clear" button — resets all filters
-- [ ] 8.9.4 Add a filter button to `MapTabView`'s toolbar:
-  `Button(action: { showFilters = true }) { Label("Filter", systemImage: "line.3.horizontal.decrease.circle") }`
-- [ ] 8.9.5 Show a badge on the filter icon when `filterState.isActive` — use
-  `.badge` or change the icon to `.fill` variant when filters are active
-- [ ] 8.9.6 Wire `FilterState` into `MapViewModel.loadLibraries()` — pass filter
-  values as query parameters to the API
-- [ ] 8.9.7 When filters change (Apply tapped), reload the map with new results
-- [ ] 8.9.8 Show active filter count or summary below the map or in a chip bar:
-  e.g., "Filtered: Berlin, DE, 10 km" — tappable to re-open the filter sheet
+- [x] 8.9.1 Create `FilterState` struct in `Models/` ✅
+- [x] 8.9.2 Add `postalCode` parameter to `APIClientProtocol.getLibraries()` ✅
+- [x] 8.9.3 Create `FilterSheetView` with Form, TextFields, country Picker, radius Picker ✅
+  - Country picker uses top 10 from `/statistics/` (pending backend `/libraries/countries/` endpoint)
+- [x] 8.9.4 Add filter button to `MapTabView` toolbar ✅
+- [x] 8.9.5 Filter icon uses `.fill` variant when filters are active ✅
+- [x] 8.9.6 Wire `FilterState` into `MapViewModel` — `applyFilters()` method ✅
+  - Location filters (city/country/postalCode) skip lat/lng so API searches by name
+- [x] 8.9.7 Apply reloads map and re-centers on filtered results ✅
+- [ ] 8.9.8 Show active filter summary — deferred (nice-to-have)
 
 ### 8.10 Write tests for MapViewModel
 
-- [ ] 8.10.1 Create `BookCornersTests/MapViewModelTests.swift`
-- [ ] 8.10.2 Test `loadLibraries` success — libraries populated
-- [ ] 8.10.3 Test `loadLibraries` with error — `errorMessage` set
-- [ ] 8.10.4 Test `selectedLibrary` — set and clear
+- [x] 8.10.1 Create `BookCornersTests/MapViewModelTests.swift` ✅
+- [x] 8.10.2 Test `applyFilters` success — libraries populated ✅
+- [x] 8.10.3 Test `applyFilters` with error — `errorMessage` set ✅
+- [x] 8.10.4 Test `selectedLibrary` — set and clear ✅
+- [x] 8.10.5 Test `regionForResults` — nil when empty, valid region with data ✅
 
 ### 8.11 Smoke test and commit
 
