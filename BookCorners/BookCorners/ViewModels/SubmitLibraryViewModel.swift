@@ -147,24 +147,34 @@ class SubmitLibraryViewModel {
 
         do {
             let mapItems = try await request.mapItems
-            guard let placemark = mapItems.first?.placemark else { return }
+            guard let mapItem = mapItems.first else { return }
 
-            if let street = placemark.thoroughfare {
-                let number = placemark.subThoroughfare ?? ""
-                address = number.isEmpty ? street : "\(street) \(number)"
+            // Use addressRepresentations for city (iOS 26 non-deprecated API)
+            if let cityName = mapItem.addressRepresentations?.cityName {
+                city = cityName
             }
-            if let placemarkCity = placemark.locality {
-                city = placemarkCity
-            }
-            if let countryCode = placemark.countryCode {
-                country = countryCode
-            }
-            if let placemarkPostalCode = placemark.postalCode {
-                postalCode = placemarkPostalCode
-            }
+
+            // MKAddress only has fullAddress/shortAddress — no individual fields for
+            // street, countryCode, postalCode. Use placemark until Apple provides
+            // proper replacements. TODO: update when iOS 27 adds individual fields.
+            let components = extractAddressComponents(from: mapItem)
+            if let street = components.street { address = street }
+            if let countryCode = components.countryCode { country = countryCode }
+            if let postal = components.postalCode { postalCode = postal }
         } catch {
             // Reverse geocoding failed — user can fill address manually
         }
+    }
+
+    @available(iOS, deprecated: 26.0, message: "Remove when Apple provides individual address fields on MKMapItem")
+    private func extractAddressComponents(from mapItem: MKMapItem) -> (street: String?, countryCode: String?, postalCode: String?) {
+        let pm = mapItem.placemark
+        var street: String?
+        if let thoroughfare = pm.thoroughfare {
+            let number = pm.subThoroughfare ?? ""
+            street = number.isEmpty ? thoroughfare : "\(thoroughfare) \(number)"
+        }
+        return (street: street, countryCode: pm.countryCode, postalCode: pm.postalCode)
     }
 
     // MARK: - Submit

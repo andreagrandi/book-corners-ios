@@ -47,8 +47,8 @@ struct LibraryDetailView: View {
                 miniMap
                 metadataSection
 
-                VStack {
-                    Button("Get Directions") {
+                VStack(spacing: 12) {
+                    Button {
                         let mapItem = MKMapItem(
                             location: CLLocation(latitude: library.lat, longitude: library.lng),
                             address: nil,
@@ -57,15 +57,29 @@ struct LibraryDetailView: View {
                         mapItem.openInMaps(launchOptions: [
                             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,
                         ])
+                    } label: {
+                        Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle")
+                            .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
 
                     if authService.isAuthenticated {
-                        Button("Report Issue") {}
+                        HStack(spacing: 12) {
+                            Button {} label: {
+                                Label("Report", systemImage: "exclamationmark.triangle")
+                                    .frame(maxWidth: .infinity)
+                            }
                             .buttonStyle(.bordered)
+                            .controlSize(.large)
 
-                        Button("Add Photo") {}
+                            Button {} label: {
+                                Label("Add Photo", systemImage: "camera")
+                                    .frame(maxWidth: .infinity)
+                            }
                             .buttonStyle(.bordered)
+                            .controlSize(.large)
+                        }
                     }
                 }
                 .padding(.horizontal)

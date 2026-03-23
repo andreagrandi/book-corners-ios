@@ -1912,10 +1912,79 @@ Read the base URL from a build configuration / environment variable.
 
 **Concepts:** `enum` with `Picker`, optional photo attachment, modal sheet presentation.
 
-- [ ] 10.1 Create `ReportViewModel` — reason, details, optional photo, submission state
-- [ ] 10.2 Build `ReportView` — form sheet with reason picker, text editor, optional photo
-- [ ] 10.3 Validate and submit as multipart form-data
-- [ ] 10.4 Handle success (dismiss + toast) and errors
+### 10.1 Create `ReportViewModel`
+
+- [ ] 10.1.1 Create `ViewModels/ReportViewModel.swift` as an `@Observable` class
+- [ ] 10.1.2 Dependencies: `apiClient: any APIClientProtocol`, `librarySlug: String`
+  (injected via init — we need the slug to POST the report)
+- [ ] 10.1.3 Form state:
+  - `reason: ReportReason` — default `.damaged` (the `ReportReason` enum already exists)
+  - `details: String` — optional free-text description (max 2000 chars)
+  - `selectedPhotoItem: PhotosPickerItem?` — optional photo evidence
+  - `photoData: Data?` — loaded from the picker item
+- [ ] 10.1.4 Submission state:
+  - `isSubmitting: Bool`
+  - `errorMessage: String?`
+  - `didSubmitSuccessfully: Bool` — triggers dismiss + confirmation
+- [ ] 10.1.5 Computed `isValid: Bool` — reason is always set, so always valid
+  (details and photo are optional)
+- [ ] 10.1.6 `loadPhoto()` async — same pattern as SubmitLibraryViewModel
+- [ ] 10.1.7 `submit()` async — calls `apiClient.reportLibrary(slug:reason:details:photo:)`
+
+### 10.2 Build `ReportView`
+
+The report form is presented as a **sheet** from `LibraryDetailView` when the user
+taps "Report Issue". It's a simple form — much smaller than the submit form.
+
+- [ ] 10.2.1 Create `Views/Libraries/ReportView.swift`
+- [ ] 10.2.2 Accept `librarySlug: String` to pass to the ViewModel
+- [ ] 10.2.3 Structure:
+  **Section 1 — Reason:** `Picker` with `ReportReason.allCases`, display as
+    human-readable labels (e.g. "Damaged", "Missing", "Incorrect Info",
+    "Inappropriate", "Other")
+  **Section 2 — Details:** `TextField` (multiline, axis: .vertical) for free-text
+    description (optional, max 2000 chars)
+  **Section 3 — Photo:** `PhotosPicker` for optional photo evidence, same pattern as
+    submit form (thumbnail preview)
+  **Section 4 — Submit:** "Submit Report" button, disabled while submitting
+- [ ] 10.2.4 Wrap in `NavigationStack` with `.navigationTitle("Report Issue")`
+- [ ] 10.2.5 Add toolbar cancel button (dismiss without submitting)
+- [ ] 10.2.6 On success: dismiss the sheet. Show a confirmation toast or alert
+  in `LibraryDetailView`
+
+### 10.3 Wire up the report button
+
+- [ ] 10.3.1 In `LibraryDetailView`, replace the stub `Button("Report Issue") {}`
+  (line 64) with one that sets `@State var showReport = false`
+- [ ] 10.3.2 Add `.sheet(isPresented: $showReport)` presenting
+  `ReportView(librarySlug: library.slug)`
+- [ ] 10.3.3 Guard behind authentication — if not logged in, show login sheet first
+  (same pattern as Submit tab)
+
+### 10.4 Display human-readable reason labels
+
+- [ ] 10.4.1 Add a `displayName` computed property to `ReportReason`:
+  `.damaged` → "Damaged", `.missing` → "Missing",
+  `.incorrectInfo` → "Incorrect Information", `.inappropriate` → "Inappropriate",
+  `.other` → "Other"
+- [ ] 10.4.2 Use `displayName` in the `Picker` options
+
+### 10.5 Write tests for ReportViewModel
+
+- [ ] 10.5.1 Create `BookCornersTests/ReportViewModelTests.swift`
+- [ ] 10.5.2 Test `submit` success — `didSubmitSuccessfully` is true
+- [ ] 10.5.3 Test `submit` error — `errorMessage` set
+- [ ] 10.5.4 Test default state — reason is `.damaged`, details empty
+
+### 10.6 Smoke test and commit
+
+- [ ] 10.6.1 Build and run on simulator
+- [ ] 10.6.2 Navigate to library detail → tap "Report Issue"
+- [ ] 10.6.3 Select a reason, add optional details/photo
+- [ ] 10.6.4 Submit report — confirmation shown, sheet dismisses
+- [ ] 10.6.5 Unauthenticated users see login prompt before report form
+- [ ] 10.6.6 Run all tests — all must pass
+- [ ] 10.6.7 Commit
 
 ---
 

@@ -9,8 +9,11 @@ import MapKit
 import SwiftUI
 
 private let kmPerDegreeLatitude = 111.0
+private let maxRadiusKm = 100
+
 struct MapTabView: View {
     @Environment(\.apiClient) private var apiClient
+    @Environment(LocationService.self) private var locationService
     @State private var viewModel: MapViewModel?
     @State private var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     @State private var navigationPath = NavigationPath()
@@ -54,7 +57,7 @@ struct MapTabView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 guard let viewModel else { return }
                 let center = context.camera.centerCoordinate
-                let radiusKm = Int(context.region.span.latitudeDelta * kmPerDegreeLatitude / 2)
+                let radiusKm = min(Int(context.region.span.latitudeDelta * kmPerDegreeLatitude / 2), maxRadiusKm)
                 viewModel.loadLibraries(lat: center.latitude, lng: center.longitude, radiusKm: max(radiusKm, 1), filters: filterState)
             }
             .sheet(item: Binding(
@@ -87,6 +90,15 @@ struct MapTabView: View {
             if viewModel == nil {
                 viewModel = MapViewModel(client: apiClient)
             }
+        }
+        .onChange(of: locationService.currentLocation) { _, location in
+            guard let viewModel, viewModel.libraries.isEmpty, let location else { return }
+            viewModel.loadLibraries(
+                lat: location.coordinate.latitude,
+                lng: location.coordinate.longitude,
+                radiusKm: maxRadiusKm,
+                filters: filterState,
+            )
         }
     }
 }
