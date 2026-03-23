@@ -85,8 +85,13 @@ class StubAPIClient: APIClientProtocol {
         return SampleData.library
     }
 
+    var reportLibraryHandler: (() throws -> Report)?
+
     func reportLibrary(slug _: String, reason _: String, details _: String?, photo _: Data?) async throws -> Report {
-        SampleData.report
+        if let handler = reportLibraryHandler {
+            return try handler()
+        }
+        return SampleData.report
     }
 
     func addPhoto(slug _: String, photo _: Data, caption _: String?) async throws -> LibraryPhoto {

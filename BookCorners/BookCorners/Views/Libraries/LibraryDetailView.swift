@@ -13,6 +13,7 @@ struct LibraryDetailView: View {
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: LibraryDetailViewModel?
     @Environment(AuthService.self) private var authService
+    @State private var showReport = false
 
     var body: some View {
         ScrollView {
@@ -66,12 +67,17 @@ struct LibraryDetailView: View {
 
                     if authService.isAuthenticated {
                         HStack(spacing: 12) {
-                            Button {} label: {
+                            Button {
+                                showReport = true
+                            } label: {
                                 Label("Report", systemImage: "exclamationmark.triangle")
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.large)
+                            .sheet(isPresented: $showReport) {
+                                ReportView(librarySlug: library.slug)
+                            }
 
                             Button {} label: {
                                 Label("Add Photo", systemImage: "camera")

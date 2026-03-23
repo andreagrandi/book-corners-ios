@@ -13,6 +13,16 @@ nonisolated enum ReportReason: String, Codable, CaseIterable {
     case incorrectInfo = "incorrect_info"
     case inappropriate
     case other
+
+    var displayName: String {
+        switch self {
+        case .damaged: "Damaged"
+        case .missing: "Missing"
+        case .incorrectInfo: "Incorrect Information"
+        case .inappropriate: "Inappropriate"
+        case .other: "Other"
+        }
+    }
 }
 
 nonisolated struct Report: Codable, Identifiable {

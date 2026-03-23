@@ -281,7 +281,7 @@ class APIClient: APIClientProtocol {
         if let details { multipart.addField(name: "details", value: details) }
         if let photo { multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo) }
 
-        return try await multipartRequest(path: "libraries/\(slug)/report/", multipart: multipart)
+        return try await multipartRequest(path: "libraries/\(slug)/report", multipart: multipart)
     }
 
     func addPhoto(
