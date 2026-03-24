@@ -18,12 +18,22 @@ class MapViewModel {
     var errorMessage: String?
     var selectedLibrary: Library?
     private var loadTask: Task<Void, Never>?
+    private var lastLoadedLat: Double?
+    private var lastLoadedLng: Double?
+    private var lastLoadedRadius: Int?
 
     init(client: any APIClientProtocol) {
         apiClient = client
     }
 
     func loadLibraries(lat: Double, lng: Double, radiusKm: Int, filters: FilterState = FilterState()) {
+        // Skip reload if the map barely moved (prevents feedback loop from annotation layout shifts)
+        if let lastLat = lastLoadedLat, let lastLng = lastLoadedLng, let lastRadius = lastLoadedRadius,
+           abs(lat - lastLat) < 0.001, abs(lng - lastLng) < 0.001, radiusKm == lastRadius
+        {
+            return
+        }
+
         loadTask?.cancel()
 
         loadTask = Task {
@@ -31,6 +41,7 @@ class MapViewModel {
                 try await Task.sleep(for: .milliseconds(300))
                 try Task.checkCancellation()
                 isLoading = true
+                errorMessage = nil
                 let response = try await apiClient.getLibraries(
                     page: 1, pageSize: 50,
                     query: filters.keywords.isEmpty ? nil : filters.keywords,
@@ -41,9 +52,14 @@ class MapViewModel {
                     hasPhoto: nil,
                 )
                 libraries = response.items
+                lastLoadedLat = lat
+                lastLoadedLng = lng
+                lastLoadedRadius = radiusKm
                 isLoading = false
             } catch is CancellationError {
                 // debounce cancelled — perfectly normal, do nothing
+            } catch let urlError as URLError where urlError.code == .cancelled {
+                // URLSession request cancelled by debounce — also normal
             } catch {
                 errorMessage = error.localizedDescription
                 isLoading = false
@@ -56,6 +72,9 @@ class MapViewModel {
     /// After zooming, `onMapCameraChange` re-fetches with the visible region.
     func applyFilters(_ filters: FilterState) async {
         loadTask?.cancel()
+        lastLoadedLat = nil
+        lastLoadedLng = nil
+        lastLoadedRadius = nil
         isLoading = true
         errorMessage = nil
 

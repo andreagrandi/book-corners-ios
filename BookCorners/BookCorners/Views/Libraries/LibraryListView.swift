@@ -92,7 +92,7 @@ struct LibraryListView: View {
             )
         }
         .refreshable {
-            await viewModel?.loadLibraries(
+            await viewModel?.refresh(
                 lat: locationService.currentLocation?.coordinate.latitude,
                 lng: locationService.currentLocation?.coordinate.longitude,
             )

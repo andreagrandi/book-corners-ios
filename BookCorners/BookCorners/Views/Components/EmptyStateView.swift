@@ -17,6 +17,7 @@ struct EmptyStateView: View {
             Image(systemName: icon)
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
 
             Text(title)
                 .font(.headline)
@@ -26,6 +27,7 @@ struct EmptyStateView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
+        .accessibilityElement(children: .combine)
     }
 }
 

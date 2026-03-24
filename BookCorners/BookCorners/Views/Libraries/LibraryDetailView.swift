@@ -24,6 +24,12 @@ struct LibraryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                if let error = viewModel?.errorMessage {
+                    ErrorView(message: error) {
+                        Task { await viewModel?.refresh() }
+                    }
+                }
+
                 heroPhoto
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -115,6 +121,14 @@ struct LibraryDetailView: View {
                 .padding(.horizontal)
             }
         }
+        .overlay(alignment: .top) {
+            if viewModel?.isLoading == true {
+                ProgressView()
+                    .padding(8)
+                    .background(.ultraThinMaterial, in: .circle)
+                    .padding(.top, 8)
+            }
+        }
         .navigationTitle(displayLibrary.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -146,6 +160,8 @@ struct LibraryDetailView: View {
         .frame(height: 200)
         .clipShape(.rect(cornerRadius: 12))
         .padding(.horizontal)
+        .accessibilityLabel("Map showing library location")
+        .accessibilityHint("Non-interactive preview")
     }
 
     @ViewBuilder
@@ -161,6 +177,7 @@ struct LibraryDetailView: View {
                         .scaledToFill()
                         .frame(maxWidth: .infinity, maxHeight: 250)
                         .clipped()
+                        .accessibilityLabel("Photo of \(displayLibrary.displayName)")
                 case .failure:
                     photoPlaceholder
                 @unknown default:
@@ -182,6 +199,7 @@ struct LibraryDetailView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 250)
+        .accessibilityLabel("No photo available")
     }
 
     @ViewBuilder

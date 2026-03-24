@@ -38,10 +38,15 @@ struct MapTabView: View {
                                     .foregroundStyle(.white)
                                     .background(.red)
                                     .clipShape(Circle())
+                                    .accessibilityLabel("Library: \(library.displayName)")
+                                    .accessibilityHint("Shows library details")
                             }
                         }
                     }
                 }
+            }
+            .sensoryFeedback(.selection, trigger: viewModel?.selectedLibrary) { _, newValue in
+                newValue != nil
             }
             .toolbar {
                 Button {
@@ -50,6 +55,15 @@ struct MapTabView: View {
                     Label("Filter", systemImage: filterState.isActive
                         ? "line.3.horizontal.decrease.circle.fill"
                         : "line.3.horizontal.decrease.circle")
+                }
+            }
+            .overlay(alignment: .top) {
+                if let error = viewModel?.errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .padding(8)
+                        .frame(maxWidth: .infinity)
+                        .background(.ultraThinMaterial)
                 }
             }
             .mapControls { MapUserLocationButton(); MapCompass(); MapScaleView() }
