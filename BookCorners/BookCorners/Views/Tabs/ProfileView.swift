@@ -36,6 +36,17 @@ struct ProfileView: View {
                         }
                     }
                 }
+
+                Section {
+                    HStack {
+                        Spacer()
+                        Text("version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                }
+                .listRowBackground(Color.clear)
             }
             .navigationTitle("Profile")
         }
