@@ -26,8 +26,6 @@ class MapViewModel {
     func loadLibraries(lat: Double, lng: Double, radiusKm: Int, filters: FilterState = FilterState()) {
         loadTask?.cancel()
 
-        let hasLocationFilter = !filters.city.isEmpty || !filters.country.isEmpty || !filters.postalCode.isEmpty
-
         loadTask = Task {
             do {
                 try await Task.sleep(for: .milliseconds(300))
@@ -39,9 +37,7 @@ class MapViewModel {
                     city: filters.city.isEmpty ? nil : filters.city,
                     country: filters.country.isEmpty ? nil : filters.country,
                     postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
-                    lat: hasLocationFilter ? nil : lat,
-                    lng: hasLocationFilter ? nil : lng,
-                    radiusKm: hasLocationFilter ? nil : radiusKm,
+                    lat: lat, lng: lng, radiusKm: radiusKm,
                     hasPhoto: nil,
                 )
                 libraries = response.items
@@ -56,12 +52,12 @@ class MapViewModel {
     }
 
     /// Loads libraries with filters applied. No debounce — called directly when user taps Apply.
+    /// Fetches without spatial bounds so the map can zoom to the results.
+    /// After zooming, `onMapCameraChange` re-fetches with the visible region.
     func applyFilters(_ filters: FilterState) async {
         loadTask?.cancel()
         isLoading = true
         errorMessage = nil
-
-        let hasLocationFilter = !filters.city.isEmpty || !filters.country.isEmpty || !filters.postalCode.isEmpty
 
         do {
             let response = try await apiClient.getLibraries(
@@ -70,9 +66,7 @@ class MapViewModel {
                 city: filters.city.isEmpty ? nil : filters.city,
                 country: filters.country.isEmpty ? nil : filters.country,
                 postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
-                lat: hasLocationFilter ? nil : nil,
-                lng: hasLocationFilter ? nil : nil,
-                radiusKm: hasLocationFilter ? nil : filters.radiusKm,
+                lat: nil, lng: nil, radiusKm: nil,
                 hasPhoto: nil,
             )
             libraries = response.items

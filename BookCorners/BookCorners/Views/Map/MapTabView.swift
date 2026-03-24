@@ -100,6 +100,15 @@ struct MapTabView: View {
                 filters: filterState,
             )
         }
+        .onChange(of: cameraPosition.followsUserLocation) { _, followsUser in
+            guard followsUser, let viewModel, let location = locationService.currentLocation else { return }
+            filterState = FilterState()
+            viewModel.loadLibraries(
+                lat: location.coordinate.latitude,
+                lng: location.coordinate.longitude,
+                radiusKm: maxRadiusKm,
+            )
+        }
     }
 }
 
