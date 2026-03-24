@@ -106,14 +106,14 @@ Features that require new backend endpoints (not blocking Steps 1–13):
 
 | iOS Feature | Missing Backend Work | When Needed |
 |---|---|---|
-| Google Sign-In | `POST /auth/google` — exchange Google ID token for JWT | Step 14 |
-| Sign in with Apple | `POST /auth/apple` — exchange Apple identity token for JWT | Step 14 |
-| List community photos | `GET /libraries/{slug}/photos` — list approved photos | Step 11 |
-| Admin: list pending | `GET /admin/libraries/?status=pending` (staff-only) | Step 15 |
-| Admin: approve/reject | `PATCH /admin/libraries/{slug}` — set status | Step 15 |
-| User role exposure | `is_staff` field in `/auth/me` response | Step 15 |
-| Push: device registration | `POST /devices/`, `DELETE /devices/{token}` | Step 16 |
-| Push: server-side sending | APNs integration for approval/submission events | Step 16 |
+| Google Sign-In | `POST /auth/google` — exchange Google ID token for JWT | Step 15 |
+| Sign in with Apple | `POST /auth/apple` — exchange Apple identity token for JWT | Step 15 |
+| Admin: list pending | `GET /admin/libraries/?status=pending` (staff-only) | Step 16 |
+| Admin: approve/reject | `PATCH /admin/libraries/{slug}` — set status | Step 16 |
+| User role exposure | `is_staff` field in `/auth/me` response | Step 16 |
+| Push: device registration | `POST /devices/`, `DELETE /devices/{token}` | Step 17 |
+| Push: server-side sending | APNs integration for approval/submission events | Step 17 |
+| Unified search | `search` param that ORs across name, description, city, address, postal_code | Step 14 |
 
 ---
 
@@ -677,7 +677,7 @@ Test that the multipart encoder produces correct output.
 
 **Goal:** Login, registration, secure token storage in Keychain, automatic token refresh,
 and auth state management across the app. Email/password only for now — social login
-(Google, Apple) deferred to Step 14 after backend support is added.
+(Google, Apple) deferred to Step 15 after backend support is added.
 
 **Concepts:** Keychain Services API (`SecItemAdd/CopyMatching/Update/Delete`), `@Observable`
 state, SwiftUI sheets, Swift 6.2 concurrency (`@concurrent` for background work, default
@@ -1977,16 +1977,19 @@ taps "Report Issue". It's a simple form — much smaller than the submit form.
 
 ---
 
-## Step 11 — Community Photos
+## Step 11 — Submit Photo for Library
 
-**Goal:** Authenticated users add photos to existing libraries.
+**Goal:** Authenticated users can submit a new photo for an existing library. If approved,
+it replaces the library's current photo. There is no photo gallery — each library has one photo.
 
-**Concepts:** Reuse `PhotosPicker` pattern, caption input, photo upload.
+**Concepts:** Reuse `PhotosPicker` pattern from Step 9, multipart upload to a different endpoint,
+conditional UI based on auth state.
 
-- [ ] 11.1 Create `AddPhotoViewModel` — photo, caption, submission state
-- [ ] 11.2 Build `AddPhotoView` — sheet with picker, preview, caption, submit
-- [ ] 11.3 Submit photo via multipart form-data
-- [ ] 11.4 Display community photos on detail view (blocked on backend `GET /libraries/{slug}/photos`)
+- [x] 11.1 Create `SubmitPhotoViewModel` — photo selection, optional caption, submission state ✅
+- [x] 11.2 Build `SubmitPhotoView` — sheet with picker, preview, optional caption, submit ✅
+- [x] 11.3 Wire `POST /libraries/{slug}/photo` multipart upload in `APIClient` (already existed) ✅
+- [x] 11.4 Add "Submit Photo" button to `LibraryDetailView` (authenticated users only) ✅
+- [x] 11.5 Tests for `SubmitPhotoViewModel` ✅
 
 ---
 
@@ -1997,10 +2000,10 @@ taps "Report Issue". It's a simple form — much smaller than the submit form.
 **Concepts:** `MKMapItem`, `openInMaps()`, URL schemes, `LSApplicationQueriesSchemes`,
 `confirmationDialog`.
 
-- [ ] 12.1 Create `DirectionsService` — open directions in Apple Maps via `MKMapItem`
-- [ ] 12.2 Support Google Maps via URL scheme (optional, check if installed)
-- [ ] 12.3 Show action sheet if multiple map apps available
-- [ ] 12.4 Wire up "Get Directions" button in library detail
+- [x] 12.1 Create `DirectionsService` — open directions in Apple Maps via `MKMapItem` ✅
+- [x] 12.2 Support Google Maps via URL scheme (check if installed) ✅
+- [x] 12.3 Show `confirmationDialog` if multiple map apps available ✅
+- [x] 12.4 Wire up "Get Directions" button in library detail ✅
 
 ---
 
@@ -2010,13 +2013,37 @@ taps "Report Issue". It's a simple form — much smaller than the submit form.
 
 **Concepts:** Launch screen configuration in Info.plist, app icon asset catalog.
 
-- [ ] 13.1 Configure launch screen via Info.plist (background color + logo)
-- [ ] 13.2 Add app logo to Assets.xcassets
-- [ ] 13.3 Optional: animated splash view while restoring session + getting location
+- [x] 13.1 Add splash image to Assets.xcassets ✅
+- [x] 13.2 Create `SplashView` with full-screen image ✅
+- [x] 13.3 Show splash during async init (restore session + start location, 800ms minimum) ✅
 
 ---
 
-## Step 14 — Social Login (deferred — blocked on backend)
+## Step 14 — Polish and Production Readiness
+
+**Goal:** Consistent error handling, loading states, accessibility, dark mode, app icon,
+and App Store preparation. Target: first release after this step.
+
+- [ ] 14.1 Reusable `ErrorView(message:retryAction:)` everywhere
+- [ ] 14.2 Loading indicators (initial load, pagination, refresh)
+- [ ] 14.3 Reusable `EmptyStateView` for screens with no data
+- [ ] 14.4 Accessibility: `.accessibilityLabel`, `.accessibilityHint`, VoiceOver testing
+- [ ] 14.5 Dark mode support (semantic colors, test all views)
+- [ ] 14.6 Network connectivity handling (`NWPathMonitor`, offline banner)
+- [ ] 14.7 Image caching (if `AsyncImage` proves insufficient)
+- [ ] 14.8 App icon (1024x1024 in Assets.xcassets)
+- [ ] 14.9 Rate limit handling (user-friendly 429 messages)
+- [ ] 14.10 Client-side input validation on all forms
+- [ ] 14.11 Haptic feedback for key actions
+- [ ] 14.12 App Store preparation (screenshots, description, privacy labels)
+
+---
+
+## 🚀 v1.0 Release
+
+---
+
+## Step 15 — Social Login (deferred — blocked on backend)
 
 **Goal:** Add Google Sign-In and Sign in with Apple as alternative auth methods.
 
@@ -2026,64 +2053,74 @@ identity provider tokens for JWT pairs.
 **Concepts:** `AuthenticationServices` framework (Apple Sign-In), Google Sign-In SDK (SPM),
 identity token exchange, account linking.
 
-- [ ] 14.1 Implement Sign in with Apple using `ASAuthorizationAppleIDProvider`
-- [ ] 14.2 Add Google Sign-In SDK via SPM
-- [ ] 14.3 Implement Google Sign-In flow
-- [ ] 14.4 Exchange provider tokens for JWT via backend
-- [ ] 14.5 Handle account linking (same email, different provider)
-- [ ] 14.6 Update `LoginView` with social login buttons
+- [ ] 15.1 Implement Sign in with Apple using `ASAuthorizationAppleIDProvider`
+- [ ] 15.2 Add Google Sign-In SDK via SPM
+- [ ] 15.3 Implement Google Sign-In flow
+- [ ] 15.4 Exchange provider tokens for JWT via backend
+- [ ] 15.5 Handle account linking (same email, different provider)
+- [ ] 15.6 Update `LoginView` with social login buttons
 
 ---
 
-## Step 15 — Admin Dashboard (blocked on backend)
+## Step 16 — Admin Dashboard (blocked on backend)
 
 **Goal:** Hidden admin section to review and approve/reject pending library submissions.
 
 **Requires backend:** `GET /admin/libraries/?status=pending`, `PATCH /admin/libraries/{slug}`,
 `is_staff` in `/auth/me` response.
 
-- [ ] 15.1 Detect admin role from `/auth/me` response (`isStaff` field)
-- [ ] 15.2 Show admin tab/section only for staff users
-- [ ] 15.3 Create `AdminViewModel` — load pending libraries
-- [ ] 15.4 Build `PendingLibrariesView` — list of submissions awaiting review
-- [ ] 15.5 Build `AdminLibraryDetailView` — detail with Approve/Reject buttons
-- [ ] 15.6 Implement approve/reject API calls with confirmation dialogs
-- [ ] 15.7 Pull-to-refresh for new submissions
+- [ ] 16.1 Detect admin role from `/auth/me` response (`isStaff` field)
+- [ ] 16.2 Show admin tab/section only for staff users
+- [ ] 16.3 Create `AdminViewModel` — load pending libraries
+- [ ] 16.4 Build `PendingLibrariesView` — list of submissions awaiting review
+- [ ] 16.5 Build `AdminLibraryDetailView` — detail with Approve/Reject buttons
+- [ ] 16.6 Implement approve/reject API calls with confirmation dialogs
+- [ ] 16.7 Pull-to-refresh for new submissions
 
 ---
 
-## Step 16 — Push Notifications (blocked on backend)
+## Step 17 — Push Notifications (blocked on backend)
 
 **Goal:** Notify users when their library is approved; notify admins of new submissions.
 
 **Requires backend:** device token registration endpoint, server-side APNs integration.
 
-- [ ] 16.1 Request notification permission (at appropriate moment, not on first launch)
-- [ ] 16.2 Register for APNs via `@UIApplicationDelegateAdaptor`
-- [ ] 16.3 Send device token to backend
-- [ ] 16.4 Handle incoming notifications — deep link to library detail
-- [ ] 16.5 Unregister device token on logout
-- [ ] 16.6 Handle permission denied gracefully
+- [ ] 17.1 Request notification permission (at appropriate moment, not on first launch)
+- [ ] 17.2 Register for APNs via `@UIApplicationDelegateAdaptor`
+- [ ] 17.3 Send device token to backend
+- [ ] 17.4 Handle incoming notifications — deep link to library detail
+- [ ] 17.5 Unregister device token on logout
+- [ ] 17.6 Handle permission denied gracefully
 
 ---
 
-## Step 17 — Polish and Production Readiness
+## Step 18 — Native Map Clustering
 
-**Goal:** Consistent error handling, loading states, accessibility, dark mode, app icon,
-and App Store preparation.
+**Goal:** Replace SwiftUI's `Map` with a `UIViewRepresentable` wrapping `MKMapView` to
+enable native annotation clustering. MapKit automatically merges nearby pins into cluster
+bubbles with counts, splitting them apart as the user zooms in.
 
-- [ ] 17.1 Reusable `ErrorView(message:retryAction:)` everywhere
-- [ ] 17.2 Loading indicators (initial load, pagination, refresh)
-- [ ] 17.3 Reusable `EmptyStateView` for screens with no data
-- [ ] 17.4 Accessibility: `.accessibilityLabel`, `.accessibilityHint`, VoiceOver testing
-- [ ] 17.5 Dark mode support (semantic colors, test all views)
-- [ ] 17.6 Network connectivity handling (`NWPathMonitor`, offline banner)
-- [ ] 17.7 Image caching (if `AsyncImage` proves insufficient)
-- [ ] 17.8 App icon (1024x1024 in Assets.xcassets)
-- [ ] 17.9 Rate limit handling (user-friendly 429 messages)
-- [ ] 17.10 Client-side input validation on all forms
-- [ ] 17.11 Haptic feedback for key actions
-- [ ] 17.12 App Store preparation (screenshots, description, privacy labels)
+Data loading stays the same (`/api/v1/libraries/` with lat/lng/radius, 50 per page).
+MapKit clusters whatever is loaded on the client side.
+
+**Concepts:** `UIViewRepresentable`, `MKMapView`, `MKMapViewDelegate`, `Coordinator`,
+`MKAnnotationView`, `clusteringIdentifier`, `MKClusterAnnotation`.
+
+- [ ] 18.1 Create `LibraryAnnotation` (`MKPointAnnotation` subclass holding a `Library`)
+      in `Models/LibraryAnnotation.swift`
+- [ ] 18.2 Create `LibraryAnnotationView` and `LibraryClusterAnnotationView`
+      (`MKAnnotationView` subclasses) in `Views/Map/ClusterAnnotationView.swift`.
+      Individual pin: book icon in red circle with `clusteringIdentifier = "library"`.
+      Cluster: sized/colored circle with count label.
+- [ ] 18.3 Create `ClusteredMapView` (`UIViewRepresentable`) in
+      `Views/Map/ClusteredMapView.swift`. Wraps `MKMapView` with Coordinator as
+      `MKMapViewDelegate`. Handles: annotation diffing in `updateUIView`, region change
+      callback, annotation selection, user location dot, map controls.
+- [ ] 18.4 Update `MapTabView` — replace SwiftUI `Map` with `ClusteredMapView`.
+      Keep filter button/sheet, bottom sheet, navigation, location service integration.
+- [ ] 18.5 Verify existing `MapViewModelTests` still pass (ViewModel unchanged).
+- [ ] 18.6 Simulator test: zoom out → clusters with counts; zoom in → individual pins;
+      tap cluster → zoom in; tap pin → bottom sheet; filters still work.
 
 ---
 
@@ -2108,22 +2145,26 @@ Step 6b (Search)          │
            │
      ┌─────┼──────────┐
   Step 9   Step 10  Step 11
- (Submit) (Report) (Photos)
+ (Submit) (Report) (Photo)
            │
         Step 12 (Directions)
-
-Step 13 (Splash) ── independent, do anytime after Step 1
-Step 14 (Social Login) ── blocked on backend, after Step 4
-Step 15 (Admin) ── blocked on backend, after Step 7
-Step 16 (Notifications) ── blocked on backend, after Step 4
-Step 17 (Polish) ── continuous, finish last
+           │
+        Step 13 (Splash)
+           │
+        Step 14 (Polish) ── v1.0 release
+           │
+Step 15 (Social Login) ── blocked on backend, after Step 4
+Step 16 (Admin) ── blocked on backend, after Step 7
+Step 17 (Notifications) ── blocked on backend, after Step 4
+Step 18 (Map Clustering) ── after Step 8
 ```
 
 Steps 1–5 are strictly sequential. After Step 5, Steps 6 and 8 can be built in either order.
 Step 6b (simple search) follows Step 6 and is a prerequisite for nothing — it can be done
 before or after Step 7. Step 7 is shared by both list and map. Steps 9–11 require auth
-(Step 4) and the detail view (Step 7). Step 8 includes advanced filters (8.9). Steps 14–16
-are blocked on backend work and should be deferred.
+(Step 4) and the detail view (Step 7). Step 8 includes advanced filters (8.9). Step 14
+(Polish) is the release milestone. Steps 15–17 are blocked on backend work and deferred
+to post-v1.0.
 
 ---
 
