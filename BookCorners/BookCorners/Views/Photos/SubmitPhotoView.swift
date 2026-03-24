@@ -38,6 +38,8 @@ struct SubmitPhotoView: View {
                                 .frame(maxWidth: .infinity, minHeight: 100)
                         }
                     }
+                    .accessibilityLabel(viewModel?.photoData != nil ? "Change photo" : "Select photo")
+                    .accessibilityHint("Opens photo picker")
                 }
 
                 Section("Caption (optional)") {
@@ -82,6 +84,12 @@ struct SubmitPhotoView: View {
             if viewModel?.didSubmitSuccessfully == true {
                 showSuccessAlert = true
             }
+        }
+        .sensoryFeedback(.success, trigger: viewModel?.didSubmitSuccessfully) { _, newValue in
+            newValue == true
+        }
+        .sensoryFeedback(.error, trigger: viewModel?.errorMessage) { _, newValue in
+            newValue != nil
         }
         .alert("Photo Submitted", isPresented: $showSuccessAlert) {
             Button("OK") { dismiss() }

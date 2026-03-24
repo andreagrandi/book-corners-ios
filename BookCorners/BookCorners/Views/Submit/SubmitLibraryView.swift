@@ -49,6 +49,8 @@ struct SubmitLibraryView: View {
                         Label("Select Photo", systemImage: "photo.on.rectangle")
                     }
                 }
+                .accessibilityLabel(viewModel.photoData != nil ? "Change photo" : "Select photo")
+                .accessibilityHint("Opens photo picker")
             }
 
             // MARK: - Location
@@ -235,6 +237,12 @@ struct SubmitLibraryView: View {
             Button("OK") { viewModel.reset() }
         } message: {
             Text("Your library has been submitted and will appear after review.")
+        }
+        .sensoryFeedback(.success, trigger: viewModel.submittedLibrary) { _, newValue in
+            newValue != nil
+        }
+        .sensoryFeedback(.error, trigger: viewModel.errorMessage) { _, newValue in
+            newValue != nil
         }
     }
 }

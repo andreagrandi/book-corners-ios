@@ -14,6 +14,7 @@ struct SplashView: View {
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
+                .accessibilityLabel("Book Corners — Share, Discover, Read")
         }
     }
 }
