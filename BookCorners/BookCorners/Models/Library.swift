@@ -31,7 +31,17 @@ nonisolated struct Library: Codable, Identifiable, Hashable {
     let brand: String
     let createdAt: Date
 
-    private static let mediaBaseURL = "https://bookcorners.org"
+    private static let mediaBaseURL: String = {
+        guard let apiBase = ProcessInfo.processInfo.environment["API_BASE_URL"],
+              let url = URL(string: apiBase),
+              let scheme = url.scheme,
+              let host = url.host()
+        else {
+            return "https://bookcorners.org"
+        }
+        let port = url.port.map { ":\($0)" } ?? ""
+        return "\(scheme)://\(host)\(port)"
+    }()
 
     var fullPhotoUrl: URL? {
         guard !photoUrl.isEmpty else { return nil }
