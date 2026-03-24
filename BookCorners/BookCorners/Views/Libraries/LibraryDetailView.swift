@@ -14,6 +14,12 @@ struct LibraryDetailView: View {
     @State private var viewModel: LibraryDetailViewModel?
     @Environment(AuthService.self) private var authService
     @State private var showReport = false
+    @State private var showSubmitPhoto = false
+    @State private var showMapPicker = false
+
+    private var displayLibrary: Library {
+        viewModel?.library ?? library
+    }
 
     var body: some View {
         ScrollView {
@@ -21,24 +27,24 @@ struct LibraryDetailView: View {
                 heroPhoto
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(library.displayName)
+                    Text(displayLibrary.displayName)
                         .font(.title)
                         .bold()
 
-                    Text("\(library.address), \(library.city), \(library.country)")
+                    Text("\(displayLibrary.address), \(displayLibrary.city), \(displayLibrary.country)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    if !library.description.isEmpty {
-                        Text(library.description)
+                    if !displayLibrary.description.isEmpty {
+                        Text(displayLibrary.description)
                     }
-                    if let websiteURL = library.websiteURL {
+                    if let websiteURL = displayLibrary.websiteURL {
                         Link(destination: websiteURL) {
-                            Label(library.website, systemImage: "globe")
+                            Label(displayLibrary.website, systemImage: "globe")
                         }
                         .font(.subheadline)
                     }
-                    if !library.contact.isEmpty {
-                        Label(library.contact, systemImage: "envelope")
+                    if !displayLibrary.contact.isEmpty {
+                        Label(displayLibrary.contact, systemImage: "envelope")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -50,20 +56,33 @@ struct LibraryDetailView: View {
 
                 VStack(spacing: 12) {
                     Button {
-                        let mapItem = MKMapItem(
-                            location: CLLocation(latitude: library.lat, longitude: library.lng),
-                            address: nil,
-                        )
-                        mapItem.name = library.displayName
-                        mapItem.openInMaps(launchOptions: [
-                            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,
-                        ])
+                        let apps = DirectionsService.availableApps()
+                        if apps.count > 1 {
+                            showMapPicker = true
+                        } else {
+                            DirectionsService.openDirections(
+                                to: libraryCoordinate,
+                                name: displayLibrary.displayName,
+                                using: .appleMaps,
+                            )
+                        }
                     } label: {
                         Label("Get Directions", systemImage: "arrow.triangle.turn.up.right.circle")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .confirmationDialog("Open directions in", isPresented: $showMapPicker) {
+                        ForEach(DirectionsService.availableApps()) { app in
+                            Button(app.rawValue) {
+                                DirectionsService.openDirections(
+                                    to: libraryCoordinate,
+                                    name: displayLibrary.displayName,
+                                    using: app,
+                                )
+                            }
+                        }
+                    }
 
                     if authService.isAuthenticated {
                         HStack(spacing: 12) {
@@ -76,27 +95,32 @@ struct LibraryDetailView: View {
                             .buttonStyle(.bordered)
                             .controlSize(.large)
                             .sheet(isPresented: $showReport) {
-                                ReportView(librarySlug: library.slug)
+                                ReportView(librarySlug: displayLibrary.slug)
                             }
 
-                            Button {} label: {
+                            Button {
+                                showSubmitPhoto = true
+                            } label: {
                                 Label("Add Photo", systemImage: "camera")
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.large)
+                            .sheet(isPresented: $showSubmitPhoto) {
+                                SubmitPhotoView(librarySlug: displayLibrary.slug)
+                            }
                         }
                     }
                 }
                 .padding(.horizontal)
             }
         }
-        .navigationTitle(library.displayName)
+        .navigationTitle(displayLibrary.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ShareLink(
-                item: URL(string: "https://bookcorners.org/libraries/\(library.slug)/")!,
-                subject: Text(library.displayName),
+                item: URL(string: "https://bookcorners.org/libraries/\(displayLibrary.slug)/")!,
+                subject: Text(displayLibrary.displayName),
                 message: Text("Check out this little library!"),
             )
         }
@@ -109,7 +133,7 @@ struct LibraryDetailView: View {
     }
 
     private var libraryCoordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: library.lat, longitude: library.lng)
+        CLLocationCoordinate2D(latitude: displayLibrary.lat, longitude: displayLibrary.lng)
     }
 
     private var miniMap: some View {
@@ -117,7 +141,7 @@ struct LibraryDetailView: View {
             centerCoordinate: libraryCoordinate,
             distance: 1000,
         )), interactionModes: []) {
-            Marker(library.name, systemImage: "book.fill", coordinate: libraryCoordinate)
+            Marker(displayLibrary.name, systemImage: "book.fill", coordinate: libraryCoordinate)
         }
         .frame(height: 200)
         .clipShape(.rect(cornerRadius: 12))
@@ -126,7 +150,7 @@ struct LibraryDetailView: View {
 
     @ViewBuilder
     private var heroPhoto: some View {
-        if let photoURL = library.fullPhotoUrl {
+        if let photoURL = displayLibrary.fullPhotoUrl {
             AsyncImage(url: photoURL) { phase in
                 switch phase {
                 case .empty:
@@ -162,23 +186,23 @@ struct LibraryDetailView: View {
 
     @ViewBuilder
     private var metadataSection: some View {
-        let hasMetadata = !library.wheelchairAccessible.isEmpty
-            || library.capacity != nil
-            || library.isIndoor != nil
-            || library.isLit != nil
+        let hasMetadata = !displayLibrary.wheelchairAccessible.isEmpty
+            || displayLibrary.capacity != nil
+            || displayLibrary.isIndoor != nil
+            || displayLibrary.isLit != nil
 
         if hasMetadata {
             VStack(alignment: .leading, spacing: 8) {
-                if !library.wheelchairAccessible.isEmpty {
-                    MetadataRow(icon: "figure.roll", label: "Wheelchair", value: library.wheelchairAccessible)
+                if !displayLibrary.wheelchairAccessible.isEmpty {
+                    MetadataRow(icon: "figure.roll", label: "Wheelchair", value: displayLibrary.wheelchairAccessible)
                 }
-                if let capacity = library.capacity {
+                if let capacity = displayLibrary.capacity {
                     MetadataRow(icon: "books.vertical", label: "Capacity", value: "\(capacity) books")
                 }
-                if let isIndoor = library.isIndoor {
+                if let isIndoor = displayLibrary.isIndoor {
                     MetadataRow(icon: "building.2", label: "Location", value: isIndoor ? "Indoor" : "Outdoor")
                 }
-                if let isLit = library.isLit {
+                if let isLit = displayLibrary.isLit {
                     MetadataRow(icon: "lightbulb", label: "Lit at night", value: isLit ? "Yes" : "No")
                 }
             }

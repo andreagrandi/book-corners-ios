@@ -297,7 +297,7 @@ class APIClient: APIClientProtocol {
         // Optional fields
         if let caption { multipart.addField(name: "caption", value: caption) }
 
-        return try await multipartRequest(path: "libraries/\(slug)/photo/", multipart: multipart)
+        return try await multipartRequest(path: "libraries/\(slug)/photo", multipart: multipart)
     }
 }
 
