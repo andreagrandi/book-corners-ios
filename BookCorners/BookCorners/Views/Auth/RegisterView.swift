@@ -43,15 +43,22 @@ struct RegisterView: View {
                         .foregroundStyle(.red)
                 }
 
+                if !email.isEmpty, !email.contains("@") {
+                    Text("Enter a valid email address")
+                        .foregroundStyle(.red)
+                }
+
                 if authService.isLoading {
                     ProgressView()
                 }
 
                 Section {
                     Button("Register") {
-                        Task { await authService.register(username: username, password: password, email: email) }
+                        let trimmedUsername = username.trimmingCharacters(in: .whitespaces)
+                        let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+                        Task { await authService.register(username: trimmedUsername, password: password, email: trimmedEmail) }
                     }
-                    .disabled(username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword ||
+                    .disabled(username.isEmpty || email.isEmpty || !email.contains("@") || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword ||
                         authService.isLoading)
                 }
 

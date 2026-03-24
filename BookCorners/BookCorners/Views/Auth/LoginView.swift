@@ -38,7 +38,8 @@ struct LoginView: View {
 
                 Section {
                     Button("Login") {
-                        Task { await authService.login(username: username, password: password) }
+                        let trimmedUsername = username.trimmingCharacters(in: .whitespaces)
+                        Task { await authService.login(username: trimmedUsername, password: password) }
                     }
                     .disabled(username.isEmpty || password.isEmpty || authService.isLoading)
                 }

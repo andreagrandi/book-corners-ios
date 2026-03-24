@@ -70,6 +70,12 @@ struct ReportView: View {
                 dismiss()
             }
         }
+        .sensoryFeedback(.success, trigger: viewModel?.didSubmitSuccessfully) { _, newValue in
+            newValue == true
+        }
+        .sensoryFeedback(.error, trigger: viewModel?.errorMessage) { _, newValue in
+            newValue != nil
+        }
     }
 }
 
