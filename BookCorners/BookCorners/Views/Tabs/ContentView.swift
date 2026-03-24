@@ -20,43 +20,55 @@ struct ContentView: View {
     @State private var showLoginSheet = false
 
     @Environment(AuthService.self) private var authService
+    @Environment(NetworkMonitor.self) private var networkMonitor
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            Tab("Nearby", systemImage: "books.vertical", value: AppTab.nearby) {
-                LibraryListView()
+        VStack(spacing: 0) {
+            if !networkMonitor.isConnected {
+                Label("No internet connection", systemImage: "wifi.slash")
+                    .font(.footnote)
+                    .padding(8)
+                    .frame(maxWidth: .infinity)
+                    .background(.red.opacity(0.9))
+                    .foregroundStyle(.white)
             }
 
-            Tab("Map", systemImage: "map", value: AppTab.map) {
-                MapTabView()
-            }
+            TabView(selection: $selectedTab) {
+                Tab("Nearby", systemImage: "books.vertical", value: AppTab.nearby) {
+                    LibraryListView()
+                }
 
-            Tab("Submit", systemImage: "plus.circle", value: AppTab.submit) {
-                SubmitLibraryView()
-            }
+                Tab("Map", systemImage: "map", value: AppTab.map) {
+                    MapTabView()
+                }
 
-            Tab("Profile", systemImage: "person", value: AppTab.profile) {
-                ProfileView()
+                Tab("Submit", systemImage: "plus.circle", value: AppTab.submit) {
+                    SubmitLibraryView()
+                }
+
+                Tab("Profile", systemImage: "person", value: AppTab.profile) {
+                    ProfileView()
+                }
             }
-        }
-        .onChange(of: selectedTab) { oldValue, newValue in
-            if newValue == .submit, !authService.isAuthenticated {
-                selectedTab = oldValue
-                showLoginSheet = true
-            } else {
-                previousTab = newValue
+            .onChange(of: selectedTab) { oldValue, newValue in
+                if newValue == .submit, !authService.isAuthenticated {
+                    selectedTab = oldValue
+                    showLoginSheet = true
+                } else {
+                    previousTab = newValue
+                }
             }
-        }
-        .sheet(isPresented: $showLoginSheet) {
-            LoginView()
-        }
-        .onChange(of: authService.isAuthenticated) { _, newValue in
-            if newValue == true, showLoginSheet {
-                showLoginSheet = false
-                selectedTab = .submit
+            .sheet(isPresented: $showLoginSheet) {
+                LoginView()
             }
+            .onChange(of: authService.isAuthenticated) { _, newValue in
+                if newValue == true, showLoginSheet {
+                    showLoginSheet = false
+                    selectedTab = .submit
+                }
+            }
+            .tabBarMinimizeBehavior(.onScrollDown)
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
     }
 }
 
@@ -66,4 +78,5 @@ struct ContentView: View {
             apiClient: APIClient(),
             keychainService: KeychainService(),
         ))
+        .environment(NetworkMonitor())
 }

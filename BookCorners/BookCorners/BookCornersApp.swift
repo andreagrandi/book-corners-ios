@@ -11,6 +11,7 @@ import SwiftUI
 struct BookCornersApp: App {
     @State private var apiClient = APIClient()
     @State private var locationService = LocationService()
+    @State private var networkMonitor = NetworkMonitor()
     @State private var authService: AuthService
     @State private var isReady = false
 
@@ -30,6 +31,7 @@ struct BookCornersApp: App {
                     .environment(\.apiClient, apiClient)
                     .environment(authService)
                     .environment(locationService)
+                    .environment(networkMonitor)
             } else {
                 SplashView()
                     .environment(\.apiClient, apiClient)
@@ -39,6 +41,7 @@ struct BookCornersApp: App {
                         async let restore: () = authService.restoreSession()
                         async let minDelay: () = Task.sleep(for: .milliseconds(800))
                         locationService.startMonitoring()
+                        networkMonitor.startMonitoring()
                         _ = await (restore, try? minDelay)
                         isReady = true
                     }

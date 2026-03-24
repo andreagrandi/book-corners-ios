@@ -408,9 +408,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3UFB423D7P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BookCorners/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
@@ -444,9 +446,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3UFB423D7P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BookCorners/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.reference";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Book Corners uses the camera to take photos of libraries";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Book Corners uses your location to show nearby libraries";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Corners needs access to your photos to submit library pictures";
