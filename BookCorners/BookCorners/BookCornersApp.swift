@@ -5,6 +5,7 @@
 //  Created by Andrea Grandi on 10/03/26.
 //
 
+import GoogleSignIn
 import SwiftUI
 
 @main
@@ -32,6 +33,9 @@ struct BookCornersApp: App {
                     .environment(authService)
                     .environment(locationService)
                     .environment(networkMonitor)
+                    .onOpenURL { url in
+                        GIDSignIn.sharedInstance.handle(url)
+                    }
             } else {
                 SplashView()
                     .environment(\.apiClient, apiClient)

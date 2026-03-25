@@ -27,6 +27,7 @@ protocol APIClientProtocol {
     func getMe() async throws -> User
     func register(username: String, password: String, email: String) async throws -> TokenPair
     func refreshToken(refreshToken: String) async throws -> AccessToken
+    func socialLogin(provider: String, idToken: String, firstName: String?, lastName: String?) async throws -> TokenPair
     func submitLibrary(
         address: String,
         city: String,

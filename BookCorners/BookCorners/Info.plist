@@ -4,6 +4,19 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Book Corners</string>
+	<key>GIDClientID</key>
+	<string>1059208464102-agj4onrsgotao5djin3bla3i98eg8ha7.apps.googleusercontent.com</string>
+	<key>GIDServerClientID</key>
+	<string>1059208464102-9let8nen9gunio17lnekrfd65ef9csup.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.1059208464102-agj4onrsgotao5djin3bla3i98eg8ha7</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>
