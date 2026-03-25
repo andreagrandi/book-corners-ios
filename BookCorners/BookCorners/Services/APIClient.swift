@@ -72,7 +72,7 @@ class APIClient: APIClientProtocol {
             )
         }
 
-        let isAuthEndpoint = url.path.contains("auth/refresh") || url.path.contains("auth/login") || url.path.contains("auth/register")
+        let isAuthEndpoint = url.path.contains("auth/refresh") || url.path.contains("auth/login") || url.path.contains("auth/register") || url.path.contains("auth/social")
         if httpResponse.statusCode == 401, let refresher = tokenRefresher, !isAuthEndpoint {
             let newToken = try await refresher()
             accessToken = newToken
@@ -217,6 +217,14 @@ class APIClient: APIClientProtocol {
 
     func refreshToken(refreshToken: String) async throws -> AccessToken {
         try await request(path: "auth/refresh", method: "POST", body: RefreshRequest(refresh: refreshToken))
+    }
+
+    func socialLogin(provider: String, idToken: String, firstName: String? = nil, lastName: String? = nil) async throws -> TokenPair {
+        try await request(
+            path: "auth/social",
+            method: "POST",
+            body: SocialLoginRequest(provider: provider, idToken: idToken, firstName: firstName, lastName: lastName),
+        )
     }
 
     // MARK: - Write Endpoints (multipart)

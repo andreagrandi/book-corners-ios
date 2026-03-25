@@ -35,6 +35,8 @@ struct ProfileView: View {
                             showingRegister = true
                         }
                     }
+
+                    SocialLoginButtonsView()
                 }
 
                 Section {

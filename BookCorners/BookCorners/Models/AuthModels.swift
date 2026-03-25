@@ -36,3 +36,10 @@ nonisolated struct RegisterRequest: Encodable {
 nonisolated struct RefreshRequest: Encodable {
     let refresh: String
 }
+
+nonisolated struct SocialLoginRequest: Encodable {
+    let provider: String
+    let idToken: String
+    let firstName: String?
+    let lastName: String?
+}

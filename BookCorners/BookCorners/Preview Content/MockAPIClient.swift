@@ -57,6 +57,10 @@ class MockAPIClient: APIClientProtocol {
         AccessToken(access: "new.access.token")
     }
 
+    func socialLogin(provider _: String, idToken _: String, firstName _: String?, lastName _: String?) async throws -> TokenPair {
+        SampleData.tokenPair
+    }
+
     func getMe() async throws -> User {
         SampleData.user
     }

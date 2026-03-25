@@ -2043,22 +2043,90 @@ and App Store preparation. Target: first release after this step.
 
 ---
 
-## Step 15 — Social Login (deferred — blocked on backend)
+## Step 15 — Social Login
 
-**Goal:** Add Google Sign-In and Sign in with Apple as alternative auth methods.
+**Goal:** Add Sign in with Apple and Google Sign-In as alternative auth methods.
 
-**Requires backend:** `POST /auth/google` and `POST /auth/apple` endpoints that exchange
-identity provider tokens for JWT pairs.
+**Backend dependency:** `POST /api/v1/auth/social` endpoint (see `book-corners-plan.md`
+Phase 10). This single endpoint accepts `{"provider": "apple"|"google", "id_token": "..."}` and
+returns a JWT `TokenPair`. The backend uses allauth's `provider.verify_token()` internally
+to verify identity tokens and handles user creation/linking. Account linking by email is
+automatic — if a social login email matches an existing user, the accounts are linked.
 
 **Concepts:** `AuthenticationServices` framework (Apple Sign-In), Google Sign-In SDK (SPM),
-identity token exchange, account linking.
+native identity token exchange, `SignInWithAppleButton` (SwiftUI).
 
-- [ ] 15.1 Implement Sign in with Apple using `ASAuthorizationAppleIDProvider`
-- [ ] 15.2 Add Google Sign-In SDK via SPM
-- [ ] 15.3 Implement Google Sign-In flow
-- [ ] 15.4 Exchange provider tokens for JWT via backend
-- [ ] 15.5 Handle account linking (same email, different provider)
-- [ ] 15.6 Update `LoginView` with social login buttons
+### 15.0 — Prerequisites
+
+- [x] 15.0.1 Create feature branch: `git checkout -b feature/social-login` ✅
+- [x] 15.0.2 Backend `POST /api/v1/auth/social` endpoint must be deployed ✅
+- [x] 15.0.3 Create an iOS OAuth client ID in Google Cloud Console ✅
+- [x] 15.0.4 Note the existing Google **web/server client ID** ✅
+
+### 15.1 — Xcode Configuration
+
+- [x] 15.1.1 Add **Sign in with Apple** capability ✅
+- [x] 15.1.2 Add **Google Sign-In SDK** via SPM ✅
+- [x] 15.1.3 Add `GIDClientID`, `GIDServerClientID`, and URL scheme to **Info.plist** ✅
+
+### 15.2 — Auth Model + API Changes
+
+- [x] 15.2.1 Add `SocialLoginRequest` to `Models/AuthModels.swift` ✅
+- [x] 15.2.2 Add `socialLogin()` method to `Services/APIClientProtocol.swift` ✅
+- [x] 15.2.3 Implement `socialLogin()` in `Services/APIClient.swift` ✅
+- [x] 15.2.4 Update `isAuthEndpoint` check in `APIClient.swift` to include `auth/social` ✅
+
+### 15.3 — AuthService Social Login Methods
+
+- [x] 15.3.1 Add `loginWithApple(identityToken:firstName:lastName:)` to `Services/AuthService.swift` ✅
+- [x] 15.3.2 Add `loginWithGoogle(idToken:)` to `Services/AuthService.swift` ✅
+- [x] 15.3.3 Update `mapError()` — changed to "Authentication failed." ✅
+
+### 15.4 — Social Login Buttons (ProfileView)
+
+Social buttons live in `ProfileView` (not LoginView/RegisterView) so they are
+visible to unauthenticated users without opening a sheet first. They are extracted
+into a reusable `Views/Auth/SocialLoginButtonsView.swift` component.
+
+- [x] 15.4.1 Create `Views/Auth/SocialLoginButtonsView.swift`: ✅
+      - A `Section` containing a `SignInWithAppleButton` and a custom Google button
+      - Apple: uses native `SignInWithAppleButton(.signIn)` from `AuthenticationServices`
+        - `onRequest`: set `request.requestedScopes = [.fullName, .email]`
+        - `onCompletion`: extract `ASAuthorizationAppleIDCredential`, get `identityToken`
+          as UTF-8 string, get optional `fullName?.givenName` / `fullName?.familyName`
+        - Call `authService.loginWithApple(identityToken:firstName:lastName:)`
+        - Handle `.failure` — ignore `.canceled`, show other errors
+        - Note: Apple only provides name/email on the FIRST authorization. On subsequent
+          sign-ins, only `identityToken` is returned. The backend handles this gracefully.
+      - Google: custom `Button` with Google "G" logo and "Sign in with Google" text
+        (the SDK's `GoogleSignInButton` doesn't match native iOS style)
+        - Get the root view controller from `UIWindowScene`
+        - Call `GIDSignIn.sharedInstance.signIn(withPresenting: rootVC)`
+        - Extract `result.user.idToken?.tokenString`
+        - Call `authService.loginWithGoogle(idToken:)`
+        - Handle errors (ignore cancellation)
+- [x] 15.4.2 Add Google "G" logo to `Assets.xcassets/GoogleLogo.imageset/` ✅
+- [x] 15.4.3 Add `SocialLoginButtonsView()` to `ProfileView` (unauthenticated state only) ✅
+
+### 15.7 — Google Sign-In URL Callback
+
+- [x] 15.7.1 Add `.onOpenURL` handler in `BookCornersApp.swift` ✅
+
+### 15.8 — Update Tests
+
+- [x] 15.8.1 Add `socialLogin()` to `MockAPIClient` in test files so existing tests compile ✅
+- [ ] 15.8.2 Add unit tests for `AuthService.loginWithApple()` and `loginWithGoogle()`
+      using mock API client
+
+### 15.9 — Verification
+
+- [x] 15.9.1 Build: `xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners build` ✅
+- [x] 15.9.2 Test Sign in with Apple on physical device ✅
+- [x] 15.9.3 Test Google Sign-In on physical device ✅
+- [ ] 15.9.4 Verify email/password login still works
+- [ ] 15.9.5 Verify token refresh works after social login
+- [ ] 15.9.6 Verify logout clears social login session
+- [ ] 15.9.7 Verify session restore on app relaunch after social login
 
 ---
 

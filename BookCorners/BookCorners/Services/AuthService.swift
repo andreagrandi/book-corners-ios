@@ -53,7 +53,7 @@ class AuthService {
         }
         switch apiError {
         case .unauthorized:
-            return "Invalid username or password"
+            return "Authentication failed."
         case .rateLimited:
             return "Too many attempts. Please try again later."
         case .networkError:
@@ -85,6 +85,40 @@ class AuthService {
 
         do {
             let tokenPair = try await apiClient.register(username: username, password: password, email: email)
+            try await handleAuthSuccess(tokenPair)
+        } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
+    func loginWithApple(identityToken: String, firstName: String?, lastName: String?) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let tokenPair = try await apiClient.socialLogin(
+                provider: "apple",
+                idToken: identityToken,
+                firstName: firstName,
+                lastName: lastName,
+            )
+            try await handleAuthSuccess(tokenPair)
+        } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
+    func loginWithGoogle(idToken: String) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            let tokenPair = try await apiClient.socialLogin(
+                provider: "google",
+                idToken: idToken,
+            )
             try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
