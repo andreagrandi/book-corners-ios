@@ -20,6 +20,16 @@ nonisolated struct User: Codable, Identifiable {
     let id: Int
     let username: String
     let email: String
+    let isSocialOnly: Bool?
+}
+
+nonisolated struct DeleteAccountRequest: Encodable {
+    let password: String?
+    let confirm: Bool?
+}
+
+nonisolated struct MessageResponse: Codable {
+    let message: String
 }
 
 nonisolated struct LoginRequest: Encodable {

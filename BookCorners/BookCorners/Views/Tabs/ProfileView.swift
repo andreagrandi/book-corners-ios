@@ -10,8 +10,9 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
 
-    @State private var showingLogin = false
-    @State private var showingRegister = false
+    @State private var showingAuth = false
+    @State private var showingDeleteConfirmation = false
+    @State private var deleteConfirmationText = ""
 
     var body: some View {
         NavigationStack {
@@ -26,17 +27,18 @@ struct ProfileView: View {
                             authService.logout()
                         }
                     }
-                } else {
                     Section {
-                        Button("Login") {
-                            showingLogin = true
-                        }
-                        Button("Register") {
-                            showingRegister = true
+                        Button("Delete Account", role: .destructive) {
+                            deleteConfirmationText = ""
+                            showingDeleteConfirmation = true
                         }
                     }
-
-                    SocialLoginButtonsView()
+                } else {
+                    Section {
+                        Button("Sign In or Register") {
+                            showingAuth = true
+                        }
+                    }
                 }
 
                 Section {
@@ -52,11 +54,39 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
         }
-        .sheet(isPresented: $showingLogin) {
-            LoginView()
+        .sheet(isPresented: $showingAuth) {
+            AuthGateView()
         }
-        .sheet(isPresented: $showingRegister) {
-            RegisterView()
+        .alert(
+            "Delete Account",
+            isPresented: $showingDeleteConfirmation,
+        ) {
+            if authService.currentUser?.isSocialOnly == true {
+                TextField("Type DELETE to confirm", text: $deleteConfirmationText)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await authService.deleteAccountSocial()
+                    }
+                }
+                .disabled(deleteConfirmationText != "DELETE")
+            } else {
+                SecureField("Enter your password", text: $deleteConfirmationText)
+                Button("Delete", role: .destructive) {
+                    Task {
+                        await authService.deleteAccount(password: deleteConfirmationText)
+                    }
+                }
+                .disabled(deleteConfirmationText.isEmpty)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            if authService.currentUser?.isSocialOnly == true {
+                Text("This action is permanent. Type DELETE to confirm.")
+            } else {
+                Text("This action is permanent. Enter your password to confirm.")
+            }
         }
     }
 }

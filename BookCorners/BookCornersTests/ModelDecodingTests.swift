@@ -77,6 +77,7 @@ struct ModelDecodingTests {
         #expect(user.id == 42)
         #expect(user.username == "booklover")
         #expect(user.email == "booklover@example.com")
+        #expect(user.isSocialOnly == false)
     }
 
     @Test func `statistics decodes`() throws {

@@ -59,7 +59,7 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showLoginSheet) {
-                LoginView()
+                AuthGateView()
             }
             .onChange(of: authService.isAuthenticated) { _, newValue in
                 if newValue == true, showLoginSheet {

@@ -106,6 +106,10 @@ class StubAPIClient: APIClientProtocol {
         }
         return SampleData.libraryPhoto
     }
+
+    func deleteAccount(password _: String?, confirm _: Bool?) async throws -> MessageResponse {
+        MessageResponse(message: "Account deleted successfully.")
+    }
 }
 
 @MainActor

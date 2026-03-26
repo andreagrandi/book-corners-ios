@@ -67,7 +67,7 @@ extension SerialNetworkTests {
 
             #expect(authService.isAuthenticated == false)
             #expect(authService.currentUser == nil)
-            #expect(authService.errorMessage == "Invalid username or password")
+            #expect(authService.errorMessage == "Authentication failed.")
         }
 
         @Test func logout() async {
@@ -171,6 +171,121 @@ extension SerialNetworkTests {
 
             #expect(authService.isAuthenticated)
             #expect(authService.currentUser?.username == "booklover")
+        }
+
+        @Test func `delete account success clears session`() async {
+            // First log in
+            MockURLProtocol.requestHandler = { request in
+                let path = request.url!.path
+                let json: String
+
+                if path.contains("auth/login") {
+                    json = Fixtures.tokenPairJSON
+                } else if path.contains("auth/me"), request.httpMethod == "GET" {
+                    json = Fixtures.userJSON
+                } else if path.contains("auth/me"), request.httpMethod == "DELETE" {
+                    json = Fixtures.deleteAccountSuccessJSON
+                } else {
+                    Issue.record("Unexpected request: \(request.httpMethod ?? "?") \(path)")
+                    json = "{}"
+                }
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, json.data(using: .utf8)!)
+            }
+
+            await authService.login(username: "test", password: "pass")
+            #expect(authService.isAuthenticated)
+
+            await authService.deleteAccount(password: "pass")
+
+            #expect(authService.isAuthenticated == false)
+            #expect(authService.currentUser == nil)
+            #expect(authService.errorMessage == nil)
+        }
+
+        @Test func `delete account wrong password shows error`() async {
+            // First log in
+            MockURLProtocol.requestHandler = { request in
+                let path = request.url!.path
+
+                if path.contains("auth/login") {
+                    let response = HTTPURLResponse(
+                        url: request.url!, statusCode: 200,
+                        httpVersion: nil, headerFields: nil,
+                    )!
+                    return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+                } else if path.contains("auth/me"), request.httpMethod == "GET" {
+                    let response = HTTPURLResponse(
+                        url: request.url!, statusCode: 200,
+                        httpVersion: nil, headerFields: nil,
+                    )!
+                    return (response, Fixtures.userJSON.data(using: .utf8)!)
+                } else if path.contains("auth/me"), request.httpMethod == "DELETE" {
+                    let json = """
+                    {"message": "Incorrect password."}
+                    """
+                    let response = HTTPURLResponse(
+                        url: request.url!, statusCode: 400,
+                        httpVersion: nil, headerFields: nil,
+                    )!
+                    return (response, json.data(using: .utf8)!)
+                } else {
+                    Issue.record("Unexpected request: \(path)")
+                    let response = HTTPURLResponse(
+                        url: request.url!, statusCode: 500,
+                        httpVersion: nil, headerFields: nil,
+                    )!
+                    return (response, "{}".data(using: .utf8)!)
+                }
+            }
+
+            await authService.login(username: "test", password: "pass")
+            #expect(authService.isAuthenticated)
+
+            await authService.deleteAccount(password: "wrongpass")
+
+            #expect(authService.isAuthenticated == true)
+            #expect(authService.currentUser != nil)
+            #expect(authService.errorMessage == "Incorrect password.")
+        }
+
+        @Test func `delete social account success clears session`() async {
+            // Log in, then mock getMe to return social user, then delete
+            MockURLProtocol.requestHandler = { request in
+                let path = request.url!.path
+                let json: String
+
+                if path.contains("auth/login") {
+                    json = Fixtures.tokenPairJSON
+                } else if path.contains("auth/me"), request.httpMethod == "GET" {
+                    json = Fixtures.socialUserJSON
+                } else if path.contains("auth/me"), request.httpMethod == "DELETE" {
+                    json = Fixtures.deleteAccountSuccessJSON
+                } else {
+                    Issue.record("Unexpected request: \(request.httpMethod ?? "?") \(path)")
+                    json = "{}"
+                }
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, json.data(using: .utf8)!)
+            }
+
+            await authService.login(username: "test", password: "pass")
+            #expect(authService.isAuthenticated)
+            #expect(authService.currentUser?.isSocialOnly == true)
+
+            await authService.deleteAccountSocial()
+
+            #expect(authService.isAuthenticated == false)
+            #expect(authService.currentUser == nil)
+            #expect(authService.errorMessage == nil)
         }
 
         @Test func `session restore with expired refresh logs out`() async throws {

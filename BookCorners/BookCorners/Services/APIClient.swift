@@ -307,6 +307,16 @@ class APIClient: APIClientProtocol {
 
         return try await multipartRequest(path: "libraries/\(slug)/photo", multipart: multipart)
     }
+
+    // MARK: - Account Management
+
+    func deleteAccount(password: String? = nil, confirm: Bool? = nil) async throws -> MessageResponse {
+        try await request(
+            path: "auth/me",
+            method: "DELETE",
+            body: DeleteAccountRequest(password: password, confirm: confirm),
+        )
+    }
 }
 
 extension EnvironmentValues {

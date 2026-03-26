@@ -154,6 +154,32 @@ class AuthService {
         errorMessage = nil
     }
 
+    func deleteAccount(password: String) async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            _ = try await apiClient.deleteAccount(password: password, confirm: nil)
+            logout()
+        } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
+    func deleteAccountSocial() async {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            _ = try await apiClient.deleteAccount(password: nil, confirm: true)
+            logout()
+        } catch {
+            errorMessage = mapError(error)
+        }
+    }
+
     func restoreSession() async {
         isLoading = true
         defer { isLoading = false }
