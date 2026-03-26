@@ -58,4 +58,5 @@ protocol APIClientProtocol {
         photo: Data,
         caption: String?,
     ) async throws -> LibraryPhoto
+    func deleteAccount(password: String?, confirm: Bool?) async throws -> MessageResponse
 }

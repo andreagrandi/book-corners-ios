@@ -103,4 +103,8 @@ class MockAPIClient: APIClientProtocol {
     ) async throws -> LibraryPhoto {
         SampleData.libraryPhoto
     }
+
+    func deleteAccount(password _: String?, confirm _: Bool?) async throws -> MessageResponse {
+        MessageResponse(message: "Account deleted successfully.")
+    }
 }
