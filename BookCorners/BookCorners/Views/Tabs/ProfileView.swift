@@ -10,8 +10,7 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(AuthService.self) private var authService
 
-    @State private var showingLogin = false
-    @State private var showingRegister = false
+    @State private var showingAuth = false
     @State private var showingDeleteConfirmation = false
     @State private var deleteConfirmationText = ""
 
@@ -36,15 +35,10 @@ struct ProfileView: View {
                     }
                 } else {
                     Section {
-                        Button("Login") {
-                            showingLogin = true
-                        }
-                        Button("Register") {
-                            showingRegister = true
+                        Button("Sign In or Register") {
+                            showingAuth = true
                         }
                     }
-
-                    SocialLoginButtonsView()
                 }
 
                 Section {
@@ -60,11 +54,8 @@ struct ProfileView: View {
             }
             .navigationTitle("Profile")
         }
-        .sheet(isPresented: $showingLogin) {
-            LoginView()
-        }
-        .sheet(isPresented: $showingRegister) {
-            RegisterView()
+        .sheet(isPresented: $showingAuth) {
+            AuthGateView()
         }
         .alert(
             "Delete Account",
