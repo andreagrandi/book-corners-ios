@@ -87,6 +87,7 @@ enum SampleData {
         id: 1,
         username: "andrea",
         email: "andrea@example.com",
+        isSocialOnly: false,
     )
 
     static let tokenPair = TokenPair(

@@ -143,7 +143,23 @@ enum Fixtures {
     {
         "id": 42,
         "username": "booklover",
-        "email": "booklover@example.com"
+        "email": "booklover@example.com",
+        "is_social_only": false
+    }
+    """
+
+    static let socialUserJSON = """
+    {
+        "id": 43,
+        "username": "socialuser",
+        "email": "social@example.com",
+        "is_social_only": true
+    }
+    """
+
+    static let deleteAccountSuccessJSON = """
+    {
+        "message": "Account deleted successfully."
     }
     """
 
