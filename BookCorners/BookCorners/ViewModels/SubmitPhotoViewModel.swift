@@ -34,8 +34,9 @@ class SubmitPhotoViewModel {
     func loadPhoto() async {
         guard let item = selectedPhotoItem else { return }
         guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-        photoData = data
-        photoThumbnail = Image(uiImage: UIImage(data: data) ?? UIImage())
+        guard let uiImage = UIImage(data: data) else { return }
+        photoData = uiImage.jpegData(compressionQuality: 0.85)
+        photoThumbnail = Image(uiImage: uiImage)
     }
 
     func submit() async {

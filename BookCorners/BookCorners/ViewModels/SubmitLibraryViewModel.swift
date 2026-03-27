@@ -83,11 +83,11 @@ class SubmitLibraryViewModel {
 
         do {
             if let data = try await item.loadTransferable(type: Data.self) {
-                photoData = data
                 if let uiImage = UIImage(data: data) {
+                    photoData = uiImage.jpegData(compressionQuality: 0.85)
                     photoThumbnail = Image(uiImage: uiImage)
                 }
-                // Extract EXIF coordinates
+                // Extract EXIF coordinates from original data (before JPEG conversion strips it)
                 if let coordinate = EXIFReader.extractCoordinates(from: data) {
                     latitude = coordinate.latitude
                     longitude = coordinate.longitude
