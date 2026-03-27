@@ -6,6 +6,9 @@ Book Corners
 ## Subtitle (max 30 characters)
 Find Community Book Exchanges
 
+## Promotional Text (max 170 characters)
+Discover community book exchanges near you. Browse the map, find your next read, and help grow the directory by submitting new libraries and photos.
+
 ## Description (max 4000 characters)
 Book Corners helps you discover, share, and contribute to community book exchanges in your neighborhood and around the world.
 
