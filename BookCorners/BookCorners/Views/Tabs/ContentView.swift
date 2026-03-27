@@ -44,7 +44,7 @@ struct ContentView: View {
 
                 Tab("Submit", systemImage: "plus.circle", value: AppTab.submit) {
                     SubmitLibraryView {
-                        selectedTab = previousTab
+                        selectedTab = .nearby
                     }
                 }
 
