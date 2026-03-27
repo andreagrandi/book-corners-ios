@@ -133,7 +133,7 @@ struct LibraryDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ShareLink(
-                item: URL(string: "https://bookcorners.org/libraries/\(displayLibrary.slug)/")!,
+                item: URL(string: "https://www.bookcorners.org/library/\(displayLibrary.slug)/")!,
                 subject: Text(displayLibrary.displayName),
                 message: Text("Check out this little library!"),
             )
