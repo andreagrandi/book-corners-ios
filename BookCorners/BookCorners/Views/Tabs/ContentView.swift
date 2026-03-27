@@ -43,7 +43,9 @@ struct ContentView: View {
                 }
 
                 Tab("Submit", systemImage: "plus.circle", value: AppTab.submit) {
-                    SubmitLibraryView()
+                    SubmitLibraryView {
+                        selectedTab = previousTab
+                    }
                 }
 
                 Tab("Profile", systemImage: "person", value: AppTab.profile) {
@@ -55,7 +57,7 @@ struct ContentView: View {
                     selectedTab = oldValue
                     showLoginSheet = true
                 } else {
-                    previousTab = newValue
+                    previousTab = oldValue
                 }
             }
             .sheet(isPresented: $showLoginSheet) {

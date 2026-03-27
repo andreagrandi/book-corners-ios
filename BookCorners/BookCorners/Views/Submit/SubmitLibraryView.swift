@@ -10,6 +10,8 @@ import PhotosUI
 import SwiftUI
 
 struct SubmitLibraryView: View {
+    var onCancel: (() -> Void)?
+
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: SubmitLibraryViewModel?
     @State private var pinCameraPosition: MapCameraPosition = .automatic
@@ -227,6 +229,14 @@ struct SubmitLibraryView: View {
             }
         }
         .navigationTitle("Submit Library")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    viewModel.reset()
+                    onCancel?()
+                }
+            }
+        }
         .onChange(of: viewModel.selectedPhotoItem) {
             Task { await viewModel.loadPhoto() }
         }

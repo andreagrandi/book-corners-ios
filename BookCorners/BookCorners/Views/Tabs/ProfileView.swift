@@ -27,12 +27,6 @@ struct ProfileView: View {
                             authService.logout()
                         }
                     }
-                    Section {
-                        Button("Delete Account", role: .destructive) {
-                            deleteConfirmationText = ""
-                            showingDeleteConfirmation = true
-                        }
-                    }
                 } else {
                     Section {
                         Button("Sign In or Register") {
@@ -42,13 +36,21 @@ struct ProfileView: View {
                 }
 
                 Section {
-                    HStack {
-                        Spacer()
+                    VStack(spacing: 12) {
                         Text("version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
-                        Spacer()
+
+                        if authService.isAuthenticated {
+                            Button("Delete Account") {
+                                deleteConfirmationText = ""
+                                showingDeleteConfirmation = true
+                            }
+                            .font(.footnote)
+                            .foregroundStyle(.red.opacity(0.7))
+                        }
                     }
+                    .frame(maxWidth: .infinity)
                 }
                 .listRowBackground(Color.clear)
             }
