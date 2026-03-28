@@ -15,6 +15,7 @@ struct SubmitPhotoView: View {
     @State private var viewModel: SubmitPhotoViewModel?
     @State private var showSuccessAlert = false
     @State private var showCamera = false
+    @State private var showPhotoPicker = false
 
     var body: some View {
         NavigationStack {
@@ -36,13 +37,9 @@ struct SubmitPhotoView: View {
                             Label("Take Photo", systemImage: "camera")
                         }
 
-                        PhotosPicker(
-                            selection: Binding(
-                                get: { viewModel?.selectedPhotoItem },
-                                set: { viewModel?.selectedPhotoItem = $0 },
-                            ),
-                            matching: .images,
-                        ) {
+                        Button {
+                            showPhotoPicker = true
+                        } label: {
                             Label("Choose from Library", systemImage: "photo.on.rectangle")
                         }
                     } label: {
@@ -111,6 +108,14 @@ struct SubmitPhotoView: View {
             }
             .ignoresSafeArea()
         }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: Binding(
+                get: { viewModel?.selectedPhotoItem },
+                set: { viewModel?.selectedPhotoItem = $0 },
+            ),
+            matching: .images,
+        )
         .alert("Photo Submitted", isPresented: $showSuccessAlert) {
             Button("OK") { dismiss() }
         } message: {

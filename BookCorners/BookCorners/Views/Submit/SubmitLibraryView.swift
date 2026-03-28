@@ -16,6 +16,7 @@ struct SubmitLibraryView: View {
     @State private var viewModel: SubmitLibraryViewModel?
     @State private var pinCameraPosition: MapCameraPosition = .automatic
     @State private var showCamera = false
+    @State private var showPhotoPicker = false
 
     var body: some View {
         NavigationStack {
@@ -50,13 +51,9 @@ struct SubmitLibraryView: View {
                         Label("Take Photo", systemImage: "camera")
                     }
 
-                    PhotosPicker(
-                        selection: Binding(
-                            get: { viewModel.selectedPhotoItem },
-                            set: { viewModel.selectedPhotoItem = $0 },
-                        ),
-                        matching: .images,
-                    ) {
+                    Button {
+                        showPhotoPicker = true
+                    } label: {
                         Label("Choose from Library", systemImage: "photo.on.rectangle")
                     }
                 } label: {
@@ -255,6 +252,14 @@ struct SubmitLibraryView: View {
             }
             .ignoresSafeArea()
         }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: Binding(
+                get: { viewModel.selectedPhotoItem },
+                set: { viewModel.selectedPhotoItem = $0 },
+            ),
+            matching: .images,
+        )
         .onChange(of: viewModel.selectedPhotoItem) {
             Task { await viewModel.loadPhoto() }
         }
