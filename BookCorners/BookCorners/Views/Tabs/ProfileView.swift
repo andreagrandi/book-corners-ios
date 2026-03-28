@@ -35,6 +35,32 @@ struct ProfileView: View {
                     }
                 }
 
+                Section("About") {
+                    Link(destination: URL(string: "https://www.andreagrandi.it")!) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "person.fill")
+                                .frame(width: 20)
+                            Text("Made by ") + Text("Andrea Grandi").bold()
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
+                    Link(destination: URL(string: "https://www.bookcorners.org/privacy/")!) {
+                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                    }
+                    .foregroundStyle(.primary)
+
+                    Link(destination: URL(string: "https://www.bookcorners.org")!) {
+                        Label("Book Corners Website", systemImage: "globe")
+                    }
+                    .foregroundStyle(.primary)
+
+                    Link(destination: URL(string: "https://github.com/andreagrandi/book-corners-ios")!) {
+                        Label("Source Code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
+                    .foregroundStyle(.primary)
+                }
+
                 Section {
                     VStack(spacing: 12) {
                         Text("version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
