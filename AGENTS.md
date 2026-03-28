@@ -1,20 +1,74 @@
 # Repository Guidelines
 
-## Tutorial-First Workflow
-This repository is a learning project, not a speed-run implementation. Treat [book-corners-ios-plan.md](/Users/andrea/Projects/book-corners-ios/book-corners-ios-plan.md) as the source of truth for scope, order, and pacing. When helping here, act like a teacher: explain the concept before the code, use Python/Go analogies where useful, guide one small step at a time, explain unfamiliar Swift/SwiftUI syntax as it appears, and recap after each step. Do not jump ahead until the learner confirms understanding. For API work, use the production API for read-only steps and switch to the local backend for write flows.
+## Project Overview
+Book Corners is an iOS app for discovering and sharing community book-sharing libraries. The backend is a Django + Django Ninja API at `https://bookcorners.org/api/v1/`.
 
-## Project Structure & Module Organization
-The Xcode project is [BookCorners/BookCorners.xcodeproj](/Users/andrea/Projects/book-corners-ios/BookCorners/BookCorners.xcodeproj). App code lives in [BookCorners/BookCorners](/Users/andrea/Projects/book-corners-ios/BookCorners/BookCorners): `Models/`, `Services/`, `ViewModels/`, `Views/`, `Extensions/`, `Utilities/`, and `Preview Content/`. Keep screen code under the matching `Views/` subfolder such as `Tabs/`, `Auth/`, `Libraries/`, `Map/`, or `Submit/`. Unit tests live in [BookCorners/BookCornersTests](/Users/andrea/Projects/book-corners-ios/BookCorners/BookCornersTests); UI tests live in [BookCorners/BookCornersUITests](/Users/andrea/Projects/book-corners-ios/BookCorners/BookCornersUITests).
+## Project Structure
+The Xcode project is `BookCorners/BookCorners.xcodeproj`. App code lives in `BookCorners/BookCorners/`:
 
-## Build, Test, and Development Commands
-Use `open BookCorners/BookCorners.xcodeproj` for day-to-day work in Xcode. Build from the CLI with `xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners build`. Run tests with `xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners test -destination 'platform=iOS Simulator,name=iPhone 16'` and swap in an installed simulator if needed. In Xcode, prefer `Cmd+B` for quick compile checks and `Cmd+R` for step-by-step simulator runs.
+```
+Models/          — Codable structs for API responses and domain objects
+Services/        — Network, auth, location, keychain, and other service classes
+ViewModels/      — @Observable classes managing view state and async operations
+Views/
+  Auth/          — Login, register, social sign-in
+  Components/    — Reusable UI (cards, pickers, empty/error states)
+  Libraries/     — Library list and detail screens
+  Map/           — Map tab
+  Photos/        — Photo submission
+  Report/        — Library reporting
+  Submit/        — Library submission
+  Tabs/          — ContentView (tab coordinator), ProfileView
+Preview Content/ — MockAPIClient and SampleData for SwiftUI previews
+Extensions/      — Swift extensions (e.g. CLLocation+Distance)
+Utilities/       — Helpers (e.g. EXIFReader)
+```
 
-## Coding Style & Naming Conventions
-This app uses Swift 6.2, SwiftUI, MVVM, and `@Observable`. Follow the existing style: 4-space indentation, one primary type per file, `UpperCamelCase` for types, and `lowerCamelCase` for properties and methods. Keep changes boring and incremental. Add new models to `Models/`, service code to `Services/`, and view state to `ViewModels/`. Avoid third-party dependencies unless the tutorial explicitly introduces them.
+Tests: `BookCorners/BookCornersTests/` (unit), `BookCorners/BookCornersUITests/` (UI).
 
-## Testing Guidelines
-Prefer Swift Testing for unit coverage: `import Testing`, `@Test`, and `#expect`. Keep network tests deterministic with `MockURLProtocol` and fixtures. Reserve XCTest for UI behavior in `BookCornersUITests`. Add or update tests with each meaningful behavior change so every tutorial step still builds and passes cleanly.
+## Architecture
+- **MVVM** with `@Observable` (not Combine)
+- **Dependency injection**: services created in `BookCornersApp.swift`, passed via `.environment()`. ViewModels receive `any APIClientProtocol` via constructor injection.
+- **Networking**: `APIClient` (URLSession-based) implements `APIClientProtocol`. Handles JSON encoding/decoding with `convertFromSnakeCase` key strategy, auth token management, and automatic token refresh.
+- **Auth**: `AuthService` manages login/register/social login flows and stores tokens via `KeychainService`.
+- **External dependency**: GoogleSignIn (only third-party framework).
 
-## Commit & Pull Request Guidelines
-Match recent history with short imperative commit subjects such as `Add ProfileView...` or `Fix missing paren...`; include step references like `(Step 5.4)` when they help. Never guess JIRA IDs. Do not run `git commit` or `git push` without explicit user approval. Use `gh` for GitHub operations, include a real PR description, and attach screenshots for visible UI changes.
+## Build & Test
 
+```bash
+# Build
+xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners build \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+
+# Run tests
+xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners test \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
+```
+
+Swap simulator name if unavailable. Use `xcodebuild ... -quiet` to suppress noise. Always verify builds compile before declaring work done.
+
+## Research Before Implementing
+Before using any Apple framework, SwiftUI API, or third-party library: **look up the documentation first** using context7 (ctx7) to verify correct API names, method signatures, and current best practices. Do not guess or rely on training data — APIs change across OS versions. Always check Apple's recommended patterns (e.g. prefer `@Observable` over `ObservableObject`, modern concurrency over Combine, etc.).
+
+## Coding Style
+- **Swift 6.2**, SwiftUI, iOS 26+ deployment target
+- 4-space indentation, trailing commas in multi-line parameters
+- One primary type per file, `UpperCamelCase` for types, `lowerCamelCase` for properties/methods
+- `@Observable` for ViewModels (not `ObservableObject`/`@Published`)
+- `async/await` for concurrency (no Combine)
+- **SwiftFormat** runs automatically via a git pre-commit hook on staged `.swift` files — do not run it manually or remind the user to do so
+
+## Testing
+- **Swift Testing** framework: `import Testing`, `@Test`, `@Suite`, `#expect`
+- Network tests use `MockURLProtocol` with handler closures and a custom `mockSession`
+- ViewModel tests use `StubAPIClient` (conforms to `APIClientProtocol`) with per-method handler closures
+- Fixtures defined in `Fixtures.swift` as static JSON strings
+- Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid `MockURLProtocol` handler conflicts
+- Preview data uses `MockAPIClient` and `SampleData` in `Preview Content/`
+
+## Commit Guidelines
+- Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
+- Never run `git commit` or `git push` without explicit user approval
+- Use `gh` for all GitHub operations; always include a PR description
+- Never include personal email addresses in commits or PRs
+- Never use `"Little Free Library"` — it's trademarked. Use "book-sharing library" or "library"
