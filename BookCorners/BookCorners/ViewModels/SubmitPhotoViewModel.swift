@@ -39,6 +39,12 @@ class SubmitPhotoViewModel {
         photoThumbnail = Image(uiImage: uiImage)
     }
 
+    func setPhoto(image: UIImage) {
+        photoData = image.jpegData(compressionQuality: 0.85)
+        photoThumbnail = Image(uiImage: image)
+        selectedPhotoItem = nil
+    }
+
     func submit() async {
         guard let photoData else { return }
         isSubmitting = true

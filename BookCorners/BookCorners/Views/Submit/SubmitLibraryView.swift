@@ -15,6 +15,7 @@ struct SubmitLibraryView: View {
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: SubmitLibraryViewModel?
     @State private var pinCameraPosition: MapCameraPosition = .automatic
+    @State private var showCamera = false
 
     var body: some View {
         NavigationStack {
@@ -34,25 +35,38 @@ struct SubmitLibraryView: View {
             // MARK: - Photo
 
             Section("Photo") {
-                PhotosPicker(
-                    selection: Binding(
-                        get: { viewModel.selectedPhotoItem },
-                        set: { viewModel.selectedPhotoItem = $0 },
-                    ),
-                    matching: .images,
-                ) {
-                    if let thumbnail = viewModel.photoThumbnail {
-                        thumbnail
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    } else {
-                        Label("Select Photo", systemImage: "photo.on.rectangle")
+                if let thumbnail = viewModel.photoThumbnail {
+                    thumbnail
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 200)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+
+                Menu {
+                    Button {
+                        showCamera = true
+                    } label: {
+                        Label("Take Photo", systemImage: "camera")
                     }
+
+                    PhotosPicker(
+                        selection: Binding(
+                            get: { viewModel.selectedPhotoItem },
+                            set: { viewModel.selectedPhotoItem = $0 },
+                        ),
+                        matching: .images,
+                    ) {
+                        Label("Choose from Library", systemImage: "photo.on.rectangle")
+                    }
+                } label: {
+                    Label(
+                        viewModel.photoData != nil ? "Change Photo" : "Select Photo",
+                        systemImage: "photo",
+                    )
                 }
                 .accessibilityLabel(viewModel.photoData != nil ? "Change photo" : "Select photo")
-                .accessibilityHint("Opens photo picker")
+                .accessibilityHint("Opens photo or camera options")
             }
 
             // MARK: - Location
@@ -236,6 +250,12 @@ struct SubmitLibraryView: View {
                     onCancel?()
                 }
             }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { image in
+                viewModel.setPhoto(image: image)
+            }
+            .ignoresSafeArea()
         }
         .onChange(of: viewModel.selectedPhotoItem) {
             Task { await viewModel.loadPhoto() }
