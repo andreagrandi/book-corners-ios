@@ -1,7 +1,7 @@
 # Book Corners iOS — Implementation Plan
 
 > A SwiftUI iOS client for [Book Corners](https://www.bookcorners.org): a community-driven directory
-> of little free libraries. Users can discover nearby book exchange spots, submit new ones,
+> of book-sharing libraries. Users can discover nearby book exchange spots, submit new ones,
 > report issues, and contribute photos.
 
 **Approach:** Interactive tutorial. Each step below will be expanded into detailed sub-steps
