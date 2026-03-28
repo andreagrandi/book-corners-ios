@@ -40,7 +40,7 @@ struct ProfileView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "person.fill")
                                 .frame(width: 20)
-                            Text("Made by ") + Text("Andrea Grandi").bold()
+                            Text("Made with ❤️ by ") + Text("Andrea Grandi").bold()
                         }
                     }
                     .foregroundStyle(.primary)
@@ -57,6 +57,38 @@ struct ProfileView: View {
 
                     Link(destination: URL(string: "https://github.com/andreagrandi/book-corners-ios")!) {
                         Label("Source Code on GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
+                    .foregroundStyle(.primary)
+                }
+
+                Section("Socials") {
+                    Link(destination: URL(string: "https://mastodon.social/@bookcorners")!) {
+                        Label {
+                            Text("Mastodon")
+                        } icon: {
+                            Image("MastodonIcon")
+                                .renderingMode(.template)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
+                    Link(destination: URL(string: "https://bsky.app/profile/bookcorners.org")!) {
+                        Label {
+                            Text("Bluesky")
+                        } icon: {
+                            Image("BlueskyIcon")
+                                .renderingMode(.template)
+                        }
+                    }
+                    .foregroundStyle(.primary)
+
+                    Link(destination: URL(string: "https://www.instagram.com/bookcornersorg/")!) {
+                        Label {
+                            Text("Instagram")
+                        } icon: {
+                            Image("InstagramIcon")
+                                .renderingMode(.template)
+                        }
                     }
                     .foregroundStyle(.primary)
                 }
