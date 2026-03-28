@@ -18,7 +18,7 @@ struct LibraryDetailViewModelTests {
     }
 
     @Test func `init exposes library immediately`() {
-        #expect(viewModel.library.slug == "little-library-amsterdam")
+        #expect(viewModel.library.slug == "community-library-amsterdam")
         #expect(viewModel.isLoading == false)
         #expect(viewModel.errorMessage == nil)
     }
@@ -26,7 +26,7 @@ struct LibraryDetailViewModelTests {
     @Test func `refresh success updates library`() async {
         let updatedLibrary = Library(
             id: 1,
-            slug: "little-library-amsterdam",
+            slug: "community-library-amsterdam",
             name: "Updated Name",
             description: "New description",
             photoUrl: "/media/new.jpg",
@@ -59,8 +59,8 @@ struct LibraryDetailViewModelTests {
 
         await viewModel.refresh()
 
-        #expect(viewModel.library.slug == "little-library-amsterdam")
-        #expect(viewModel.library.name == "Little Library Amsterdam")
+        #expect(viewModel.library.slug == "community-library-amsterdam")
+        #expect(viewModel.library.name == "Community Library Amsterdam")
         #expect(viewModel.errorMessage == "Error fetching library details")
         #expect(viewModel.isLoading == false)
     }

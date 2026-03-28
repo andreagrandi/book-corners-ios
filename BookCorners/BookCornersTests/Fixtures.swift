@@ -11,8 +11,8 @@ enum Fixtures {
     static let libraryJSON = """
     {
         "id": 1,
-        "slug": "little-free-library-berlin",
-        "name": "Little Free Library Berlin",
+        "slug": "community-library-berlin",
+        "name": "Community Library Berlin",
         "description": "A cozy book corner near the park",
         "photo_url": "https://example.com/photo.jpg",
         "thumbnail_url": "https://example.com/thumb.jpg",
@@ -67,8 +67,8 @@ enum Fixtures {
         "items": [
             {
                 "id": 1,
-                "slug": "little-free-library-berlin",
-                "name": "Little Free Library Berlin",
+                "slug": "community-library-berlin",
+                "name": "Community Library Berlin",
                 "description": "A cozy book corner near the park",
                 "photo_url": "https://example.com/photo.jpg",
                 "thumbnail_url": "https://example.com/thumb.jpg",
@@ -106,8 +106,8 @@ enum Fixtures {
         "items": [
             {
                 "id": 1,
-                "slug": "little-free-library-berlin",
-                "name": "Little Free Library Berlin",
+                "slug": "community-library-berlin",
+                "name": "Community Library Berlin",
                 "description": "A cozy book corner near the park",
                 "photo_url": "https://example.com/photo.jpg",
                 "thumbnail_url": "https://example.com/thumb.jpg",

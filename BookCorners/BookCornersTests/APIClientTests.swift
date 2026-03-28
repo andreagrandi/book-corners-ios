@@ -34,7 +34,7 @@ extension SerialNetworkTests {
 
             let result = try await client.getLatestLibraries()
             #expect(result.items.count == 1)
-            #expect(result.items[0].slug == "little-free-library-berlin")
+            #expect(result.items[0].slug == "community-library-berlin")
         }
 
         @Test func `get library returns decoded response`() async throws {
@@ -49,10 +49,10 @@ extension SerialNetworkTests {
                 return (response, data)
             }
 
-            let result = try await client.getLibrary(slug: "little-free-library-berlin")
-            #expect(result.slug == "little-free-library-berlin")
+            let result = try await client.getLibrary(slug: "community-library-berlin")
+            #expect(result.slug == "community-library-berlin")
             #expect(result.id == 1)
-            #expect(result.name == "Little Free Library Berlin")
+            #expect(result.name == "Community Library Berlin")
         }
 
         @Test func `get libraries builds query parameters`() async throws {

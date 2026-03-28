@@ -8,8 +8,8 @@ import Foundation
 enum SampleData {
     static let library = Library(
         id: 1,
-        slug: "little-library-amsterdam",
-        name: "Little Library Amsterdam",
+        slug: "community-library-amsterdam",
+        name: "Community Library Amsterdam",
         description: "A cozy street library near the canal, stocked with Dutch and English books.",
         photoUrl: "/media/libraries/photos/amsterdam.jpg",
         thumbnailUrl: "/media/libraries/thumbnails/amsterdam.jpg",

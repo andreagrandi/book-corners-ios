@@ -136,7 +136,7 @@ struct LibraryListViewModelTests {
         await viewModel.loadLibraries()
 
         #expect(viewModel.libraries.count == 3)
-        #expect(viewModel.libraries[0].slug == "little-library-amsterdam")
+        #expect(viewModel.libraries[0].slug == "community-library-amsterdam")
         #expect(viewModel.hasMorePages == false)
         #expect(viewModel.isLoading == false)
         #expect(viewModel.errorMessage == nil)
@@ -187,7 +187,7 @@ struct LibraryListViewModelTests {
 
         await viewModel.loadMore()
         #expect(viewModel.libraries.count == 2)
-        #expect(viewModel.libraries[0].slug == "little-library-amsterdam")
+        #expect(viewModel.libraries[0].slug == "community-library-amsterdam")
         #expect(viewModel.libraries[1].slug == "book-box-berlin")
         #expect(viewModel.hasMorePages == false)
         #expect(viewModel.isLoadingMore == false)

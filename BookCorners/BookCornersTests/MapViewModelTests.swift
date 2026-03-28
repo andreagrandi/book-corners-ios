@@ -54,7 +54,7 @@ struct MapViewModelTests {
         #expect(viewModel.selectedLibrary == nil)
 
         viewModel.selectedLibrary = SampleData.library
-        #expect(viewModel.selectedLibrary?.slug == "little-library-amsterdam")
+        #expect(viewModel.selectedLibrary?.slug == "community-library-amsterdam")
 
         viewModel.selectedLibrary = nil
         #expect(viewModel.selectedLibrary == nil)

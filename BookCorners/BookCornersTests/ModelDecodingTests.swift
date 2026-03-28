@@ -23,8 +23,8 @@ struct ModelDecodingTests {
         let library = try decoder.decode(Library.self, from: data)
 
         #expect(library.id == 1)
-        #expect(library.slug == "little-free-library-berlin")
-        #expect(library.name == "Little Free Library Berlin")
+        #expect(library.slug == "community-library-berlin")
+        #expect(library.name == "Community Library Berlin")
         #expect(library.lat == 52.52)
         #expect(library.lng == 13.405)
         #expect(library.capacity == 30)
@@ -45,7 +45,7 @@ struct ModelDecodingTests {
         let response = try decoder.decode(LibraryListResponse.self, from: data)
 
         #expect(response.items.count == 1)
-        #expect(response.items[0].slug == "little-free-library-berlin")
+        #expect(response.items[0].slug == "community-library-berlin")
         #expect(response.pagination.page == 1)
         #expect(response.pagination.pageSize == 20)
         #expect(response.pagination.total == 1)
@@ -59,7 +59,7 @@ struct ModelDecodingTests {
         let response = try decoder.decode(LatestLibrariesResponse.self, from: data)
 
         #expect(response.items.count == 1)
-        #expect(response.items[0].name == "Little Free Library Berlin")
+        #expect(response.items[0].name == "Community Library Berlin")
     }
 
     @Test func `token pair decodes`() throws {
