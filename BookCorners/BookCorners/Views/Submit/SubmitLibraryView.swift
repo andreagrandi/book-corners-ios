@@ -244,11 +244,9 @@ struct SubmitLibraryView: View {
         }
         .navigationTitle("Submit Library")
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    viewModel.reset()
-                    onCancel?()
-                }
+            Button("Cancel") {
+                viewModel.reset()
+                onCancel?()
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
