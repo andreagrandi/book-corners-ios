@@ -100,6 +100,12 @@ class SubmitLibraryViewModel {
         }
     }
 
+    func setPhoto(image: UIImage) {
+        photoData = image.jpegData(compressionQuality: 0.85)
+        photoThumbnail = Image(uiImage: image)
+        selectedPhotoItem = nil
+    }
+
     // MARK: - Address autocomplete
 
     func searchAddress(_ query: String) {

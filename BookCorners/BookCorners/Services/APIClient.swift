@@ -127,6 +127,28 @@ class APIClient: APIClientProtocol {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIClientError.networkError(URLError(.badServerResponse))
         }
+        if httpResponse.statusCode == 401, let refresher = tokenRefresher {
+            let newToken = try await refresher()
+            accessToken = newToken
+
+            urlRequest.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+
+            let (retryData, retryResponse) = try await session.data(for: urlRequest)
+
+            guard let retryHttpResponse = retryResponse as? HTTPURLResponse else {
+                throw APIClientError.networkError(URLError(.badServerResponse))
+            }
+            guard (200 ... 299).contains(retryHttpResponse.statusCode) else {
+                throw try parseError(statusCode: retryHttpResponse.statusCode, data: retryData)
+            }
+
+            do {
+                return try decoder.decode(T.self, from: retryData)
+            } catch {
+                throw APIClientError.decodingError(error)
+            }
+        }
+
         guard (200 ... 299).contains(httpResponse.statusCode) else {
             throw try parseError(statusCode: httpResponse.statusCode, data: data)
         }
