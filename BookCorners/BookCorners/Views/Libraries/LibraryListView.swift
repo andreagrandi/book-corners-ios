@@ -18,7 +18,9 @@ struct LibraryListView: View {
 
     var body: some View {
         NavigationStack {
-            if let viewModel {
+            if searchText.isEmpty, !locationService.isAuthorized {
+                locationCTA
+            } else if let viewModel {
                 if viewModel.isLoading {
                     ProgressView()
                 } else if let errorMessage = viewModel.errorMessage {
@@ -46,12 +48,6 @@ struct LibraryListView: View {
                     }
                 } else {
                     List {
-                        if locationService.currentLocation == nil, searchText.isEmpty {
-                            Label("Enable location for nearby results", systemImage: "location.slash")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                        }
-
                         ForEach(viewModel.libraries) { library in
                             NavigationLink(value: library) {
                                 LibraryCardView(
@@ -86,6 +82,7 @@ struct LibraryListView: View {
             if viewModel == nil {
                 viewModel = LibraryListViewModel(client: apiClient)
             }
+            guard locationService.currentLocation != nil || !searchText.isEmpty else { return }
             await viewModel?.loadLibraries(
                 lat: locationService.currentLocation?.coordinate.latitude,
                 lng: locationService.currentLocation?.coordinate.longitude,
@@ -133,6 +130,28 @@ struct LibraryListView: View {
                 Task {
                     await viewModel?.performSearch(query: searchText)
                 }
+            }
+        }
+    }
+
+    private var locationCTA: some View {
+        ContentUnavailableView {
+            Label("See Libraries Near You", systemImage: "location.circle")
+        } description: {
+            Text("Enable location to find book-sharing libraries closest to you.")
+        } actions: {
+            if locationService.authorizationStatus == .notDetermined {
+                Button("Enable Location") {
+                    locationService.startMonitoring()
+                }
+                .buttonStyle(.borderedProminent)
+            } else {
+                Button("Open Settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
             }
         }
     }

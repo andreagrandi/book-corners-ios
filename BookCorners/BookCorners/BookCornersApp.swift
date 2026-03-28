@@ -44,7 +44,9 @@ struct BookCornersApp: App {
                     .task {
                         async let restore: () = authService.restoreSession()
                         async let minDelay: () = Task.sleep(for: .milliseconds(800))
-                        locationService.startMonitoring()
+                        if locationService.isAuthorized {
+                            locationService.startMonitoring()
+                        }
                         networkMonitor.startMonitoring()
                         _ = await (restore, try? minDelay)
                         isReady = true
