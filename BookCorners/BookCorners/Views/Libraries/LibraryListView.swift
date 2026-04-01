@@ -141,10 +141,11 @@ struct LibraryListView: View {
             Text("Enable location to find book-sharing libraries closest to you.")
         } actions: {
             if locationService.authorizationStatus == .notDetermined {
-                Button("Enable Location") {
+                Button("Continue") {
                     locationService.startMonitoring()
                 }
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             } else {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) {
