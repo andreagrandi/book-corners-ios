@@ -132,11 +132,27 @@ struct LibraryDetailView: View {
         .navigationTitle(displayLibrary.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ShareLink(
-                item: URL(string: "https://www.bookcorners.org/library/\(displayLibrary.slug)/")!,
-                subject: Text(displayLibrary.displayName),
-                message: Text("Check out this little library!"),
-            )
+            ToolbarItem(placement: .primaryAction) {
+                HStack {
+                    if authService.isAuthenticated {
+                        Button {
+                            Task {
+                                await viewModel?.toggleFavourite()
+                            }
+                        } label: {
+                            Image(systemName: displayLibrary.isFavourited == true ? "heart.fill" : "heart")
+                        }
+                        .disabled(viewModel?.isFavouriting == true)
+                        .accessibilityLabel(displayLibrary.isFavourited == true ? "Remove from favourites" : "Add to favourites")
+                    }
+
+                    ShareLink(
+                        item: URL(string: "https://www.bookcorners.org/library/\(displayLibrary.slug)/")!,
+                        subject: Text(displayLibrary.displayName),
+                        message: Text("Check out this little library!"),
+                    )
+                }
+            }
         }
         .task {
             if viewModel == nil {

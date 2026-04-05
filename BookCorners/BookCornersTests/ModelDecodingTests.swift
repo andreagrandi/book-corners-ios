@@ -102,6 +102,36 @@ struct ModelDecodingTests {
         #expect(error.details?["username"] == "Not found")
     }
 
+    @Test func `library with is_favourited true decodes`() throws {
+        let data = try #require(Fixtures.libraryFavouritedJSON.data(using: .utf8))
+        let library = try decoder.decode(Library.self, from: data)
+
+        #expect(library.isFavourited == true)
+    }
+
+    @Test func `library with is_favourited false decodes`() throws {
+        let data = try #require(Fixtures.libraryJSON.data(using: .utf8))
+        let library = try decoder.decode(Library.self, from: data)
+
+        #expect(library.isFavourited == false)
+    }
+
+    @Test func `library without is_favourited field decodes as nil`() throws {
+        let data = try #require(Fixtures.libraryNullFieldsJSON.data(using: .utf8))
+        let library = try decoder.decode(Library.self, from: data)
+
+        #expect(library.isFavourited == nil)
+    }
+
+    @Test func `favourites list response decodes`() throws {
+        let data = try #require(Fixtures.favouritesListJSON.data(using: .utf8))
+        let response = try decoder.decode(LibraryListResponse.self, from: data)
+
+        #expect(response.items.count == 1)
+        #expect(response.items[0].isFavourited == true)
+        #expect(response.pagination.total == 1)
+    }
+
     @Test func `invalid JSON throws decoding error`() throws {
         let badJSON = "{\"id\": \"not_a_number\"}"
         let data = try #require(badJSON.data(using: .utf8))

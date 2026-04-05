@@ -185,6 +185,68 @@ extension SerialNetworkTests {
             _ = try await client.getLibrary(slug: "test")
         }
 
+        // MARK: - Favourites
+
+        @Test func `get favourites returns decoded response`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                let url = request.url!
+                #expect(url.path.contains("libraries/favourites"))
+                #expect(request.httpMethod == "GET")
+                let query = url.query ?? ""
+                #expect(query.contains("page=1"))
+                #expect(query.contains("page_size=20"))
+
+                let response = HTTPURLResponse(
+                    url: url, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                let data = Fixtures.favouritesListJSON.data(using: .utf8)!
+                return (response, data)
+            }
+
+            let result = try await client.getFavourites(page: 1, pageSize: 20)
+            #expect(result.items.count == 1)
+            #expect(result.items[0].isFavourited == true)
+        }
+
+        @Test func `add favourite sends POST request`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                #expect(request.httpMethod == "POST")
+                #expect(request.url!.path.contains("libraries/test-slug/favourite"))
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 201,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                let data = Fixtures.favouriteAddedJSON.data(using: .utf8)!
+                return (response, data)
+            }
+
+            let result = try await client.addFavourite(slug: "test-slug")
+            #expect(result.message == "Library added to favourites.")
+        }
+
+        @Test func `remove favourite sends DELETE request`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                #expect(request.httpMethod == "DELETE")
+                #expect(request.url!.path.contains("libraries/test-slug/favourite"))
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 204,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, Data())
+            }
+
+            try await client.removeFavourite(slug: "test-slug")
+        }
+
         @Test func `no auth header when token nil`() async throws {
             client.accessToken = nil
 

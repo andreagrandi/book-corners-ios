@@ -39,6 +39,7 @@ class APIClient: APIClientProtocol {
         method: String = "GET",
         body: (any Encodable)? = nil,
         queryItems: [URLQueryItem]? = nil,
+        cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
     ) async throws -> T {
         // Build URL with query parameters
         var url = baseURL.appending(path: path)
@@ -49,6 +50,7 @@ class APIClient: APIClientProtocol {
         // Create request
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
+        urlRequest.cachePolicy = cachePolicy
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Attach auth token if available
@@ -106,6 +108,64 @@ class APIClient: APIClientProtocol {
             return try decoder.decode(T.self, from: data)
         } catch {
             throw APIClientError.decodingError(error)
+        }
+    }
+
+    func requestVoid(
+        path: String,
+        method: String = "DELETE",
+        body: (any Encodable)? = nil,
+        queryItems: [URLQueryItem]? = nil,
+    ) async throws {
+        // Build URL with query parameters
+        var url = baseURL.appending(path: path)
+        if let queryItems, !queryItems.isEmpty {
+            url.append(queryItems: queryItems)
+        }
+
+        // Create request
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = method
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        // Attach auth token if available
+        if let accessToken {
+            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        }
+
+        // Encode body for POST/PUT/PATCH
+        if let body {
+            urlRequest.httpBody = try encoder.encode(body)
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        // Make the network call
+        let (data, response) = try await session.data(for: urlRequest)
+
+        // Check HTTP status
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIClientError.networkError(URLError(.badServerResponse))
+        }
+
+        if httpResponse.statusCode == 401, let refresher = tokenRefresher {
+            let newToken = try await refresher()
+            accessToken = newToken
+
+            urlRequest.setValue("Bearer \(newToken)", forHTTPHeaderField: "Authorization")
+
+            let (retryData, retryResponse) = try await session.data(for: urlRequest)
+
+            guard let retryHttpResponse = retryResponse as? HTTPURLResponse else {
+                throw APIClientError.networkError(URLError(.badServerResponse))
+            }
+            guard (200 ... 299).contains(retryHttpResponse.statusCode) else {
+                throw try parseError(statusCode: retryHttpResponse.statusCode, data: retryData)
+            }
+            return
+        }
+
+        guard (200 ... 299).contains(httpResponse.statusCode) else {
+            throw try parseError(statusCode: httpResponse.statusCode, data: data)
         }
     }
 
@@ -179,6 +239,12 @@ class APIClient: APIClientProtocol {
 
     func getLibrary(slug: String) async throws -> Library {
         try await request(path: "libraries/\(slug)")
+    }
+
+    func invalidateLibraryCache(slug: String) {
+        let url = baseURL.appending(path: "libraries/\(slug)")
+        let request = URLRequest(url: url)
+        session.configuration.urlCache?.removeCachedResponse(for: request)
     }
 
     func getStatistics() async throws -> Statistics {
@@ -328,6 +394,28 @@ class APIClient: APIClientProtocol {
         if let caption { multipart.addField(name: "caption", value: caption) }
 
         return try await multipartRequest(path: "libraries/\(slug)/photo", multipart: multipart)
+    }
+
+    // MARK: - Favourites
+
+    func getFavourites(page: Int = 1, pageSize: Int = 20) async throws -> LibraryListResponse {
+        let items = [
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "page_size", value: String(pageSize)),
+        ]
+        return try await request(
+            path: "libraries/favourites",
+            queryItems: items,
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
+    }
+
+    func addFavourite(slug: String) async throws -> MessageResponse {
+        try await request(path: "libraries/\(slug)/favourite", method: "POST")
+    }
+
+    func removeFavourite(slug: String) async throws {
+        try await requestVoid(path: "libraries/\(slug)/favourite", method: "DELETE")
     }
 
     // MARK: - Account Management

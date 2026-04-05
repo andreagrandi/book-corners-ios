@@ -107,4 +107,22 @@ class MockAPIClient: APIClientProtocol {
     func deleteAccount(password _: String?, confirm _: Bool?) async throws -> MessageResponse {
         MessageResponse(message: "Account deleted successfully.")
     }
+
+    func getFavourites(page _: Int, pageSize _: Int) async throws -> LibraryListResponse {
+        LibraryListResponse(
+            items: SampleData.libraries.filter { $0.isFavourited == true },
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    func addFavourite(slug _: String) async throws -> MessageResponse {
+        MessageResponse(message: "Library added to favourites.")
+    }
+
+    func removeFavourite(slug _: String) async throws {}
+
+    func invalidateLibraryCache(slug _: String) {}
 }

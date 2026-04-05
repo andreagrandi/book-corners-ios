@@ -110,6 +110,40 @@ class StubAPIClient: APIClientProtocol {
     func deleteAccount(password _: String?, confirm _: Bool?) async throws -> MessageResponse {
         MessageResponse(message: "Account deleted successfully.")
     }
+
+    var getFavouritesHandler: ((Int, Int) throws -> LibraryListResponse)?
+
+    func getFavourites(page: Int, pageSize: Int) async throws -> LibraryListResponse {
+        if let handler = getFavouritesHandler {
+            return try handler(page, pageSize)
+        }
+        return LibraryListResponse(
+            items: [],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 0, totalPages: 0,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    var addFavouriteHandler: ((String) throws -> MessageResponse)?
+
+    func addFavourite(slug: String) async throws -> MessageResponse {
+        if let handler = addFavouriteHandler {
+            return try handler(slug)
+        }
+        return MessageResponse(message: "Library added to favourites.")
+    }
+
+    var removeFavouriteHandler: ((String) throws -> Void)?
+
+    func removeFavourite(slug: String) async throws {
+        if let handler = removeFavouriteHandler {
+            try handler(slug)
+        }
+    }
+
+    func invalidateLibraryCache(slug _: String) {}
 }
 
 @MainActor
@@ -351,6 +385,84 @@ struct LibraryListViewModelTests {
         #expect(receivedLat == 52.37)
         #expect(receivedLng == 4.90)
         #expect(viewModel.libraries.count == 3)
+    }
+
+    @Test func `switch to favourites mode loads from favourites endpoint`() async {
+        stubClient.getFavouritesHandler = { _, _ in
+            LibraryListResponse(
+                items: [SampleData.library],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 1, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+
+        await viewModel.switchMode(.favourites)
+
+        #expect(viewModel.listMode == .favourites)
+        #expect(viewModel.libraries.count == 1)
+        #expect(viewModel.libraries[0].slug == "community-library-amsterdam")
+    }
+
+    @Test func `switch back to nearby mode loads from nearby endpoint`() async {
+        // Start in favourites mode
+        stubClient.getFavouritesHandler = { _, _ in
+            LibraryListResponse(
+                items: [SampleData.library],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 1, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+        await viewModel.switchMode(.favourites)
+        #expect(viewModel.listMode == .favourites)
+
+        // Switch back to nearby
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
+            LibraryListResponse(
+                items: SampleData.libraries,
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 3, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
+        await viewModel.switchMode(.nearby, lat: 52.37, lng: 4.90)
+
+        #expect(viewModel.listMode == .nearby)
+        #expect(viewModel.libraries.count == 3)
+    }
+
+    @Test func `favourites mode load more paginates correctly`() async {
+        stubClient.getFavouritesHandler = { page, _ in
+            if page == 1 {
+                LibraryListResponse(
+                    items: [SampleData.libraries[0]],
+                    pagination: PaginationMeta(
+                        page: 1, pageSize: 1, total: 2, totalPages: 2,
+                        hasNext: true, hasPrevious: false,
+                    ),
+                )
+            } else {
+                LibraryListResponse(
+                    items: [SampleData.libraries[1]],
+                    pagination: PaginationMeta(
+                        page: 2, pageSize: 1, total: 2, totalPages: 2,
+                        hasNext: false, hasPrevious: true,
+                    ),
+                )
+            }
+        }
+
+        await viewModel.switchMode(.favourites)
+        #expect(viewModel.libraries.count == 1)
+        #expect(viewModel.hasMorePages == true)
+
+        await viewModel.loadMore()
+        #expect(viewModel.libraries.count == 2)
+        #expect(viewModel.hasMorePages == false)
     }
 
     @Test func `search with no results sets empty libraries`() async {
