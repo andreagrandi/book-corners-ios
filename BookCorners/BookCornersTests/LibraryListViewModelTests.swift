@@ -463,7 +463,7 @@ struct LibraryListViewModelTests {
         #expect(viewModel.hasMorePages == false)
     }
 
-    @Test func `updateFavouriteStatus removes unfavourited library in favourites mode`() async {
+    @Test func `reloadIfDirty reloads when dirty`() async {
         stubClient.getFavouritesHandler = { _, _ in
             LibraryListResponse(
                 items: SampleData.libraries,
@@ -476,13 +476,25 @@ struct LibraryListViewModelTests {
         await viewModel.switchMode(.favourites)
         #expect(viewModel.libraries.count == 3)
 
-        viewModel.updateFavouriteStatus(slug: "book-box-berlin", isFavourited: false)
+        // Mark dirty and set up handler to return fewer items
+        viewModel.favouritesDirty = true
+        stubClient.getFavouritesHandler = { _, _ in
+            LibraryListResponse(
+                items: [SampleData.library],
+                pagination: PaginationMeta(
+                    page: 1, pageSize: 20, total: 1, totalPages: 1,
+                    hasNext: false, hasPrevious: false,
+                ),
+            )
+        }
 
-        #expect(viewModel.libraries.count == 2)
-        #expect(viewModel.libraries.contains { $0.slug == "book-box-berlin" } == false)
+        await viewModel.reloadIfDirty()
+
+        #expect(viewModel.libraries.count == 1)
+        #expect(viewModel.favouritesDirty == false)
     }
 
-    @Test func `updateFavouriteStatus updates flag in nearby mode`() async {
+    @Test func `reloadIfDirty does nothing when not dirty`() async {
         stubClient.getLibrariesHandler = { _, _, _, _, _ in
             LibraryListResponse(
                 items: SampleData.libraries,
@@ -493,12 +505,19 @@ struct LibraryListViewModelTests {
             )
         }
         await viewModel.loadLibraries()
-
-        viewModel.updateFavouriteStatus(slug: "book-box-berlin", isFavourited: true)
-
-        let updated = viewModel.libraries.first { $0.slug == "book-box-berlin" }
-        #expect(updated?.isFavourited == true)
         #expect(viewModel.libraries.count == 3)
+
+        // Not dirty — should not reload
+        var reloadCalled = false
+        stubClient.getLibrariesHandler = { _, _, _, _, _ in
+            reloadCalled = true
+            fatalError("Should not be called")
+        }
+
+        await viewModel.reloadIfDirty()
+
+        #expect(viewModel.libraries.count == 3)
+        #expect(reloadCalled == false)
     }
 
     @Test func `search with no results sets empty libraries`() async {

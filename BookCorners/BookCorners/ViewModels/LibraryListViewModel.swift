@@ -23,6 +23,7 @@ class LibraryListViewModel {
     var hasMorePages: Bool = false
     var searchQuery: String = ""
     var listMode: ListMode = .nearby
+    var favouritesDirty: Bool = false
 
     private var currentPage: Int = 1
     private var pageSize: Int = 20
@@ -120,13 +121,9 @@ class LibraryListViewModel {
         }
     }
 
-    func updateFavouriteStatus(slug: String, isFavourited: Bool) {
-        if let index = libraries.firstIndex(where: { $0.slug == slug }) {
-            if listMode == .favourites, !isFavourited {
-                libraries.remove(at: index)
-            } else {
-                libraries[index].isFavourited = isFavourited
-            }
-        }
+    func reloadIfDirty(lat: Double? = nil, lng: Double? = nil) async {
+        guard favouritesDirty else { return }
+        favouritesDirty = false
+        await refresh(lat: lat, lng: lng)
     }
 }

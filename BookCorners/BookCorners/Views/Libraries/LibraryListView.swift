@@ -206,8 +206,21 @@ struct LibraryListView: View {
             }
         }
         .navigationDestination(for: Library.self) { library in
-            LibraryDetailView(library: library) { slug, isFavourited in
-                viewModel?.updateFavouriteStatus(slug: slug, isFavourited: isFavourited)
+            LibraryDetailView(
+                library: library,
+                favouritesDirty: Binding(
+                    get: { viewModel?.favouritesDirty ?? false },
+                    set: { viewModel?.favouritesDirty = $0 },
+                ),
+            )
+        }
+        .onAppear {
+            guard viewModel?.favouritesDirty == true else { return }
+            Task {
+                await viewModel?.reloadIfDirty(
+                    lat: locationService.currentLocation?.coordinate.latitude,
+                    lng: locationService.currentLocation?.coordinate.longitude,
+                )
             }
         }
     }

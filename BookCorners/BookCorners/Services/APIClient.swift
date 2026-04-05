@@ -49,7 +49,6 @@ class APIClient: APIClientProtocol {
         // Create request
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
-        urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Attach auth token if available
@@ -125,7 +124,6 @@ class APIClient: APIClientProtocol {
         // Create request
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
-        urlRequest.cachePolicy = .reloadIgnoringLocalCacheData
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Attach auth token if available
