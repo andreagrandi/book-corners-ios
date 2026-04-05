@@ -38,6 +38,7 @@ class LibraryDetailViewModel {
             } else {
                 _ = try await apiClient.addFavourite(slug: library.slug)
             }
+            apiClient.invalidateLibraryCache(slug: library.slug)
             NotificationCenter.default.post(name: .favouriteToggled, object: nil)
         } catch {
             // Revert on failure

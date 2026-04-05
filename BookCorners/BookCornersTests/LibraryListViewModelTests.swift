@@ -142,6 +142,8 @@ class StubAPIClient: APIClientProtocol {
             try handler(slug)
         }
     }
+
+    func invalidateLibraryCache(slug _: String) {}
 }
 
 @MainActor

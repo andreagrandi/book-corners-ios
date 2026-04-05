@@ -123,4 +123,6 @@ class MockAPIClient: APIClientProtocol {
     }
 
     func removeFavourite(slug _: String) async throws {}
+
+    func invalidateLibraryCache(slug _: String) {}
 }

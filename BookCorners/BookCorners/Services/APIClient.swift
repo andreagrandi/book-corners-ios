@@ -241,6 +241,12 @@ class APIClient: APIClientProtocol {
         try await request(path: "libraries/\(slug)")
     }
 
+    func invalidateLibraryCache(slug: String) {
+        let url = baseURL.appending(path: "libraries/\(slug)")
+        let request = URLRequest(url: url)
+        session.configuration.urlCache?.removeCachedResponse(for: request)
+    }
+
     func getStatistics() async throws -> Statistics {
         try await request(path: "statistics/")
     }
