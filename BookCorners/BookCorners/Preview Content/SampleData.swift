@@ -29,6 +29,7 @@ enum SampleData {
         operatorName: "",
         brand: "",
         createdAt: Date(),
+        isFavourited: false,
     )
 
     static let libraries = [
@@ -56,6 +57,7 @@ enum SampleData {
             operatorName: "",
             brand: "",
             createdAt: Date(),
+            isFavourited: false,
         ),
         Library(
             id: 3,
@@ -80,6 +82,7 @@ enum SampleData {
             operatorName: "",
             brand: "",
             createdAt: Date(),
+            isFavourited: false,
         ),
     ]
 

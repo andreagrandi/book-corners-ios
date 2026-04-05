@@ -31,7 +31,36 @@ enum Fixtures {
         "source": "user",
         "operator": "Book Club Berlin",
         "brand": "",
-        "created_at": "2025-06-15T14:30:00Z"
+        "created_at": "2025-06-15T14:30:00Z",
+        "is_favourited": false
+    }
+    """
+
+    static let libraryFavouritedJSON = """
+    {
+        "id": 1,
+        "slug": "community-library-berlin",
+        "name": "Community Library Berlin",
+        "description": "A cozy book corner near the park",
+        "photo_url": "https://example.com/photo.jpg",
+        "thumbnail_url": "https://example.com/thumb.jpg",
+        "lat": 52.52,
+        "lng": 13.405,
+        "address": "Alexanderplatz 1",
+        "city": "Berlin",
+        "country": "DE",
+        "postal_code": "10178",
+        "wheelchair_accessible": "yes",
+        "capacity": 30,
+        "is_indoor": false,
+        "is_lit": true,
+        "website": "https://example.com",
+        "contact": "info@example.com",
+        "source": "user",
+        "operator": "Book Club Berlin",
+        "brand": "",
+        "created_at": "2025-06-15T14:30:00Z",
+        "is_favourited": true
     }
     """
 
@@ -209,6 +238,52 @@ enum Fixtures {
         "message": "Too many requests",
         "details": {
             "retry_after": "30"
+        }
+    }
+    """
+
+    static let favouriteAddedJSON = """
+    {
+        "message": "Library added to favourites."
+    }
+    """
+
+    static let favouritesListJSON = """
+    {
+        "items": [
+            {
+                "id": 1,
+                "slug": "community-library-berlin",
+                "name": "Community Library Berlin",
+                "description": "A cozy book corner near the park",
+                "photo_url": "https://example.com/photo.jpg",
+                "thumbnail_url": "https://example.com/thumb.jpg",
+                "lat": 52.52,
+                "lng": 13.405,
+                "address": "Alexanderplatz 1",
+                "city": "Berlin",
+                "country": "DE",
+                "postal_code": "10178",
+                "wheelchair_accessible": "yes",
+                "capacity": 30,
+                "is_indoor": false,
+                "is_lit": true,
+                "website": "https://example.com",
+                "contact": "info@example.com",
+                "source": "user",
+                "operator": "Book Club Berlin",
+                "brand": "",
+                "created_at": "2025-06-15T14:30:00Z",
+                "is_favourited": true
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "page_size": 20,
+            "total": 1,
+            "total_pages": 1,
+            "has_next": false,
+            "has_previous": false
         }
     }
     """

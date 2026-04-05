@@ -30,6 +30,7 @@ nonisolated struct Library: Codable, Identifiable, Hashable {
     let operatorName: String
     let brand: String
     let createdAt: Date
+    var isFavourited: Bool? = nil
 
     private static let mediaBaseURL: String = {
         guard let apiBase = ProcessInfo.processInfo.environment["API_BASE_URL"],
@@ -68,5 +69,6 @@ nonisolated struct Library: Codable, Identifiable, Hashable {
         case wheelchairAccessible, capacity, isIndoor, isLit
         case website, contact, source, brand, createdAt
         case operatorName = "operator"
+        case isFavourited
     }
 }

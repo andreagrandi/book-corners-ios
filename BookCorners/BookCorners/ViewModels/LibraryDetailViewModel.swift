@@ -12,11 +12,33 @@ class LibraryDetailViewModel {
     var library: Library
     var apiClient: any APIClientProtocol
     var isLoading: Bool = false
+    var isFavouriting: Bool = false
     var errorMessage: String?
 
     init(library: Library, client: any APIClientProtocol) {
         self.library = library
         apiClient = client
+    }
+
+    func toggleFavourite() async {
+        let wasFavourited = library.isFavourited == true
+        isFavouriting = true
+        defer { isFavouriting = false }
+
+        // Optimistic update
+        library.isFavourited = !wasFavourited
+
+        do {
+            if wasFavourited {
+                try await apiClient.removeFavourite(slug: library.slug)
+            } else {
+                _ = try await apiClient.addFavourite(slug: library.slug)
+            }
+        } catch {
+            // Revert on failure
+            library.isFavourited = wasFavourited
+            errorMessage = "Failed to update favourite"
+        }
     }
 
     func refresh() async {

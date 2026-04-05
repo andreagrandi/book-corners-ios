@@ -59,4 +59,7 @@ protocol APIClientProtocol {
         caption: String?,
     ) async throws -> LibraryPhoto
     func deleteAccount(password: String?, confirm: Bool?) async throws -> MessageResponse
+    func getFavourites(page: Int, pageSize: Int) async throws -> LibraryListResponse
+    func addFavourite(slug: String) async throws -> MessageResponse
+    func removeFavourite(slug: String) async throws
 }
