@@ -97,7 +97,7 @@ struct MapTabView: View {
                 }
             }
             .navigationDestination(for: Library.self) { library in
-                LibraryDetailView(library: library, favouritesDirty: .constant(false))
+                LibraryDetailView(library: library)
             }
         }
         .task {

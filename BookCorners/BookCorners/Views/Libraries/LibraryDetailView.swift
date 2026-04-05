@@ -10,7 +10,6 @@ import SwiftUI
 
 struct LibraryDetailView: View {
     let library: Library
-    @Binding var favouritesDirty: Bool
     @Environment(\.apiClient) private var apiClient
     @State private var viewModel: LibraryDetailViewModel?
     @Environment(AuthService.self) private var authService
@@ -139,7 +138,6 @@ struct LibraryDetailView: View {
                         Button {
                             Task {
                                 await viewModel?.toggleFavourite()
-                                favouritesDirty = true
                             }
                         } label: {
                             Image(systemName: displayLibrary.isFavourited == true ? "heart.fill" : "heart")
@@ -267,7 +265,7 @@ private struct MetadataRow: View {
 }
 
 #Preview {
-    LibraryDetailView(library: SampleData.library, favouritesDirty: .constant(false))
+    LibraryDetailView(library: SampleData.library)
         .environment(AuthService(apiClient: APIClient(), keychainService: KeychainService()))
         .environment(\.apiClient, APIClient())
 }

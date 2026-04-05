@@ -23,7 +23,6 @@ class LibraryListViewModel {
     var hasMorePages: Bool = false
     var searchQuery: String = ""
     var listMode: ListMode = .nearby
-    var favouritesDirty: Bool = false
 
     private var currentPage: Int = 1
     private var pageSize: Int = 20
@@ -119,11 +118,5 @@ class LibraryListViewModel {
         } catch {
             errorMessage = "Failed to load more libraries"
         }
-    }
-
-    func reloadIfDirty(lat: Double? = nil, lng: Double? = nil) async {
-        guard favouritesDirty else { return }
-        favouritesDirty = false
-        await refresh(lat: lat, lng: lng)
     }
 }

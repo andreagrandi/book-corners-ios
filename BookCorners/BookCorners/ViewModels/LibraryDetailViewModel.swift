@@ -7,6 +7,10 @@
 
 import Foundation
 
+extension Notification.Name {
+    static let favouriteToggled = Notification.Name("favouriteToggled")
+}
+
 @Observable
 class LibraryDetailViewModel {
     var library: Library
@@ -34,6 +38,7 @@ class LibraryDetailViewModel {
             } else {
                 _ = try await apiClient.addFavourite(slug: library.slug)
             }
+            NotificationCenter.default.post(name: .favouriteToggled, object: nil)
         } catch {
             // Revert on failure
             library.isFavourited = wasFavourited

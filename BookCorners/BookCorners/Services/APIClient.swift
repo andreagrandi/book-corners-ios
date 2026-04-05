@@ -39,6 +39,7 @@ class APIClient: APIClientProtocol {
         method: String = "GET",
         body: (any Encodable)? = nil,
         queryItems: [URLQueryItem]? = nil,
+        cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy,
     ) async throws -> T {
         // Build URL with query parameters
         var url = baseURL.appending(path: path)
@@ -49,6 +50,7 @@ class APIClient: APIClientProtocol {
         // Create request
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
+        urlRequest.cachePolicy = cachePolicy
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Attach auth token if available
@@ -395,7 +397,11 @@ class APIClient: APIClientProtocol {
             URLQueryItem(name: "page", value: String(page)),
             URLQueryItem(name: "page_size", value: String(pageSize)),
         ]
-        return try await request(path: "libraries/favourites", queryItems: items)
+        return try await request(
+            path: "libraries/favourites",
+            queryItems: items,
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func addFavourite(slug: String) async throws -> MessageResponse {
