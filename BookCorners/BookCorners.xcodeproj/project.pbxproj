@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5E5E5E012FA50001000A1B2C /* Sentry in Frameworks */ = {isa = PBXBuildFile; productRef = 5E5E5E022FA50001000A1B2C /* Sentry */; };
 		655977682F747E2E002FED8F /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 655977672F747E2E002FED8F /* GoogleSignIn */; };
 		6559776A2F747E2E002FED8F /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 655977692F747E2E002FED8F /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
@@ -70,6 +71,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5E5E5E012FA50001000A1B2C /* Sentry in Frameworks */,
 				655977682F747E2E002FED8F /* GoogleSignIn in Frameworks */,
 				6559776A2F747E2E002FED8F /* GoogleSignInSwift in Frameworks */,
 			);
@@ -132,6 +134,7 @@
 			);
 			name = BookCorners;
 			packageProductDependencies = (
+				5E5E5E022FA50001000A1B2C /* Sentry */,
 				655977672F747E2E002FED8F /* GoogleSignIn */,
 				655977692F747E2E002FED8F /* GoogleSignInSwift */,
 			);
@@ -218,6 +221,7 @@
 			mainGroup = 65AA1F4B2F60B49600E72A8F;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				5E5E5E032FA50001000A1B2C /* XCRemoteSwiftPackageReference "sentry-cocoa" */,
 				655977662F747E2E002FED8F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -613,6 +617,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		5E5E5E032FA50001000A1B2C /* XCRemoteSwiftPackageReference "sentry-cocoa" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/getsentry/sentry-cocoa.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.12.0;
+			};
+		};
 		655977662F747E2E002FED8F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -624,6 +636,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		5E5E5E022FA50001000A1B2C /* Sentry */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5E5E5E032FA50001000A1B2C /* XCRemoteSwiftPackageReference "sentry-cocoa" */;
+			productName = Sentry;
+		};
 		655977672F747E2E002FED8F /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 655977662F747E2E002FED8F /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;

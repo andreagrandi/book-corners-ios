@@ -95,7 +95,9 @@ class APIClient: APIClientProtocol {
             do {
                 return try decoder.decode(T.self, from: retryData)
             } catch {
-                throw APIClientError.decodingError(error)
+                let wrapped = APIClientError.decodingError(error)
+                ErrorReporter.capture(wrapped)
+                throw wrapped
             }
         }
 
@@ -107,7 +109,9 @@ class APIClient: APIClientProtocol {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
-            throw APIClientError.decodingError(error)
+            let wrapped = APIClientError.decodingError(error)
+            ErrorReporter.capture(wrapped)
+            throw wrapped
         }
     }
 
@@ -205,7 +209,9 @@ class APIClient: APIClientProtocol {
             do {
                 return try decoder.decode(T.self, from: retryData)
             } catch {
-                throw APIClientError.decodingError(error)
+                let wrapped = APIClientError.decodingError(error)
+                ErrorReporter.capture(wrapped)
+                throw wrapped
             }
         }
 
@@ -216,7 +222,9 @@ class APIClient: APIClientProtocol {
         do {
             return try decoder.decode(T.self, from: data)
         } catch {
-            throw APIClientError.decodingError(error)
+            let wrapped = APIClientError.decodingError(error)
+            ErrorReporter.capture(wrapped)
+            throw wrapped
         }
     }
 
@@ -231,7 +239,11 @@ class APIClient: APIClientProtocol {
             let retryAfter = errorResponse?.details?["retry_after"].flatMap(Int.init)
             return .rateLimited(retryAfter: retryAfter)
         default:
-            return .httpError(statusCode: statusCode, message: message)
+            let error = APIClientError.httpError(statusCode: statusCode, message: message)
+            if (500 ... 599).contains(statusCode) {
+                ErrorReporter.capture(error)
+            }
+            return error
         }
     }
 
