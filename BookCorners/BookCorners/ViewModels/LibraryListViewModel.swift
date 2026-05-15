@@ -67,7 +67,7 @@ class LibraryListViewModel {
                 try await apiClient.getLibraries(
                     page: page, pageSize: pageSize,
                     query: nil, city: nil, country: nil, postalCode: nil,
-                    lat: lat, lng: lng, radiusKm: 50, hasPhoto: nil,
+                    lat: lat, lng: lng, radiusKm: nil, hasPhoto: nil,
                 )
             }
         }
