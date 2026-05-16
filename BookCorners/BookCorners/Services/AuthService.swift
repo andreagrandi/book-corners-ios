@@ -44,7 +44,14 @@ class AuthService {
         setTokens(access: tokenPair.access, refresh: tokenPair.refresh)
         try keychainService.saveString(tokenPair.access, forKey: KeychainService.accessTokenKey)
         try keychainService.saveString(tokenPair.refresh, forKey: KeychainService.refreshTokenKey)
-        currentUser = try await apiClient.getMe()
+        let user = try await apiClient.getMe()
+        currentUser = user
+        ErrorReporter.setUser(id: String(user.id))
+    }
+
+    private func captureUnexpected(_ error: Error) {
+        if error is APIClientError { return }
+        ErrorReporter.capture(error)
     }
 
     private func mapError(_ error: Error) -> String {
@@ -74,6 +81,7 @@ class AuthService {
             let tokenPair = try await apiClient.login(username: username, password: password)
             try await handleAuthSuccess(tokenPair)
         } catch {
+            captureUnexpected(error)
             errorMessage = mapError(error)
         }
     }
@@ -87,6 +95,7 @@ class AuthService {
             let tokenPair = try await apiClient.register(username: username, password: password, email: email)
             try await handleAuthSuccess(tokenPair)
         } catch {
+            captureUnexpected(error)
             errorMessage = mapError(error)
         }
     }
@@ -105,6 +114,7 @@ class AuthService {
             )
             try await handleAuthSuccess(tokenPair)
         } catch {
+            captureUnexpected(error)
             errorMessage = mapError(error)
         }
     }
@@ -121,6 +131,7 @@ class AuthService {
             )
             try await handleAuthSuccess(tokenPair)
         } catch {
+            captureUnexpected(error)
             errorMessage = mapError(error)
         }
     }
@@ -152,6 +163,7 @@ class AuthService {
         try? keychainService.delete(forKey: KeychainService.accessTokenKey)
         try? keychainService.delete(forKey: KeychainService.refreshTokenKey)
         errorMessage = nil
+        ErrorReporter.clearUser()
     }
 
     func deleteAccount(password: String) async {
@@ -198,11 +210,15 @@ class AuthService {
 
         // 4. Nested do/catch: try getMe, if fail try refresh + getMe, if fail logout
         do {
-            currentUser = try await apiClient.getMe()
+            let user = try await apiClient.getMe()
+            currentUser = user
+            ErrorReporter.setUser(id: String(user.id))
         } catch {
             do {
                 _ = try await refreshAccessToken()
-                currentUser = try await apiClient.getMe()
+                let user = try await apiClient.getMe()
+                currentUser = user
+                ErrorReporter.setUser(id: String(user.id))
             } catch {
                 logout()
             }
