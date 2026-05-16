@@ -21,7 +21,5 @@
 	<array>
 		<string>comgooglemaps</string>
 	</array>
-	<key>SentryDSN</key>
-	<string>https://d22240662ff73bf5abb018ad9fdf4ac6@o4510954160324608.ingest.de.sentry.io/4511341786497104</string>
 </dict>
 </plist>

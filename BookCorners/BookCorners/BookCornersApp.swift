@@ -6,7 +6,6 @@
 //
 
 import GoogleSignIn
-import Sentry
 import SwiftUI
 
 @main
@@ -18,34 +17,12 @@ struct BookCornersApp: App {
     @State private var isReady = false
 
     init() {
-        Self.startSentry()
-
         let client = APIClient()
         _apiClient = State(initialValue: client)
         _authService = State(initialValue: AuthService(
             apiClient: client,
             keychainService: KeychainService(),
         ))
-    }
-
-    private static func startSentry() {
-        let dsn = Bundle.main.object(forInfoDictionaryKey: "SentryDSN") as? String
-        guard let dsn, !dsn.isEmpty, !dsn.hasPrefix("__") else {
-            #if DEBUG
-                print("[Sentry] SentryDSN missing or placeholder in Info.plist — Sentry not started.")
-            #endif
-            return
-        }
-
-        SentrySDK.start { options in
-            options.dsn = dsn
-            options.debug = false
-            #if DEBUG
-                options.environment = "debug"
-            #else
-                options.environment = "release"
-            #endif
-        }
     }
 
     var body: some Scene {
