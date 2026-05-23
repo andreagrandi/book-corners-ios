@@ -32,12 +32,12 @@ class SubmitLibraryViewModel {
 
     // MARK: - Required address fields
 
-    var address: String = ""
     var city: String = ""
     var country: String = ""
 
     // MARK: - Optional fields
 
+    var address: String = ""
     var name: String = ""
     var libraryDescription: String = ""
     var postalCode: String = ""
@@ -66,7 +66,6 @@ class SubmitLibraryViewModel {
 
     var isValid: Bool {
         photoData != nil
-            && !address.isEmpty
             && !city.isEmpty
             && !country.isEmpty
             && hasCoordinates
