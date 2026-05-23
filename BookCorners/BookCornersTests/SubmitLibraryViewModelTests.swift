@@ -27,14 +27,14 @@ struct SubmitLibraryViewModelTests {
         #expect(viewModel.isValid == false)
     }
 
-    @Test func `isValid false when missing address`() {
+    @Test func `isValid true when address missing but coordinates present`() {
         viewModel.photoData = Data([0xFF])
         viewModel.city = "Florence"
         viewModel.country = "IT"
         viewModel.latitude = 43.77
         viewModel.longitude = 11.25
 
-        #expect(viewModel.isValid == false)
+        #expect(viewModel.isValid == true)
     }
 
     @Test func `isValid false when missing coordinates`() {

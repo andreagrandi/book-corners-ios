@@ -69,7 +69,7 @@ struct SubmitLibraryView: View {
             // MARK: - Location
 
             Section("Location") {
-                TextField("Address", text: Binding(
+                TextField("Address (optional)", text: Binding(
                     get: { viewModel.address },
                     set: {
                         viewModel.address = $0
