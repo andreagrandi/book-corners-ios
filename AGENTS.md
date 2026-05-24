@@ -1,5 +1,88 @@
 # Repository Guidelines
 
+## Session Start Workflow
+
+Before making code or documentation changes in this repo:
+
+1. Switch back to `master`.
+2. Pull the latest changes with `git pull --ff-only`.
+3. Create a new branch with a short, descriptive name related to the feature being added or the bug being fixed.
+4. Make the requested changes on that branch.
+
+Do not start work from an old feature branch unless the user explicitly asks to continue that branch.
+
+## Adding a Ticket, Issue, or Bug
+
+When the user asks to add a "ticket", "issue", or "bug" to this repo, all of
+the steps below are required — creating the GitHub issue alone is not enough.
+
+**1. Create the issue** with the repo label and a type label:
+
+```bash
+gh issue create --repo andreagrandi/book-corners-ios \
+  --title "<concise title>" \
+  --body "<description>" \
+  --label "book-corners-ios" \
+  --label "<type>"
+```
+
+- Always apply the `book-corners-ios` label — every work item in this repo
+  carries it.
+- Pick one type label: `bug`, `enhancement`, or `documentation`. These are
+  the only type labels in use on existing issues (see #9–#19).
+- Do not invent new labels. Area is captured via the project's Area field
+  (step 3), not via a label.
+
+**2. Add the issue to the "Book Corners" project** and capture the item ID
+(https://github.com/users/andreagrandi/projects/2):
+
+```bash
+ITEM_ID=$(gh project item-add 2 --owner andreagrandi \
+  --url <issue-url> --format json --jq .id)
+```
+
+**3. Set Project, Priority, Area, and Status** on the project item. The
+"Book Corners" board is shared by both `book-corners` and `book-corners-ios`,
+so the Project field must be set to distinguish them.
+
+- Project ID: `PVT_kwHOAAm1584BYNOT`
+- Project (which repo) — field `PVTSSF_lAHOAAm1584BYNOTzhTUrB4`:
+  book-corners `1e714f28`, book-corners-ios `5955c8f9`
+- Priority — field `PVTSSF_lAHOAAm1584BYNOTzhTUrCA`:
+  High `b925d2e0`, Medium `23f4e2d2`, Low `89b1cb1e`
+- Area — field `PVTSSF_lAHOAAm1584BYNOTzhTUrB8`:
+  API `c4e6b87d`, Admin `ba5fc051`, Search `82f936e5`, Map `97b54a1b`,
+  Notifications `4ec3ad2e`, Operations `144b587b`, Testing `3aa57aae`,
+  UX `9574e84e`
+- Status — field `PVTSSF_lAHOAAm1584BYNOTzhTUq48`:
+  Todo `f75ad846`, In Progress `47fc9ee4`, Done `98236657`
+
+```bash
+# Project — always set to book-corners-ios for issues from this repo
+gh project item-edit --id "$ITEM_ID" --project-id PVT_kwHOAAm1584BYNOT \
+  --field-id PVTSSF_lAHOAAm1584BYNOTzhTUrB4 \
+  --single-select-option-id 5955c8f9
+
+# Priority — always set it
+gh project item-edit --id "$ITEM_ID" --project-id PVT_kwHOAAm1584BYNOT \
+  --field-id PVTSSF_lAHOAAm1584BYNOTzhTUrCA \
+  --single-select-option-id <priority-option-id>
+
+# Area — pick the option that best matches the issue
+gh project item-edit --id "$ITEM_ID" --project-id PVT_kwHOAAm1584BYNOT \
+  --field-id PVTSSF_lAHOAAm1584BYNOTzhTUrB8 \
+  --single-select-option-id <area-option-id>
+
+# Status — new tickets start as Todo
+gh project item-edit --id "$ITEM_ID" --project-id PVT_kwHOAAm1584BYNOT \
+  --field-id PVTSSF_lAHOAAm1584BYNOTzhTUq48 \
+  --single-select-option-id f75ad846
+```
+
+If the user does not state a priority or area, ask before creating the
+issue. Follow the conventions of existing project issues — do not invent
+new labels or fields.
+
 ## Project Overview
 Book Corners is an iOS app for discovering and sharing community book-sharing libraries. The backend is a Django + Django Ninja API at `https://bookcorners.org/api/v1/`.
 
@@ -65,13 +148,6 @@ Before using any Apple framework, SwiftUI API, or third-party library: **look up
 - Fixtures defined in `Fixtures.swift` as static JSON strings
 - Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid `MockURLProtocol` handler conflicts
 - Preview data uses `MockAPIClient` and `SampleData` in `Preview Content/`
-
-## Creating Issues / Tickets
-When the user asks to create an "issue" or "ticket":
-- Create the issue in this project's GitHub repository using `gh`
-- Add the `priority` label
-- Add labels consistent with those used on other existing issues in the repo
-- Add the issue to this GitHub project: https://github.com/users/andreagrandi/projects/2/views/3
 
 ## Commit Guidelines
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
