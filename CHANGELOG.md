@@ -2,6 +2,9 @@
 
 ## v1.3.1
 
+### Features
+- Tap a library's photo on the detail screen to view it full-size with pinch-to-zoom, double-tap zoom, and swipe-down to dismiss
+
 ### Fixes
 - Map callout sheet now insets the library card so the thumbnail no longer touches the card edges
 
