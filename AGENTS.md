@@ -149,6 +149,15 @@ Before using any Apple framework, SwiftUI API, or third-party library: **look up
 - Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid `MockURLProtocol` handler conflicts
 - Preview data uses `MockAPIClient` and `SampleData` in `Preview Content/`
 
+## Changelog
+- Whenever you make user-visible changes (features, fixes, polish), update
+  `CHANGELOG.md` in the same PR that introduces them.
+- Add the entry under the version section matching the bumped
+  `MARKETING_VERSION`. Create the section if it does not exist yet.
+- Group entries under `### Features`, `### Fixes`, or `### Polish` to match
+  the existing format. Keep bullets short and user-facing — describe the
+  observable change, not the implementation.
+
 ## Commit Guidelines
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
 - Never run `git commit` or `git push` without explicit user approval
