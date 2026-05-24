@@ -66,6 +66,13 @@ Before using any Apple framework, SwiftUI API, or third-party library: **look up
 - Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid `MockURLProtocol` handler conflicts
 - Preview data uses `MockAPIClient` and `SampleData` in `Preview Content/`
 
+## Creating Issues / Tickets
+When the user asks to create an "issue" or "ticket":
+- Create the issue in this project's GitHub repository using `gh`
+- Add the `priority` label
+- Add labels consistent with those used on other existing issues in the repo
+- Add the issue to this GitHub project: https://github.com/users/andreagrandi/projects/2/views/3
+
 ## Commit Guidelines
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
 - Never run `git commit` or `git push` without explicit user approval
