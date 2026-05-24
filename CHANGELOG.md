@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.1
+
+### Fixes
+- Map callout sheet now insets the library card so the thumbnail no longer touches the card edges
+
 ## v1.0.0 — Initial Release
 
 ### Features

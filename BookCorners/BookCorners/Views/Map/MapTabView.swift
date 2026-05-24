@@ -78,12 +78,16 @@ struct MapTabView: View {
                 get: { viewModel?.selectedLibrary },
                 set: { viewModel?.selectedLibrary = $0 },
             )) { library in
-                LibraryCardView(library: library, distance: nil)
-                    .presentationDetents([.fraction(0.25)])
-                Button("View Details") {
-                    viewModel?.selectedLibrary = nil
-                    navigationPath.append(library)
+                VStack(alignment: .leading, spacing: 12) {
+                    LibraryCardView(library: library, distance: nil)
+                    Button("View Details") {
+                        viewModel?.selectedLibrary = nil
+                        navigationPath.append(library)
+                    }
                 }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .presentationDetents([.fraction(0.25)])
             }
             .sheet(isPresented: $showFilters) {
                 FilterSheetView(filterState: $filterState) {
