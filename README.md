@@ -1,5 +1,7 @@
 # Book Corners for iOS
 
+[![CI](https://github.com/andreagrandi/book-corners-ios/actions/workflows/ci.yml/badge.svg)](https://github.com/andreagrandi/book-corners-ios/actions/workflows/ci.yml)
+
 Book Corners is a community directory of book-sharing libraries — those little shelves, boxes, and cabinets where neighbours leave books for each other. This is the iOS client for [bookcorners.org](https://www.bookcorners.org).
 
 ## Features
