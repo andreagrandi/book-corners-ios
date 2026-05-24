@@ -16,6 +16,7 @@ struct LibraryDetailView: View {
     @State private var showReport = false
     @State private var showSubmitPhoto = false
     @State private var showMapPicker = false
+    @Namespace private var photoZoomNamespace
 
     private var displayLibrary: Library {
         viewModel?.library ?? library
@@ -183,23 +184,34 @@ struct LibraryDetailView: View {
     @ViewBuilder
     private var heroPhoto: some View {
         if let photoURL = displayLibrary.fullPhotoUrl {
-            AsyncImage(url: photoURL) { phase in
-                switch phase {
-                case .empty:
-                    photoPlaceholder
-                case let .success(image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity, maxHeight: 250)
-                        .clipped()
-                        .accessibilityLabel("Photo of \(displayLibrary.displayName)")
-                case .failure:
-                    photoPlaceholder
-                @unknown default:
-                    photoPlaceholder
+            NavigationLink {
+                PhotoViewerView(
+                    url: photoURL,
+                    accessibilityName: displayLibrary.displayName,
+                )
+                .navigationTransition(.zoom(sourceID: "library-photo", in: photoZoomNamespace))
+            } label: {
+                AsyncImage(url: photoURL) { phase in
+                    switch phase {
+                    case .empty:
+                        photoPlaceholder
+                    case let .success(image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: .infinity, maxHeight: 250)
+                            .clipped()
+                    case .failure:
+                        photoPlaceholder
+                    @unknown default:
+                        photoPlaceholder
+                    }
                 }
             }
+            .buttonStyle(.plain)
+            .matchedTransitionSource(id: "library-photo", in: photoZoomNamespace)
+            .accessibilityLabel("Photo of \(displayLibrary.displayName)")
+            .accessibilityHint("Double tap to view full size")
         } else {
             photoPlaceholder
         }
