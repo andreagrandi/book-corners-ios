@@ -3,20 +3,24 @@
 ## v1.3.1
 
 ### Features
-- Tap a library's photo on the detail screen to view it full-size with pinch-to-zoom, double-tap zoom, and swipe-down to dismiss
+
+- Show staff users a dedicated Admin Dashboard entry point for moderation tools
+- View library photos full-screen with pinch, double-tap, and swipe-to-dismiss gestures
 
 ### Fixes
-- Map callout sheet now insets the library card so the thumbnail no longer touches the card edges
+
+- Map callout cards now inset thumbnails so images no longer touch the edges
 
 ## v1.0.0 — Initial Release
 
 ### Features
+
 - Browse nearby book-sharing libraries with distance display and pagination
 - Search libraries by name or description with debounced input
 - Library detail view with hero photo, metadata, contact info, and mini map
 - Interactive map with library pins, bottom sheet, and spatial filtering
 - Get directions to any library via Apple Maps or Google Maps
-- Submit new libraries with photo picker, camera capture, EXIF GPS extraction, and address autocomplete
+- Submit new libraries with photos, camera capture, EXIF GPS, and address autocomplete
 - Submit additional photos for existing libraries
 - Report issues on libraries with reason picker
 - Share library links via the system share sheet
@@ -27,6 +31,7 @@
 - Profile view with about section, privacy policy, and source code links
 
 ### Polish
+
 - Offline detection with connectivity banner
 - Accessibility labels and hints throughout the app
 - Input validation and haptic feedback

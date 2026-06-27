@@ -50,6 +50,65 @@ extension SerialNetworkTests {
 
             #expect(authService.isAuthenticated)
             #expect(authService.currentUser?.username == "booklover")
+            #expect(authService.canAccessAdmin == false)
+            #expect(authService.errorMessage == nil)
+        }
+
+        @Test func `staff login grants admin access`() async {
+            MockURLProtocol.requestHandler = { request in
+                let path = request.url!.path
+                let json: String
+
+                if path.contains("auth/login") {
+                    json = Fixtures.tokenPairJSON
+                } else if path.contains("auth/me") {
+                    json = Fixtures.staffUserJSON
+                } else {
+                    Issue.record("Unexpected request: \(path)")
+                    json = "{}"
+                }
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, json.data(using: .utf8)!)
+            }
+
+            await authService.login(username: "moderator", password: "pass")
+
+            #expect(authService.isAuthenticated)
+            #expect(authService.currentUser?.username == "moderator")
+            #expect(authService.canAccessAdmin == true)
+            #expect(authService.errorMessage == nil)
+        }
+
+        @Test func `non-staff login hides admin access`() async {
+            MockURLProtocol.requestHandler = { request in
+                let path = request.url!.path
+                let json: String
+
+                if path.contains("auth/login") {
+                    json = Fixtures.tokenPairJSON
+                } else if path.contains("auth/me") {
+                    json = Fixtures.nonStaffUserJSON
+                } else {
+                    Issue.record("Unexpected request: \(path)")
+                    json = "{}"
+                }
+
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, json.data(using: .utf8)!)
+            }
+
+            await authService.login(username: "reader", password: "pass")
+
+            #expect(authService.isAuthenticated)
+            #expect(authService.currentUser?.username == "reader")
+            #expect(authService.canAccessAdmin == false)
             #expect(authService.errorMessage == nil)
         }
 
@@ -79,7 +138,7 @@ extension SerialNetworkTests {
                 if path.contains("auth/login") {
                     json = Fixtures.tokenPairJSON
                 } else if path.contains("auth/me") {
-                    json = Fixtures.userJSON
+                    json = Fixtures.staffUserJSON
                 } else {
                     Issue.record("Unexpected request: \(path)")
                     json = "{}"
@@ -93,10 +152,13 @@ extension SerialNetworkTests {
             }
 
             await authService.login(username: "test", password: "pass")
+            #expect(authService.canAccessAdmin == true)
+
             authService.logout()
 
             #expect(authService.isAuthenticated == false)
             #expect(authService.currentUser == nil)
+            #expect(authService.canAccessAdmin == false)
             #expect(authService.errorMessage == nil)
         }
 
@@ -118,6 +180,26 @@ extension SerialNetworkTests {
 
             #expect(authService.isAuthenticated)
             #expect(authService.currentUser?.username == "booklover")
+            #expect(authService.canAccessAdmin == false)
+        }
+
+        @Test func `session restore with staff token grants admin access`() async throws {
+            try keychainService.saveString("saved-access", forKey: KeychainService.accessTokenKey)
+            try keychainService.saveString("saved-refresh", forKey: KeychainService.refreshTokenKey)
+
+            MockURLProtocol.requestHandler = { request in
+                let response = HTTPURLResponse(
+                    url: request.url!, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                return (response, Fixtures.staffUserJSON.data(using: .utf8)!)
+            }
+
+            await authService.restoreSession()
+
+            #expect(authService.isAuthenticated)
+            #expect(authService.currentUser?.username == "moderator")
+            #expect(authService.canAccessAdmin == true)
         }
 
         @Test func `session restore with expired token refreshes`() async throws {
