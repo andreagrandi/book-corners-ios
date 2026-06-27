@@ -135,4 +135,79 @@ enum SampleData {
         status: "approved",
         createdAt: Date(),
     )
+
+    static let moderationSummary = ModerationSummary(
+        pendingLibrariesCount: 3,
+        openReportsCount: 1,
+        pendingPhotosCount: 2,
+        totalPending: 6,
+        totalLibraries: 1234,
+        totalUsers: 128,
+    )
+
+    static let moderationUser = ModerationUser(
+        id: 2,
+        username: "moderator",
+    )
+
+    static let moderationLibrarySummary = ModerationLibrarySummary(
+        id: 1,
+        slug: "community-library-amsterdam",
+        name: "Community Library Amsterdam",
+        address: "Keizersgracht 123",
+        city: "Amsterdam",
+        country: "NL",
+        status: .pending,
+    )
+
+    static let moderationLibrary = ModerationLibrary(
+        id: 1,
+        slug: "community-library-amsterdam",
+        name: "Community Library Amsterdam",
+        description: "A cozy street library near the canal, stocked with Dutch and English books.",
+        photoUrl: "/media/libraries/photos/amsterdam.jpg",
+        thumbnailUrl: "/media/libraries/thumbnails/amsterdam.jpg",
+        lat: 52.3676,
+        lng: 4.9041,
+        address: "Keizersgracht 123",
+        city: "Amsterdam",
+        country: "NL",
+        postalCode: "1015 CJ",
+        wheelchairAccessible: "yes",
+        capacity: 50,
+        isIndoor: false,
+        isLit: true,
+        website: "",
+        contact: "",
+        source: "user",
+        operatorName: "",
+        brand: "",
+        createdAt: Date(),
+        isFavourited: false,
+        status: .pending,
+        rejectionReason: "",
+        createdBy: moderationUser,
+    )
+
+    static let moderationReport = ModerationReport(
+        id: 1,
+        library: moderationLibrarySummary,
+        createdBy: moderationUser,
+        reason: .damaged,
+        details: "The door hinge is broken.",
+        photoUrl: "/media/reports/photos/report.jpg",
+        status: .open,
+        createdAt: Date(),
+    )
+
+    static let moderationPhoto = ModerationPhoto(
+        id: 1,
+        library: moderationLibrarySummary,
+        createdBy: moderationUser,
+        caption: "Front view of the library",
+        photoUrl: "/media/libraries/user_photos/photo.jpg",
+        thumbnailUrl: "/media/libraries/user_photos/thumbnails/photo.jpg",
+        status: .pending,
+        createdAt: Date(),
+    )
 }

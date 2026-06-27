@@ -11,6 +11,7 @@ enum APIClientError: Error, LocalizedError {
     case invalidURL
     case httpError(statusCode: Int, message: String)
     case unauthorized
+    case forbidden(message: String)
     case rateLimited(retryAfter: Int?)
     case decodingError(Error)
     case networkError(Error)
@@ -23,6 +24,8 @@ enum APIClientError: Error, LocalizedError {
             return "HTTP \(statusCode): \(message)"
         case .unauthorized:
             return "Authentication required"
+        case let .forbidden(message):
+            return message
         case let .rateLimited(retryAfter):
             if let seconds = retryAfter {
                 return "Too many requests. Try again in \(seconds) seconds."
