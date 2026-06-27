@@ -78,6 +78,39 @@ struct ModelDecodingTests {
         #expect(user.username == "booklover")
         #expect(user.email == "booklover@example.com")
         #expect(user.isSocialOnly == false)
+        #expect(user.isStaff == false)
+    }
+
+    @Test func `staff user decodes`() throws {
+        let data = try #require(Fixtures.staffUserJSON.data(using: .utf8))
+        let user = try decoder.decode(User.self, from: data)
+
+        #expect(user.id == 44)
+        #expect(user.username == "moderator")
+        #expect(user.isStaff == true)
+    }
+
+    @Test func `non-staff user decodes`() throws {
+        let data = try #require(Fixtures.nonStaffUserJSON.data(using: .utf8))
+        let user = try decoder.decode(User.self, from: data)
+
+        #expect(user.id == 45)
+        #expect(user.username == "reader")
+        #expect(user.isStaff == false)
+    }
+
+    @Test func `user without staff field decodes as non-staff`() throws {
+        let data = Data("""
+        {
+            "id": 46,
+            "username": "legacy",
+            "email": "legacy@example.com",
+            "is_social_only": false
+        }
+        """.utf8)
+        let user = try decoder.decode(User.self, from: data)
+
+        #expect(user.isStaff == false)
     }
 
     @Test func `statistics decodes`() throws {

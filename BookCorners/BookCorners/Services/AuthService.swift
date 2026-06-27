@@ -24,6 +24,10 @@ class AuthService {
         accessToken != nil
     }
 
+    var canAccessAdmin: Bool {
+        currentUser?.isStaff == true
+    }
+
     init(apiClient: APIClient, keychainService: KeychainService) {
         self.apiClient = apiClient
         self.keychainService = keychainService

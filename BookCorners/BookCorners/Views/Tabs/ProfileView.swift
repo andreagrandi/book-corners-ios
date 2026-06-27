@@ -14,6 +14,12 @@ struct ProfileView: View {
     @State private var showingDeleteConfirmation = false
     @State private var deleteConfirmationText = ""
 
+    private var appVersionText: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
+        return "version: \(version).\(build)"
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -22,6 +28,18 @@ struct ProfileView: View {
                         Text(authService.currentUser?.username ?? "Unknown")
                         Text(authService.currentUser?.email ?? "")
                     }
+
+                    if authService.canAccessAdmin {
+                        Section("Administration") {
+                            NavigationLink {
+                                AdminDashboardView()
+                            } label: {
+                                AdminDashboardProfileRow()
+                            }
+                            .accessibilityHint("Opens staff moderation tools")
+                        }
+                    }
+
                     Section {
                         Button("Logout") {
                             authService.logout()
@@ -40,7 +58,11 @@ struct ProfileView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "person.fill")
                                 .frame(width: 20)
-                            Text("Made with ❤️ by ") + Text("Andrea Grandi").bold()
+                            HStack(spacing: 0) {
+                                Text("Made with ❤️ by ")
+                                Text("Andrea Grandi")
+                                    .bold()
+                            }
                         }
                     }
                     .foregroundStyle(.primary)
@@ -95,7 +117,7 @@ struct ProfileView: View {
 
                 Section {
                     VStack(spacing: 12) {
-                        Text("version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?").\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?")")
+                        Text(appVersionText)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
 
@@ -148,6 +170,38 @@ struct ProfileView: View {
                 Text("This action is permanent. Enter your password to confirm.")
             }
         }
+    }
+}
+
+private struct AdminDashboardProfileRow: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "rectangle.grid.2x2")
+                .font(.headline)
+                .foregroundStyle(.blue)
+                .frame(width: 32, height: 32)
+                .background(.blue.opacity(0.12), in: .rect(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Admin Dashboard")
+                    .foregroundStyle(.primary)
+
+                Text("Review moderation queues")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Text("Staff")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.blue)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.blue.opacity(0.12), in: Capsule())
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Admin Dashboard, staff moderation queues")
     }
 }
 

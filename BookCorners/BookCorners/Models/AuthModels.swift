@@ -21,6 +21,30 @@ nonisolated struct User: Codable, Identifiable {
     let username: String
     let email: String
     let isSocialOnly: Bool?
+    let isStaff: Bool
+
+    init(
+        id: Int,
+        username: String,
+        email: String,
+        isSocialOnly: Bool?,
+        isStaff: Bool = false,
+    ) {
+        self.id = id
+        self.username = username
+        self.email = email
+        self.isSocialOnly = isSocialOnly
+        self.isStaff = isStaff
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(Int.self, forKey: .id)
+        username = try container.decode(String.self, forKey: .username)
+        email = try container.decode(String.self, forKey: .email)
+        isSocialOnly = try container.decodeIfPresent(Bool.self, forKey: .isSocialOnly)
+        isStaff = try container.decodeIfPresent(Bool.self, forKey: .isStaff) ?? false
+    }
 }
 
 nonisolated struct DeleteAccountRequest: Encodable {

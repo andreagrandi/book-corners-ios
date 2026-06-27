@@ -173,7 +173,28 @@ enum Fixtures {
         "id": 42,
         "username": "booklover",
         "email": "booklover@example.com",
-        "is_social_only": false
+        "is_social_only": false,
+        "is_staff": false
+    }
+    """
+
+    static let staffUserJSON = """
+    {
+        "id": 44,
+        "username": "moderator",
+        "email": "moderator@example.com",
+        "is_social_only": false,
+        "is_staff": true
+    }
+    """
+
+    static let nonStaffUserJSON = """
+    {
+        "id": 45,
+        "username": "reader",
+        "email": "reader@example.com",
+        "is_social_only": false,
+        "is_staff": false
     }
     """
 
@@ -182,7 +203,8 @@ enum Fixtures {
         "id": 43,
         "username": "socialuser",
         "email": "social@example.com",
-        "is_social_only": true
+        "is_social_only": true,
+        "is_staff": false
     }
     """
 
