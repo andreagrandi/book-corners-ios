@@ -165,6 +165,66 @@ struct ModelDecodingTests {
         #expect(response.pagination.total == 1)
     }
 
+    @Test func `moderation summary decodes`() throws {
+        let data = try #require(Fixtures.moderationSummaryJSON.data(using: .utf8))
+        let summary = try decoder.decode(ModerationSummary.self, from: data)
+
+        #expect(summary.pendingLibrariesCount == 4)
+        #expect(summary.openReportsCount == 2)
+        #expect(summary.pendingPhotosCount == 5)
+        #expect(summary.totalPending == 11)
+        #expect(summary.totalLibraries == 350)
+        #expect(summary.totalUsers == 128)
+    }
+
+    @Test func `moderation library decodes`() throws {
+        let data = try #require(Fixtures.moderationLibraryJSON.data(using: .utf8))
+        let library = try decoder.decode(ModerationLibrary.self, from: data)
+
+        #expect(library.id == 42)
+        #expect(library.slug == "florence-via-rosina-15-corner-books")
+        #expect(library.status == .pending)
+        #expect(library.rejectionReason == "")
+        #expect(library.createdBy?.username == "janedoe")
+        #expect(library.operatorName == "Book Club Florence")
+    }
+
+    @Test func `moderation library list response decodes`() throws {
+        let data = try #require(Fixtures.moderationLibraryListJSON.data(using: .utf8))
+        let response = try decoder.decode(ModerationLibraryListResponse.self, from: data)
+
+        #expect(response.items.count == 1)
+        #expect(response.items[0].status == .pending)
+        #expect(response.items[0].createdBy?.id == 1)
+        #expect(response.pagination.page == 1)
+        #expect(response.pagination.total == 1)
+    }
+
+    @Test func `moderation report list response decodes`() throws {
+        let data = try #require(Fixtures.moderationReportListJSON.data(using: .utf8))
+        let response = try decoder.decode(ModerationReportListResponse.self, from: data)
+
+        #expect(response.items.count == 1)
+        #expect(response.items[0].id == 7)
+        #expect(response.items[0].library.status == .approved)
+        #expect(response.items[0].reason == .damaged)
+        #expect(response.items[0].status == .open)
+        #expect(response.items[0].createdBy?.username == "reader")
+        #expect(response.pagination.totalPages == 1)
+    }
+
+    @Test func `moderation photo list response decodes`() throws {
+        let data = try #require(Fixtures.moderationPhotoListJSON.data(using: .utf8))
+        let response = try decoder.decode(ModerationPhotoListResponse.self, from: data)
+
+        #expect(response.items.count == 1)
+        #expect(response.items[0].id == 12)
+        #expect(response.items[0].library.slug == "florence-via-rosina-15-corner-books")
+        #expect(response.items[0].status == .pending)
+        #expect(response.items[0].createdBy?.id == 3)
+        #expect(response.pagination.hasNext == false)
+    }
+
     @Test func `invalid JSON throws decoding error`() throws {
         let badJSON = "{\"id\": \"not_a_number\"}"
         let data = try #require(badJSON.data(using: .utf8))

@@ -73,7 +73,12 @@ extension SerialNetworkTests {
             }
 
             _ = try await client.getLibraries(
-                page: 2, pageSize: 10, query: "berlin", country: "DE",
+                request: LibrarySearchRequest(
+                    page: 2,
+                    pageSize: 10,
+                    query: "berlin",
+                    country: "DE",
+                ),
             )
         }
 
@@ -150,7 +155,7 @@ extension SerialNetworkTests {
                     url: request.url!, statusCode: 200,
                     httpVersion: nil, headerFields: nil,
                 )!
-                let data = "not json at all".data(using: .utf8)!
+                let data = Data("not json at all".utf8)
                 return (response, data)
             }
 

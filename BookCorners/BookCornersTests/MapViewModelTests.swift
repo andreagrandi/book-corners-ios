@@ -61,8 +61,6 @@ struct MapViewModelTests {
     }
 
     @Test func `apply filters with city passes city to API`() async {
-        var receivedCity: String?
-
         stubClient.getLibrariesHandler = { _, _, _, _, _ in
             LibraryListResponse(
                 items: [],
@@ -73,13 +71,14 @@ struct MapViewModelTests {
             )
         }
 
-        // Override to capture city — StubAPIClient ignores city by default,
-        // so we check the viewModel correctly clears lat/lng when city is set
         var filters = FilterState()
         filters.city = "Pistoia"
 
         await viewModel.applyFilters(filters)
 
+        #expect(stubClient.lastLibrarySearchRequest?.city == "Pistoia")
+        #expect(stubClient.lastLibrarySearchRequest?.lat == nil)
+        #expect(stubClient.lastLibrarySearchRequest?.lng == nil)
         #expect(viewModel.libraries.isEmpty)
         #expect(viewModel.errorMessage == nil)
     }

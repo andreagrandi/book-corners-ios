@@ -43,13 +43,17 @@ class MapViewModel {
                 isLoading = true
                 errorMessage = nil
                 let response = try await apiClient.getLibraries(
-                    page: 1, pageSize: 50,
-                    query: filters.keywords.isEmpty ? nil : filters.keywords,
-                    city: filters.city.isEmpty ? nil : filters.city,
-                    country: filters.country.isEmpty ? nil : filters.country,
-                    postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
-                    lat: lat, lng: lng, radiusKm: radiusKm,
-                    hasPhoto: nil,
+                    request: LibrarySearchRequest(
+                        page: 1,
+                        pageSize: 50,
+                        query: filters.keywords.isEmpty ? nil : filters.keywords,
+                        city: filters.city.isEmpty ? nil : filters.city,
+                        country: filters.country.isEmpty ? nil : filters.country,
+                        postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
+                        lat: lat,
+                        lng: lng,
+                        radiusKm: radiusKm,
+                    ),
                 )
                 libraries = response.items
                 lastLoadedLat = lat
@@ -80,13 +84,14 @@ class MapViewModel {
 
         do {
             let response = try await apiClient.getLibraries(
-                page: 1, pageSize: 50,
-                query: filters.keywords.isEmpty ? nil : filters.keywords,
-                city: filters.city.isEmpty ? nil : filters.city,
-                country: filters.country.isEmpty ? nil : filters.country,
-                postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
-                lat: nil, lng: nil, radiusKm: nil,
-                hasPhoto: nil,
+                request: LibrarySearchRequest(
+                    page: 1,
+                    pageSize: 50,
+                    query: filters.keywords.isEmpty ? nil : filters.keywords,
+                    city: filters.city.isEmpty ? nil : filters.city,
+                    country: filters.country.isEmpty ? nil : filters.country,
+                    postalCode: filters.postalCode.isEmpty ? nil : filters.postalCode,
+                ),
             )
             libraries = response.items
         } catch {

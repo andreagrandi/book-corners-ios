@@ -1,33 +1,42 @@
 //
-//  MockAPIClient.swift
-//  BookCorners
+//  StubAPIClient.swift
+//  BookCornersTests
 //
 
+@testable import BookCorners
 import Foundation
 
-class MockAPIClient: APIClientProtocol {
+/// A configurable stub that lets each test control what getLibraries() returns.
+/// Python analogy: like setting mock.return_value or mock.side_effect per test.
+/// Go analogy: a struct with function fields you swap out per test case.
+class StubAPIClient: APIClientProtocol {
     var accessToken: String?
 
-    func getLibraries(request _: LibrarySearchRequest) async throws -> LibraryListResponse {
-        LibraryListResponse(
-            items: SampleData.libraries,
-            pagination: PaginationMeta(
-                page: 1,
-                pageSize: 20,
-                total: 3,
-                totalPages: 1,
-                hasNext: false,
-                hasPrevious: false,
-            ),
-        )
+    /// Each test sets this closure to control the response.
+    /// Parameters: (page, pageSize, query, lat, lng)
+    var getLibrariesHandler: ((Int, Int, String?, Double?, Double?) throws -> LibraryListResponse)?
+    var lastLibrarySearchRequest: LibrarySearchRequest?
+
+    func getLibraries(request: LibrarySearchRequest) async throws -> LibraryListResponse {
+        lastLibrarySearchRequest = request
+        guard let handler = getLibrariesHandler else {
+            fatalError("getLibrariesHandler not set — configure it in your test")
+        }
+        return try handler(request.page, request.pageSize, request.query, request.lat, request.lng)
     }
 
-    func getLibrary(slug _: String) async throws -> Library {
-        SampleData.library
+    /// Each test can set this to control getLibrary() response
+    var getLibraryHandler: ((String) throws -> Library)?
+
+    func getLibrary(slug: String) async throws -> Library {
+        if let handler = getLibraryHandler {
+            return try handler(slug)
+        }
+        return SampleData.library
     }
 
     func getLatestLibraries(limit _: Int, hasPhoto _: Bool?) async throws -> LatestLibrariesResponse {
-        LatestLibrariesResponse(items: SampleData.libraries)
+        LatestLibrariesResponse(items: [])
     }
 
     func getStatistics() async throws -> Statistics {
@@ -43,7 +52,7 @@ class MockAPIClient: APIClientProtocol {
     }
 
     func refreshToken(refreshToken _: String) async throws -> AccessToken {
-        AccessToken(access: "new.access.token")
+        AccessToken(access: "")
     }
 
     func socialLogin(
@@ -59,46 +68,68 @@ class MockAPIClient: APIClientProtocol {
         SampleData.user
     }
 
+    var submitLibraryHandler: (() throws -> Library)?
+
     func submitLibrary(_: LibrarySubmissionRequest) async throws -> Library {
-        SampleData.library
+        if let handler = submitLibraryHandler {
+            return try handler()
+        }
+        return SampleData.library
     }
 
-    func reportLibrary(
-        slug _: String,
-        reason _: String,
-        details _: String?,
-        photo _: Data?,
-    ) async throws -> Report {
-        SampleData.report
+    var reportLibraryHandler: (() throws -> Report)?
+
+    func reportLibrary(slug _: String, reason _: String, details _: String?, photo _: Data?) async throws -> Report {
+        if let handler = reportLibraryHandler {
+            return try handler()
+        }
+        return SampleData.report
     }
 
-    func addPhoto(
-        slug _: String,
-        photo _: Data,
-        caption _: String?,
-    ) async throws -> LibraryPhoto {
-        SampleData.libraryPhoto
+    var addPhotoHandler: (() throws -> LibraryPhoto)?
+
+    func addPhoto(slug _: String, photo _: Data, caption _: String?) async throws -> LibraryPhoto {
+        if let handler = addPhotoHandler {
+            return try handler()
+        }
+        return SampleData.libraryPhoto
     }
 
     func deleteAccount(password _: String?, confirm _: Bool?) async throws -> MessageResponse {
         MessageResponse(message: "Account deleted successfully.")
     }
 
-    func getFavourites(page _: Int, pageSize _: Int) async throws -> LibraryListResponse {
-        LibraryListResponse(
-            items: SampleData.libraries.filter { $0.isFavourited == true },
+    var getFavouritesHandler: ((Int, Int) throws -> LibraryListResponse)?
+
+    func getFavourites(page: Int, pageSize: Int) async throws -> LibraryListResponse {
+        if let handler = getFavouritesHandler {
+            return try handler(page, pageSize)
+        }
+        return LibraryListResponse(
+            items: [],
             pagination: PaginationMeta(
-                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                page: 1, pageSize: 20, total: 0, totalPages: 0,
                 hasNext: false, hasPrevious: false,
             ),
         )
     }
 
-    func addFavourite(slug _: String) async throws -> MessageResponse {
-        MessageResponse(message: "Library added to favourites.")
+    var addFavouriteHandler: ((String) throws -> MessageResponse)?
+
+    func addFavourite(slug: String) async throws -> MessageResponse {
+        if let handler = addFavouriteHandler {
+            return try handler(slug)
+        }
+        return MessageResponse(message: "Library added to favourites.")
     }
 
-    func removeFavourite(slug _: String) async throws {}
+    var removeFavouriteHandler: ((String) throws -> Void)?
+
+    func removeFavourite(slug: String) async throws {
+        if let handler = removeFavouriteHandler {
+            try handler(slug)
+        }
+    }
 
     func getModerationSummary() async throws -> ModerationSummary {
         SampleData.moderationSummary

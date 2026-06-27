@@ -160,7 +160,9 @@ enum Fixtures {
         ]
     }
     """
+}
 
+extension Fixtures {
     static let tokenPairJSON = """
     {
         "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.test.access",

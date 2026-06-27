@@ -227,6 +227,8 @@ class APIClient: APIClientProtocol {
         switch statusCode {
         case 401:
             return .unauthorized
+        case 403:
+            return .forbidden(message: message)
         case 429:
             let retryAfter = errorResponse?.details?["retry_after"].flatMap(Int.init)
             return .rateLimited(retryAfter: retryAfter)
@@ -260,30 +262,19 @@ class APIClient: APIClientProtocol {
         return try await request(path: "libraries/latest", queryItems: items)
     }
 
-    func getLibraries(
-        page: Int = 1,
-        pageSize: Int = 20,
-        query: String? = nil,
-        city: String? = nil,
-        country: String? = nil,
-        postalCode: String? = nil,
-        lat: Double? = nil,
-        lng: Double? = nil,
-        radiusKm: Int? = nil,
-        hasPhoto: Bool? = nil,
-    ) async throws -> LibraryListResponse {
+    func getLibraries(request libraryRequest: LibrarySearchRequest = .init()) async throws -> LibraryListResponse {
         var items = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
+            URLQueryItem(name: "page", value: String(libraryRequest.page)),
+            URLQueryItem(name: "page_size", value: String(libraryRequest.pageSize)),
         ]
-        if let query { items.append(URLQueryItem(name: "q", value: query)) }
-        if let city { items.append(URLQueryItem(name: "city", value: city)) }
-        if let country { items.append(URLQueryItem(name: "country", value: country)) }
-        if let postalCode { items.append(URLQueryItem(name: "postal_code", value: postalCode)) }
-        if let lat { items.append(URLQueryItem(name: "lat", value: String(lat))) }
-        if let lng { items.append(URLQueryItem(name: "lng", value: String(lng))) }
-        if let radiusKm { items.append(URLQueryItem(name: "radius_km", value: String(radiusKm))) }
-        if let hasPhoto { items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto))) }
+        if let query = libraryRequest.query { items.append(URLQueryItem(name: "q", value: query)) }
+        if let city = libraryRequest.city { items.append(URLQueryItem(name: "city", value: city)) }
+        if let country = libraryRequest.country { items.append(URLQueryItem(name: "country", value: country)) }
+        if let postalCode = libraryRequest.postalCode { items.append(URLQueryItem(name: "postal_code", value: postalCode)) }
+        if let lat = libraryRequest.lat { items.append(URLQueryItem(name: "lat", value: String(lat))) }
+        if let lng = libraryRequest.lng { items.append(URLQueryItem(name: "lng", value: String(lng))) }
+        if let radiusKm = libraryRequest.radiusKm { items.append(URLQueryItem(name: "radius_km", value: String(radiusKm))) }
+        if let hasPhoto = libraryRequest.hasPhoto { items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto))) }
 
         return try await request(path: "libraries/", queryItems: items)
     }
@@ -317,47 +308,31 @@ class APIClient: APIClientProtocol {
 
     // MARK: - Write Endpoints (multipart)
 
-    func submitLibrary(
-        address: String,
-        city: String,
-        country: String,
-        latitude: Double,
-        longitude: Double,
-        photo: Data,
-        name: String? = nil,
-        description: String? = nil,
-        postalCode: String? = nil,
-        wheelchairAccessible: String? = nil,
-        capacity: Int? = nil,
-        isIndoor: Bool? = nil,
-        isLit: Bool? = nil,
-        website: String? = nil,
-        contact: String? = nil,
-        operatorName: String? = nil,
-        brand: String? = nil,
-    ) async throws -> Library {
+    func submitLibrary(_ submission: LibrarySubmissionRequest) async throws -> Library {
         var multipart = MultipartFormData()
 
         // Required fields
-        multipart.addField(name: "address", value: address)
-        multipart.addField(name: "city", value: city)
-        multipart.addField(name: "country", value: country)
-        multipart.addField(name: "latitude", value: String(latitude))
-        multipart.addField(name: "longitude", value: String(longitude))
-        multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo)
+        multipart.addField(name: "address", value: submission.address)
+        multipart.addField(name: "city", value: submission.city)
+        multipart.addField(name: "country", value: submission.country)
+        multipart.addField(name: "latitude", value: String(submission.latitude))
+        multipart.addField(name: "longitude", value: String(submission.longitude))
+        multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: submission.photo)
 
         // Optional fields
-        if let name { multipart.addField(name: "name", value: name) }
-        if let description { multipart.addField(name: "description", value: description) }
-        if let postalCode { multipart.addField(name: "postal_code", value: postalCode) }
-        if let wheelchairAccessible { multipart.addField(name: "wheelchair_accessible", value: wheelchairAccessible) }
-        if let capacity { multipart.addField(name: "capacity", value: String(capacity)) }
-        if let isIndoor { multipart.addField(name: "is_indoor", value: String(isIndoor)) }
-        if let isLit { multipart.addField(name: "is_lit", value: String(isLit)) }
-        if let website { multipart.addField(name: "website", value: website) }
-        if let contact { multipart.addField(name: "contact", value: contact) }
-        if let operatorName { multipart.addField(name: "operator", value: operatorName) }
-        if let brand { multipart.addField(name: "brand", value: brand) }
+        if let name = submission.name { multipart.addField(name: "name", value: name) }
+        if let description = submission.description { multipart.addField(name: "description", value: description) }
+        if let postalCode = submission.postalCode { multipart.addField(name: "postal_code", value: postalCode) }
+        if let wheelchairAccessible = submission.wheelchairAccessible {
+            multipart.addField(name: "wheelchair_accessible", value: wheelchairAccessible)
+        }
+        if let capacity = submission.capacity { multipart.addField(name: "capacity", value: String(capacity)) }
+        if let isIndoor = submission.isIndoor { multipart.addField(name: "is_indoor", value: String(isIndoor)) }
+        if let isLit = submission.isLit { multipart.addField(name: "is_lit", value: String(isLit)) }
+        if let website = submission.website { multipart.addField(name: "website", value: website) }
+        if let contact = submission.contact { multipart.addField(name: "contact", value: contact) }
+        if let operatorName = submission.operatorName { multipart.addField(name: "operator", value: operatorName) }
+        if let brand = submission.brand { multipart.addField(name: "brand", value: brand) }
 
         return try await multipartRequest(path: "libraries/", multipart: multipart)
     }
@@ -394,28 +369,6 @@ class APIClient: APIClientProtocol {
         if let caption { multipart.addField(name: "caption", value: caption) }
 
         return try await multipartRequest(path: "libraries/\(slug)/photo", multipart: multipart)
-    }
-
-    // MARK: - Favourites
-
-    func getFavourites(page: Int = 1, pageSize: Int = 20) async throws -> LibraryListResponse {
-        let items = [
-            URLQueryItem(name: "page", value: String(page)),
-            URLQueryItem(name: "page_size", value: String(pageSize)),
-        ]
-        return try await request(
-            path: "libraries/favourites",
-            queryItems: items,
-            cachePolicy: .reloadIgnoringLocalCacheData,
-        )
-    }
-
-    func addFavourite(slug: String) async throws -> MessageResponse {
-        try await request(path: "libraries/\(slug)/favourite", method: "POST")
-    }
-
-    func removeFavourite(slug: String) async throws {
-        try await requestVoid(path: "libraries/\(slug)/favourite", method: "DELETE")
     }
 
     // MARK: - Account Management

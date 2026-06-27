@@ -10,6 +10,12 @@ import Observation
 import PhotosUI
 import SwiftUI
 
+private struct ReverseGeocodedAddressComponents {
+    let street: String?
+    let countryCode: String?
+    let postalCode: String?
+}
+
 @Observable
 class SubmitLibraryViewModel {
     private let apiClient: APIClientProtocol
@@ -161,7 +167,7 @@ class SubmitLibraryViewModel {
 
             // MKAddress only has fullAddress/shortAddress — no individual fields for
             // street, countryCode, postalCode. Use placemark until Apple provides
-            // proper replacements. TODO: update when iOS 27 adds individual fields.
+            // proper replacements in a future iOS release.
             let components = extractAddressComponents(from: mapItem)
             if let street = components.street { address = street }
             if let countryCode = components.countryCode { country = countryCode }
@@ -171,15 +177,20 @@ class SubmitLibraryViewModel {
         }
     }
 
-    @available(iOS, deprecated: 26.0, message: "Remove when Apple provides individual address fields on MKMapItem")
-    private func extractAddressComponents(from mapItem: MKMapItem) -> (street: String?, countryCode: String?, postalCode: String?) {
-        let pm = mapItem.placemark
+    private func extractAddressComponents(
+        from mapItem: MKMapItem,
+    ) -> ReverseGeocodedAddressComponents {
+        let placemark = mapItem.placemark
         var street: String?
-        if let thoroughfare = pm.thoroughfare {
-            let number = pm.subThoroughfare ?? ""
+        if let thoroughfare = placemark.thoroughfare {
+            let number = placemark.subThoroughfare ?? ""
             street = number.isEmpty ? thoroughfare : "\(thoroughfare) \(number)"
         }
-        return (street: street, countryCode: pm.countryCode, postalCode: pm.postalCode)
+        return ReverseGeocodedAddressComponents(
+            street: street,
+            countryCode: placemark.countryCode,
+            postalCode: placemark.postalCode,
+        )
     }
 
     // MARK: - Submit
@@ -192,23 +203,25 @@ class SubmitLibraryViewModel {
 
         do {
             let library = try await apiClient.submitLibrary(
-                address: address,
-                city: city,
-                country: country,
-                latitude: latitude,
-                longitude: longitude,
-                photo: photoData,
-                name: name.isEmpty ? nil : name,
-                description: libraryDescription.isEmpty ? nil : libraryDescription,
-                postalCode: postalCode.isEmpty ? nil : postalCode,
-                wheelchairAccessible: wheelchairAccessible.isEmpty ? nil : wheelchairAccessible,
-                capacity: capacity,
-                isIndoor: isIndoor,
-                isLit: isLit,
-                website: website.isEmpty ? nil : website,
-                contact: contact.isEmpty ? nil : contact,
-                operatorName: operatorName.isEmpty ? nil : operatorName,
-                brand: brand.isEmpty ? nil : brand,
+                LibrarySubmissionRequest(
+                    address: address,
+                    city: city,
+                    country: country,
+                    latitude: latitude,
+                    longitude: longitude,
+                    photo: photoData,
+                    name: name.isEmpty ? nil : name,
+                    description: libraryDescription.isEmpty ? nil : libraryDescription,
+                    postalCode: postalCode.isEmpty ? nil : postalCode,
+                    wheelchairAccessible: wheelchairAccessible.isEmpty ? nil : wheelchairAccessible,
+                    capacity: capacity,
+                    isIndoor: isIndoor,
+                    isLit: isLit,
+                    website: website.isEmpty ? nil : website,
+                    contact: contact.isEmpty ? nil : contact,
+                    operatorName: operatorName.isEmpty ? nil : operatorName,
+                    brand: brand.isEmpty ? nil : brand,
+                ),
             )
             submittedLibrary = library
         } catch {

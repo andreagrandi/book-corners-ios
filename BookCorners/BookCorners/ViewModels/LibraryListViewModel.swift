@@ -57,19 +57,15 @@ class LibraryListViewModel {
         case .favourites:
             try await apiClient.getFavourites(page: page, pageSize: pageSize)
         case .nearby:
-            if isSearching {
-                try await apiClient.getLibraries(
-                    page: page, pageSize: pageSize,
-                    query: searchQuery, city: nil, country: nil, postalCode: nil,
-                    lat: nil, lng: nil, radiusKm: nil, hasPhoto: nil,
-                )
-            } else {
-                try await apiClient.getLibraries(
-                    page: page, pageSize: pageSize,
-                    query: nil, city: nil, country: nil, postalCode: nil,
-                    lat: lat, lng: lng, radiusKm: nil, hasPhoto: nil,
-                )
-            }
+            try await apiClient.getLibraries(
+                request: LibrarySearchRequest(
+                    page: page,
+                    pageSize: pageSize,
+                    query: isSearching ? searchQuery : nil,
+                    lat: isSearching ? nil : lat,
+                    lng: isSearching ? nil : lng,
+                ),
+            )
         }
     }
 
