@@ -100,6 +100,11 @@ struct AdminDashboardView: View {
                 await viewModel?.refresh()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .moderationPhotoQueueDidChange)) { _ in
+            Task {
+                await viewModel?.refresh()
+            }
+        }
     }
 
     private func formattedCount(_ value: Int?) -> String {
@@ -231,10 +236,7 @@ private struct AdminModerationList: View {
                 .padding(.leading, 64)
 
             NavigationLink {
-                AdminPlaceholderDetailView(
-                    title: "Submitted photos",
-                    systemImage: "camera",
-                )
+                PhotoModerationQueueView()
             } label: {
                 AdminModerationRow(
                     title: "Submitted photos",

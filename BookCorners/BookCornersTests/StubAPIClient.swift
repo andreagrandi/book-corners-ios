@@ -12,6 +12,11 @@ struct ModerationLibraryUpdateCapture: Equatable {
     let rejectionReason: String?
 }
 
+struct ModerationPhotoUpdateCapture: Equatable {
+    let id: Int
+    let status: PhotoModerationStatus
+}
+
 /// A configurable stub that lets each test control what getLibraries() returns.
 /// Python analogy: like setting mock.return_value or mock.side_effect per test.
 /// Go analogy: a struct with function fields you swap out per test case.
@@ -207,8 +212,15 @@ class StubAPIClient: APIClientProtocol {
         SampleData.moderationReport
     }
 
-    func getModerationPhotos(request _: ModerationPhotoListRequest) async throws -> ModerationPhotoListResponse {
-        ModerationPhotoListResponse(
+    var getModerationPhotosHandler: ((ModerationPhotoListRequest) throws -> ModerationPhotoListResponse)?
+    var lastModerationPhotoListRequest: ModerationPhotoListRequest?
+
+    func getModerationPhotos(request: ModerationPhotoListRequest) async throws -> ModerationPhotoListResponse {
+        lastModerationPhotoListRequest = request
+        if let handler = getModerationPhotosHandler {
+            return try handler(request)
+        }
+        return ModerationPhotoListResponse(
             items: [SampleData.moderationPhoto],
             pagination: PaginationMeta(
                 page: 1, pageSize: 20, total: 1, totalPages: 1,
@@ -217,8 +229,15 @@ class StubAPIClient: APIClientProtocol {
         )
     }
 
-    func updateModerationPhoto(id _: Int, status _: PhotoModerationStatus) async throws -> ModerationPhoto {
-        SampleData.moderationPhoto
+    var updateModerationPhotoHandler: ((Int, PhotoModerationStatus) throws -> ModerationPhoto)?
+    var lastModerationPhotoUpdate: ModerationPhotoUpdateCapture?
+
+    func updateModerationPhoto(id: Int, status: PhotoModerationStatus) async throws -> ModerationPhoto {
+        lastModerationPhotoUpdate = ModerationPhotoUpdateCapture(id: id, status: status)
+        if let handler = updateModerationPhotoHandler {
+            return try handler(id, status)
+        }
+        return SampleData.moderationPhoto
     }
 
     func invalidateLibraryCache(slug _: String) {}

@@ -9,13 +9,30 @@ struct ModerationStatusChip: View {
     let status: LibraryModerationStatus
 
     var body: some View {
-        Text(status.displayName)
+        StatusChipLabel(displayName: status.displayName, tint: status.tint)
+    }
+}
+
+struct PhotoModerationStatusChip: View {
+    let status: PhotoModerationStatus
+
+    var body: some View {
+        StatusChipLabel(displayName: status.displayName, tint: status.tint)
+    }
+}
+
+private struct StatusChipLabel: View {
+    let displayName: String
+    let tint: Color
+
+    var body: some View {
+        Text(displayName)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(status.tint)
+            .foregroundStyle(tint)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(status.tint.opacity(0.12), in: Capsule())
-            .accessibilityLabel("Status: \(status.displayName)")
+            .background(tint.opacity(0.12), in: Capsule())
+            .accessibilityLabel("Status: \(displayName)")
     }
 }
 
@@ -44,6 +61,45 @@ extension LibraryModerationStatus {
 }
 
 extension ModerationStatusFilter {
+    var displayName: String {
+        switch self {
+        case .all:
+            "All"
+        case .pending:
+            "Pending"
+        case .approved:
+            "Approved"
+        case .rejected:
+            "Rejected"
+        }
+    }
+}
+
+extension PhotoModerationStatus {
+    var displayName: String {
+        switch self {
+        case .pending:
+            "Pending"
+        case .approved:
+            "Approved"
+        case .rejected:
+            "Rejected"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .pending:
+            .orange
+        case .approved:
+            .green
+        case .rejected:
+            .red
+        }
+    }
+}
+
+extension PhotoModerationStatusFilter {
     var displayName: String {
         switch self {
         case .all:

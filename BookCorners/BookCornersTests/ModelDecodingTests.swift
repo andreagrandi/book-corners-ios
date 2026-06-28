@@ -213,6 +213,19 @@ struct ModelDecodingTests {
         #expect(response.pagination.totalPages == 1)
     }
 
+    @Test func `moderation photo decodes`() throws {
+        let data = try #require(Fixtures.moderationPhotoJSON.data(using: .utf8))
+        let photo = try decoder.decode(ModerationPhoto.self, from: data)
+
+        #expect(photo.id == 12)
+        #expect(photo.caption == "Front view")
+        #expect(photo.library.displayName == "Corner Books")
+        #expect(photo.status == .pending)
+        #expect(photo.createdBy?.username == "reader")
+        #expect(photo.fullPhotoUrl?.path() == "/media/libraries/user_photos/photo.jpg")
+        #expect(photo.fullThumbnailUrl?.path() == "/media/libraries/user_photos/thumbnails/photo.jpg")
+    }
+
     @Test func `moderation photo list response decodes`() throws {
         let data = try #require(Fixtures.moderationPhotoListJSON.data(using: .utf8))
         let response = try decoder.decode(ModerationPhotoListResponse.self, from: data)
