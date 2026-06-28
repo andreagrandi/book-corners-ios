@@ -104,11 +104,23 @@ class MockAPIClient: APIClientProtocol {
         SampleData.moderationSummary
     }
 
-    func getModerationLibraries(request _: ModerationLibraryListRequest) async throws -> ModerationLibraryListResponse {
-        ModerationLibraryListResponse(
-            items: [SampleData.moderationLibrary],
+    func getModerationLibraries(request: ModerationLibraryListRequest) async throws -> ModerationLibraryListResponse {
+        var items = [SampleData.moderationLibrary]
+        if request.status != .all {
+            items = items.filter { $0.status.rawValue == request.status.rawValue }
+        }
+        if let query = request.query, !query.isEmpty {
+            items = items.filter {
+                $0.displayName.localizedCaseInsensitiveContains(query) ||
+                    $0.city.localizedCaseInsensitiveContains(query) ||
+                    $0.country.localizedCaseInsensitiveContains(query)
+            }
+        }
+
+        return ModerationLibraryListResponse(
+            items: items,
             pagination: PaginationMeta(
-                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                page: 1, pageSize: 20, total: items.count, totalPages: items.isEmpty ? 0 : 1,
                 hasNext: false, hasPrevious: false,
             ),
         )
@@ -120,10 +132,13 @@ class MockAPIClient: APIClientProtocol {
 
     func updateModerationLibrary(
         slug _: String,
-        status _: LibraryModerationStatus,
-        rejectionReason _: String?,
+        status: LibraryModerationStatus,
+        rejectionReason: String?,
     ) async throws -> ModerationLibrary {
-        SampleData.moderationLibrary
+        updatedModerationLibrary(
+            status: status,
+            rejectionReason: rejectionReason ?? "",
+        )
     }
 
     func getModerationReports(request _: ModerationReportListRequest) async throws -> ModerationReportListResponse {
@@ -152,6 +167,41 @@ class MockAPIClient: APIClientProtocol {
 
     func updateModerationPhoto(id _: Int, status _: PhotoModerationStatus) async throws -> ModerationPhoto {
         SampleData.moderationPhoto
+    }
+
+    private func updatedModerationLibrary(
+        status: LibraryModerationStatus,
+        rejectionReason: String,
+    ) -> ModerationLibrary {
+        let library = SampleData.moderationLibrary
+        return ModerationLibrary(
+            id: library.id,
+            slug: library.slug,
+            name: library.name,
+            description: library.description,
+            photoUrl: library.photoUrl,
+            thumbnailUrl: library.thumbnailUrl,
+            lat: library.lat,
+            lng: library.lng,
+            address: library.address,
+            city: library.city,
+            country: library.country,
+            postalCode: library.postalCode,
+            wheelchairAccessible: library.wheelchairAccessible,
+            capacity: library.capacity,
+            isIndoor: library.isIndoor,
+            isLit: library.isLit,
+            website: library.website,
+            contact: library.contact,
+            source: library.source,
+            operatorName: library.operatorName,
+            brand: library.brand,
+            createdAt: library.createdAt,
+            isFavourited: library.isFavourited,
+            status: status,
+            rejectionReason: rejectionReason,
+            createdBy: library.createdBy,
+        )
     }
 
     func invalidateLibraryCache(slug _: String) {}

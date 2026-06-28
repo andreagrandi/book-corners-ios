@@ -6,6 +6,12 @@
 @testable import BookCorners
 import Foundation
 
+struct ModerationLibraryUpdateCapture: Equatable {
+    let slug: String
+    let status: LibraryModerationStatus
+    let rejectionReason: String?
+}
+
 /// A configurable stub that lets each test control what getLibraries() returns.
 /// Python analogy: like setting mock.return_value or mock.side_effect per test.
 /// Go analogy: a struct with function fields you swap out per test case.
@@ -131,12 +137,24 @@ class StubAPIClient: APIClientProtocol {
         }
     }
 
+    var getModerationSummaryHandler: (() throws -> ModerationSummary)?
+
     func getModerationSummary() async throws -> ModerationSummary {
-        SampleData.moderationSummary
+        if let handler = getModerationSummaryHandler {
+            return try handler()
+        }
+        return SampleData.moderationSummary
     }
 
-    func getModerationLibraries(request _: ModerationLibraryListRequest) async throws -> ModerationLibraryListResponse {
-        ModerationLibraryListResponse(
+    var getModerationLibrariesHandler: ((ModerationLibraryListRequest) throws -> ModerationLibraryListResponse)?
+    var lastModerationLibraryListRequest: ModerationLibraryListRequest?
+
+    func getModerationLibraries(request: ModerationLibraryListRequest) async throws -> ModerationLibraryListResponse {
+        lastModerationLibraryListRequest = request
+        if let handler = getModerationLibrariesHandler {
+            return try handler(request)
+        }
+        return ModerationLibraryListResponse(
             items: [SampleData.moderationLibrary],
             pagination: PaginationMeta(
                 page: 1, pageSize: 20, total: 1, totalPages: 1,
@@ -145,16 +163,34 @@ class StubAPIClient: APIClientProtocol {
         )
     }
 
-    func getModerationLibrary(slug _: String) async throws -> ModerationLibrary {
-        SampleData.moderationLibrary
+    var getModerationLibraryHandler: ((String) throws -> ModerationLibrary)?
+    var lastModerationLibrarySlug: String?
+
+    func getModerationLibrary(slug: String) async throws -> ModerationLibrary {
+        lastModerationLibrarySlug = slug
+        if let handler = getModerationLibraryHandler {
+            return try handler(slug)
+        }
+        return SampleData.moderationLibrary
     }
 
+    var updateModerationLibraryHandler: ((String, LibraryModerationStatus, String?) throws -> ModerationLibrary)?
+    var lastModerationLibraryUpdate: ModerationLibraryUpdateCapture?
+
     func updateModerationLibrary(
-        slug _: String,
-        status _: LibraryModerationStatus,
-        rejectionReason _: String?,
+        slug: String,
+        status: LibraryModerationStatus,
+        rejectionReason: String?,
     ) async throws -> ModerationLibrary {
-        SampleData.moderationLibrary
+        lastModerationLibraryUpdate = ModerationLibraryUpdateCapture(
+            slug: slug,
+            status: status,
+            rejectionReason: rejectionReason,
+        )
+        if let handler = updateModerationLibraryHandler {
+            return try handler(slug, status, rejectionReason)
+        }
+        return SampleData.moderationLibrary
     }
 
     func getModerationReports(request _: ModerationReportListRequest) async throws -> ModerationReportListResponse {
