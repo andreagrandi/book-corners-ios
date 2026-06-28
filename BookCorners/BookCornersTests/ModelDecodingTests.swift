@@ -200,6 +200,19 @@ struct ModelDecodingTests {
         #expect(response.pagination.total == 1)
     }
 
+    @Test func `moderation report decodes`() throws {
+        let data = try #require(Fixtures.moderationReportJSON.data(using: .utf8))
+        let report = try decoder.decode(ModerationReport.self, from: data)
+
+        #expect(report.id == 7)
+        #expect(report.library.displayName == "Corner Books")
+        #expect(report.reason == .damaged)
+        #expect(report.details == "The door hinge is broken.")
+        #expect(report.status == .open)
+        #expect(report.createdBy?.username == "reader")
+        #expect(report.fullPhotoUrl?.path() == "/media/reports/photos/report.jpg")
+    }
+
     @Test func `moderation report list response decodes`() throws {
         let data = try #require(Fixtures.moderationReportListJSON.data(using: .utf8))
         let response = try decoder.decode(ModerationReportListResponse.self, from: data)

@@ -105,6 +105,11 @@ struct AdminDashboardView: View {
                 await viewModel?.refresh()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .moderationReportQueueDidChange)) { _ in
+            Task {
+                await viewModel?.refresh()
+            }
+        }
     }
 
     private func formattedCount(_ value: Int?) -> String {
@@ -252,10 +257,7 @@ private struct AdminModerationList: View {
                 .padding(.leading, 64)
 
             NavigationLink {
-                AdminPlaceholderDetailView(
-                    title: "User reports",
-                    systemImage: "flag",
-                )
+                ReportModerationQueueView()
             } label: {
                 AdminModerationRow(
                     title: "User reports",
@@ -326,21 +328,6 @@ private struct AdminModerationRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title), \(subtitle), \(status)")
         .accessibilityHint("Opens the moderation workflow")
-    }
-}
-
-private struct AdminPlaceholderDetailView: View {
-    let title: String
-    let systemImage: String
-
-    var body: some View {
-        ContentUnavailableView {
-            Label(title, systemImage: systemImage)
-        } description: {
-            Text("This staff workflow will be connected in a follow-up moderation ticket.")
-        }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

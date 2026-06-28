@@ -21,6 +21,14 @@ struct PhotoModerationStatusChip: View {
     }
 }
 
+struct ReportModerationStatusChip: View {
+    let status: ReportModerationStatus
+
+    var body: some View {
+        StatusChipLabel(displayName: status.displayName, tint: status.tint)
+    }
+}
+
 private struct StatusChipLabel: View {
     let displayName: String
     let tint: Color
@@ -110,6 +118,64 @@ extension PhotoModerationStatusFilter {
             "Approved"
         case .rejected:
             "Rejected"
+        }
+    }
+}
+
+extension ReportModerationStatus {
+    var displayName: String {
+        switch self {
+        case .open:
+            "Open"
+        case .resolved:
+            "Resolved"
+        case .dismissed:
+            "Dismissed"
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .open:
+            .red
+        case .resolved:
+            .green
+        case .dismissed:
+            .secondary
+        }
+    }
+}
+
+extension ReportModerationStatusFilter {
+    var displayName: String {
+        switch self {
+        case .all:
+            "All"
+        case .open:
+            "Open"
+        case .resolved:
+            "Resolved"
+        case .dismissed:
+            "Dismissed"
+        }
+    }
+}
+
+extension ReportModerationReasonFilter {
+    var displayName: String {
+        switch self {
+        case .all:
+            "All Reasons"
+        case .damaged:
+            "Damaged"
+        case .missing:
+            "Missing"
+        case .incorrectInfo:
+            "Incorrect Info"
+        case .inappropriate:
+            "Inappropriate"
+        case .other:
+            "Other"
         }
     }
 }

@@ -34,7 +34,7 @@ gh issue create --repo andreagrandi/book-corners-ios \
   (step 3), not via a label.
 
 **2. Add the issue to the "Book Corners" project** and capture the item ID
-(https://github.com/users/andreagrandi/projects/2):
+(<https://github.com/users/andreagrandi/projects/2>):
 
 ```bash
 ITEM_ID=$(gh project item-add 2 --owner andreagrandi \
@@ -84,9 +84,11 @@ issue. Follow the conventions of existing project issues — do not invent
 new labels or fields.
 
 ## Project Overview
+
 Book Corners is an iOS app for discovering and sharing community book-sharing libraries. The backend is a Django + Django Ninja API at `https://bookcorners.org/api/v1/`.
 
 ## Project Structure
+
 The Xcode project is `BookCorners/BookCorners.xcodeproj`. App code lives in `BookCorners/BookCorners/`:
 
 ```
@@ -110,6 +112,7 @@ Utilities/       — Helpers (e.g. EXIFReader)
 Tests: `BookCorners/BookCornersTests/` (unit), `BookCorners/BookCornersUITests/` (UI).
 
 ## Architecture
+
 - **MVVM** with `@Observable` (not Combine)
 - **Dependency injection**: services created in `BookCornersApp.swift`, passed via `.environment()`. ViewModels receive `any APIClientProtocol` via constructor injection.
 - **Networking**: `APIClient` (URLSession-based) implements `APIClientProtocol`. Handles JSON encoding/decoding with `convertFromSnakeCase` key strategy, auth token management, and automatic token refresh.
@@ -117,6 +120,11 @@ Tests: `BookCorners/BookCornersTests/` (unit), `BookCorners/BookCornersUITests/`
 - **External dependency**: GoogleSignIn (only third-party framework).
 
 ## Build & Test
+
+Prefer XcodeBuildMCP for build and test verification when it is available. Use
+it to list/select an available simulator and run the `BookCorners` scheme. If
+XcodeBuildMCP is unavailable, disconnected, or cannot run the needed action,
+fall back to the `xcodebuild` commands below.
 
 ```bash
 # Build
@@ -128,28 +136,42 @@ xcodebuild -project BookCorners/BookCorners.xcodeproj -scheme BookCorners test \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
 ```
 
-Swap simulator name if unavailable. Use `xcodebuild ... -quiet` to suppress noise. Always verify builds compile before declaring work done.
+When using the fallback, swap simulator name if unavailable. Use
+`xcodebuild ... -quiet` to suppress noise. Always verify builds compile before
+declaring work done.
 
 ## Research Before Implementing
-Before using any Apple framework, SwiftUI API, or third-party library: **look up the documentation first** using context7 (ctx7) to verify correct API names, method signatures, and current best practices. Do not guess or rely on training data — APIs change across OS versions. Always check Apple's recommended patterns (e.g. prefer `@Observable` over `ObservableObject`, modern concurrency over Combine, etc.).
+
+Before using any Apple framework, SwiftUI API, or third-party library: **look
+up the documentation first** using context7 (ctx7) to verify correct API names,
+method signatures, and current best practices. Do not guess or rely on training
+data — APIs change across OS versions. Always check Apple's recommended
+patterns (e.g. prefer `@Observable` over `ObservableObject`, modern concurrency
+over Combine, etc.).
 
 ## Coding Style
+
 - **Swift 6.2**, SwiftUI, iOS 26+ deployment target
 - 4-space indentation, trailing commas in multi-line parameters
 - One primary type per file, `UpperCamelCase` for types, `lowerCamelCase` for properties/methods
 - `@Observable` for ViewModels (not `ObservableObject`/`@Published`)
 - `async/await` for concurrency (no Combine)
-- **SwiftFormat** runs automatically via a git pre-commit hook on staged `.swift` files — do not run it manually or remind the user to do so
+- **SwiftFormat** runs automatically via a git pre-commit hook on staged
+  `.swift` files — do not run it manually or remind the user to do so
 
 ## Testing
+
 - **Swift Testing** framework: `import Testing`, `@Test`, `@Suite`, `#expect`
 - Network tests use `MockURLProtocol` with handler closures and a custom `mockSession`
-- ViewModel tests use `StubAPIClient` (conforms to `APIClientProtocol`) with per-method handler closures
+- ViewModel tests use `StubAPIClient` (conforms to `APIClientProtocol`) with
+  per-method handler closures
 - Fixtures defined in `Fixtures.swift` as static JSON strings
-- Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid `MockURLProtocol` handler conflicts
+- Network tests are marked `.serialized` (in `SerialNetworkTests`) to avoid
+  `MockURLProtocol` handler conflicts
 - Preview data uses `MockAPIClient` and `SampleData` in `Preview Content/`
 
 ## Changelog
+
 - Whenever you make user-visible changes (features, fixes, polish), update
   `CHANGELOG.md` in the same PR that introduces them.
 - Add the entry under the version section matching the bumped
@@ -159,8 +181,10 @@ Before using any Apple framework, SwiftUI API, or third-party library: **look up
   observable change, not the implementation.
 
 ## Commit Guidelines
+
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
 - Never run `git commit` or `git push` without explicit user approval
 - Use `gh` for all GitHub operations; always include a PR description
 - Never include personal email addresses in commits or PRs
-- Never use `"Little Free Library"` — it's trademarked. Use "book-sharing library" or "library"
+- Never use `"Little Free Library"` — it's trademarked. Use "book-sharing
+  library" or "library"
