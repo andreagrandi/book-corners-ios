@@ -7,9 +7,9 @@ import SwiftUI
 
 struct AdminDashboardView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.apiClient) private var apiClient
 
-    private let summaryItems = AdminDashboardData.summaryItems
-    private let moderationItems = AdminDashboardData.moderationItems
+    @State private var viewModel: ModerationLibraryQueueViewModel?
 
     private var summaryColumns: [GridItem] {
         let columnCount = horizontalSizeClass == .regular ? 4 : 2
@@ -19,10 +19,48 @@ struct AdminDashboardView: View {
         )
     }
 
+    private var summaryItems: [AdminSummaryItem] {
+        let summary = viewModel?.summary
+        return [
+            AdminSummaryItem(
+                title: "Total Libraries",
+                value: formattedCount(summary?.totalLibraries),
+                systemImage: "books.vertical",
+                tint: .blue,
+                badge: summary == nil ? nil : "Live",
+            ),
+            AdminSummaryItem(
+                title: "Pending Libraries",
+                value: formattedCount(summary?.pendingLibrariesCount),
+                systemImage: "clock.badge.exclamationmark",
+                tint: .orange,
+                badge: pendingBadge(summary?.pendingLibrariesCount),
+            ),
+            AdminSummaryItem(
+                title: "Pending Photos",
+                value: formattedCount(summary?.pendingPhotosCount),
+                systemImage: "photo.on.rectangle",
+                tint: .purple,
+                badge: nil,
+            ),
+            AdminSummaryItem(
+                title: "Open Reports",
+                value: formattedCount(summary?.openReportsCount),
+                systemImage: "exclamationmark.octagon",
+                tint: .red,
+                badge: nil,
+            ),
+        ]
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 AdminDashboardHeader()
+
+                if let errorMessage = viewModel?.errorMessage {
+                    AdminDashboardErrorBanner(message: errorMessage)
+                }
 
                 LazyVGrid(columns: summaryColumns, spacing: 12) {
                     ForEach(summaryItems) { item in
@@ -31,11 +69,15 @@ struct AdminDashboardView: View {
                 }
 
                 AdminDashboardSection(title: "Moderation queue") {
-                    AdminModerationList(items: moderationItems)
+                    AdminModerationList(summary: viewModel?.summary)
                 }
 
                 AdminDashboardSection(title: "System status") {
-                    AdminStatusCard()
+                    AdminStatusCard(
+                        isLoading: viewModel?.isLoading == true,
+                        errorMessage: viewModel?.errorMessage,
+                        hasSummary: viewModel?.summary != nil,
+                    )
                 }
             }
             .padding(.horizontal, 16)
@@ -44,6 +86,30 @@ struct AdminDashboardView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Admin Dashboard")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            if viewModel == nil {
+                viewModel = ModerationLibraryQueueViewModel(client: apiClient)
+            }
+            await viewModel?.loadInitialIfNeeded()
+        }
+        .refreshable {
+            await viewModel?.refresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .moderationLibraryQueueDidChange)) { _ in
+            Task {
+                await viewModel?.refresh()
+            }
+        }
+    }
+
+    private func formattedCount(_ value: Int?) -> String {
+        guard let value else { return "—" }
+        return value.formatted()
+    }
+
+    private func pendingBadge(_ count: Int?) -> String? {
+        guard let count, count > 0 else { return nil }
+        return "Review"
     }
 }
 
@@ -59,6 +125,20 @@ private struct AdminDashboardHeader: View {
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+    }
+}
+
+private struct AdminDashboardErrorBanner: View {
+    let message: String
+
+    var body: some View {
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.orange)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.orange.opacity(0.12), in: .rect(cornerRadius: 12, style: .continuous))
+            .accessibilityElement(children: .combine)
     }
 }
 
@@ -93,6 +173,7 @@ private struct AdminSummaryCard: View {
                     .foregroundStyle(item.tint)
                     .frame(width: iconContainerSize, height: iconContainerSize)
                     .background(item.tint.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                    .accessibilityHidden(true)
 
                 Spacer(minLength: 8)
 
@@ -129,49 +210,96 @@ private struct AdminSummaryCard: View {
 }
 
 private struct AdminModerationList: View {
-    let items: [AdminModerationItem]
+    let summary: ModerationSummary?
 
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(items) { item in
-                NavigationLink {
-                    AdminPlaceholderDetailView(item: item)
-                } label: {
-                    AdminModerationRow(item: item)
-                }
-                .buttonStyle(.plain)
-
-                if item.id != items.last?.id {
-                    Divider()
-                        .padding(.leading, 64)
-                }
+            NavigationLink {
+                LibraryModerationQueueView()
+            } label: {
+                AdminModerationRow(
+                    title: "Library approvals",
+                    subtitle: "Approve or reject submitted book-sharing libraries.",
+                    status: queueStatus(summary?.pendingLibrariesCount),
+                    systemImage: "books.vertical",
+                    tint: .blue,
+                )
             }
+            .buttonStyle(.plain)
+
+            Divider()
+                .padding(.leading, 64)
+
+            NavigationLink {
+                AdminPlaceholderDetailView(
+                    title: "Submitted photos",
+                    systemImage: "camera",
+                )
+            } label: {
+                AdminModerationRow(
+                    title: "Submitted photos",
+                    subtitle: "Review community photos before they appear publicly.",
+                    status: queueStatus(summary?.pendingPhotosCount),
+                    systemImage: "camera",
+                    tint: .purple,
+                )
+            }
+            .buttonStyle(.plain)
+
+            Divider()
+                .padding(.leading, 64)
+
+            NavigationLink {
+                AdminPlaceholderDetailView(
+                    title: "User reports",
+                    systemImage: "flag",
+                )
+            } label: {
+                AdminModerationRow(
+                    title: "User reports",
+                    subtitle: "Resolve reports for inaccurate or damaged locations.",
+                    status: queueStatus(summary?.openReportsCount),
+                    systemImage: "flag",
+                    tint: .red,
+                )
+            }
+            .buttonStyle(.plain)
         }
         .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16, style: .continuous))
         .clipShape(.rect(cornerRadius: 16, style: .continuous))
     }
+
+    private func queueStatus(_ count: Int?) -> String {
+        guard let count else { return "—" }
+        return count == 0 ? "Clear" : "\(count)"
+    }
 }
 
 private struct AdminModerationRow: View {
-    let item: AdminModerationItem
+    let title: String
+    let subtitle: String
+    let status: String
+    let systemImage: String
+    let tint: Color
 
     @ScaledMetric(relativeTo: .body) private var iconContainerSize = 44.0
     @ScaledMetric(relativeTo: .body) private var iconSize = 22.0
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: item.systemImage)
+            Image(systemName: systemImage)
                 .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(item.tint)
+                .foregroundStyle(tint)
                 .frame(width: iconContainerSize, height: iconContainerSize)
-                .background(item.tint.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                .background(tint.opacity(0.12), in: .rect(cornerRadius: 10, style: .continuous))
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.title)
+                Text(title)
                     .font(.headline)
                     .foregroundStyle(.primary)
 
-                Text(item.subtitle)
+                Text(subtitle)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -179,148 +307,39 @@ private struct AdminModerationRow: View {
 
             Spacer(minLength: 8)
 
-            Text(item.status)
+            Text(status)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(item.tint)
+                .foregroundStyle(tint)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(item.tint.opacity(0.12), in: Capsule())
+                .background(tint.opacity(0.12), in: Capsule())
 
             Image(systemName: "chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .padding(16)
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.title), \(item.subtitle), \(item.status)")
+        .accessibilityLabel("\(title), \(subtitle), \(status)")
         .accessibilityHint("Opens the moderation workflow")
     }
 }
 
-private struct AdminStatusCard: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            AdminStatusRow(title: "Staff session", value: "Active", tint: .green)
-            Divider()
-                .padding(.leading, 16)
-            AdminStatusRow(title: "Moderation APIs", value: "Coming next", tint: .orange)
-        }
-        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16, style: .continuous))
-        .clipShape(.rect(cornerRadius: 16, style: .continuous))
-    }
-}
-
-private struct AdminStatusRow: View {
-    let title: String
-    let value: String
-    let tint: Color
-
-    var body: some View {
-        HStack {
-            Text(title)
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            Label(value, systemImage: "circle.fill")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(tint)
-                .labelStyle(.titleAndIcon)
-        }
-        .font(.body)
-        .padding(16)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 private struct AdminPlaceholderDetailView: View {
-    let item: AdminModerationItem
+    let title: String
+    let systemImage: String
 
     var body: some View {
         ContentUnavailableView {
-            Label(item.title, systemImage: item.systemImage)
+            Label(title, systemImage: systemImage)
         } description: {
             Text("This staff workflow will be connected in a follow-up moderation ticket.")
         }
-        .navigationTitle(item.title)
+        .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }
-}
-
-private enum AdminDashboardData {
-    static let summaryItems = [
-        AdminSummaryItem(
-            title: "Staff access",
-            value: "On",
-            systemImage: "checkmark.shield",
-            tint: .blue,
-            badge: "Staff",
-        ),
-        AdminSummaryItem(
-            title: "Library approvals",
-            value: "Soon",
-            systemImage: "books.vertical",
-            tint: .indigo,
-            badge: nil,
-        ),
-        AdminSummaryItem(
-            title: "Pending photos",
-            value: "Soon",
-            systemImage: "photo.on.rectangle",
-            tint: .purple,
-            badge: nil,
-        ),
-        AdminSummaryItem(
-            title: "Open reports",
-            value: "Soon",
-            systemImage: "exclamationmark.octagon",
-            tint: .red,
-            badge: nil,
-        ),
-    ]
-
-    static let moderationItems = [
-        AdminModerationItem(
-            title: "Library approvals",
-            subtitle: "Approve or reject submitted book-sharing libraries.",
-            status: "Next",
-            systemImage: "books.vertical",
-            tint: .blue,
-        ),
-        AdminModerationItem(
-            title: "Submitted photos",
-            subtitle: "Review community photos before they appear publicly.",
-            status: "Next",
-            systemImage: "camera",
-            tint: .purple,
-        ),
-        AdminModerationItem(
-            title: "User reports",
-            subtitle: "Resolve reports for inaccurate or damaged locations.",
-            status: "Next",
-            systemImage: "flag",
-            tint: .red,
-        ),
-    ]
-}
-
-private struct AdminSummaryItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let value: String
-    let systemImage: String
-    let tint: Color
-    let badge: String?
-}
-
-private struct AdminModerationItem: Identifiable {
-    let id = UUID()
-    let title: String
-    let subtitle: String
-    let status: String
-    let systemImage: String
-    let tint: Color
 }
 
 #Preview {
