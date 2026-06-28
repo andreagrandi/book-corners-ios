@@ -17,6 +17,11 @@ struct ModerationPhotoUpdateCapture: Equatable {
     let status: PhotoModerationStatus
 }
 
+struct ModerationReportUpdateCapture: Equatable {
+    let id: Int
+    let status: ReportModerationStatus
+}
+
 /// A configurable stub that lets each test control what getLibraries() returns.
 /// Python analogy: like setting mock.return_value or mock.side_effect per test.
 /// Go analogy: a struct with function fields you swap out per test case.
@@ -198,8 +203,15 @@ class StubAPIClient: APIClientProtocol {
         return SampleData.moderationLibrary
     }
 
-    func getModerationReports(request _: ModerationReportListRequest) async throws -> ModerationReportListResponse {
-        ModerationReportListResponse(
+    var getModerationReportsHandler: ((ModerationReportListRequest) throws -> ModerationReportListResponse)?
+    var lastModerationReportListRequest: ModerationReportListRequest?
+
+    func getModerationReports(request: ModerationReportListRequest) async throws -> ModerationReportListResponse {
+        lastModerationReportListRequest = request
+        if let handler = getModerationReportsHandler {
+            return try handler(request)
+        }
+        return ModerationReportListResponse(
             items: [SampleData.moderationReport],
             pagination: PaginationMeta(
                 page: 1, pageSize: 20, total: 1, totalPages: 1,
@@ -208,8 +220,15 @@ class StubAPIClient: APIClientProtocol {
         )
     }
 
-    func updateModerationReport(id _: Int, status _: ReportModerationStatus) async throws -> ModerationReport {
-        SampleData.moderationReport
+    var updateModerationReportHandler: ((Int, ReportModerationStatus) throws -> ModerationReport)?
+    var lastModerationReportUpdate: ModerationReportUpdateCapture?
+
+    func updateModerationReport(id: Int, status: ReportModerationStatus) async throws -> ModerationReport {
+        lastModerationReportUpdate = ModerationReportUpdateCapture(id: id, status: status)
+        if let handler = updateModerationReportHandler {
+            return try handler(id, status)
+        }
+        return SampleData.moderationReport
     }
 
     var getModerationPhotosHandler: ((ModerationPhotoListRequest) throws -> ModerationPhotoListResponse)?
