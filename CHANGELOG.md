@@ -8,6 +8,8 @@
 
 - Let staff review, approve, and reject submitted book-sharing libraries from
   the Admin Dashboard
+- Let staff review, approve, and reject submitted library photos from the Admin
+  Dashboard
 - Show staff users a dedicated Admin Dashboard entry point for moderation tools
 - View library photos full-screen with pinch, double-tap, and swipe-to-dismiss gestures
 

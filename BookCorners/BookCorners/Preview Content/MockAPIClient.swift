@@ -155,18 +155,23 @@ class MockAPIClient: APIClientProtocol {
         SampleData.moderationReport
     }
 
-    func getModerationPhotos(request _: ModerationPhotoListRequest) async throws -> ModerationPhotoListResponse {
-        ModerationPhotoListResponse(
-            items: [SampleData.moderationPhoto],
+    func getModerationPhotos(request: ModerationPhotoListRequest) async throws -> ModerationPhotoListResponse {
+        var items = [SampleData.moderationPhoto]
+        if request.status != .all {
+            items = items.filter { $0.status.rawValue == request.status.rawValue }
+        }
+
+        return ModerationPhotoListResponse(
+            items: items,
             pagination: PaginationMeta(
-                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                page: 1, pageSize: 20, total: items.count, totalPages: items.isEmpty ? 0 : 1,
                 hasNext: false, hasPrevious: false,
             ),
         )
     }
 
-    func updateModerationPhoto(id _: Int, status _: PhotoModerationStatus) async throws -> ModerationPhoto {
-        SampleData.moderationPhoto
+    func updateModerationPhoto(id _: Int, status: PhotoModerationStatus) async throws -> ModerationPhoto {
+        updatedModerationPhoto(status: status)
     }
 
     private func updatedModerationLibrary(
@@ -201,6 +206,20 @@ class MockAPIClient: APIClientProtocol {
             status: status,
             rejectionReason: rejectionReason,
             createdBy: library.createdBy,
+        )
+    }
+
+    private func updatedModerationPhoto(status: PhotoModerationStatus) -> ModerationPhoto {
+        let photo = SampleData.moderationPhoto
+        return ModerationPhoto(
+            id: photo.id,
+            library: photo.library,
+            createdBy: photo.createdBy,
+            caption: photo.caption,
+            photoUrl: photo.photoUrl,
+            thumbnailUrl: photo.thumbnailUrl,
+            status: status,
+            createdAt: photo.createdAt,
         )
     }
 
