@@ -160,14 +160,10 @@ class SubmitLibraryViewModel {
             let mapItems = try await request.mapItems
             guard let mapItem = mapItems.first else { return }
 
-            // Use addressRepresentations for city (iOS 26 non-deprecated API)
             if let cityName = mapItem.addressRepresentations?.cityName {
                 city = cityName
             }
 
-            // MKAddress only has fullAddress/shortAddress — no individual fields for
-            // street, countryCode, postalCode. Use placemark until Apple provides
-            // proper replacements in a future iOS release.
             let components = extractAddressComponents(from: mapItem)
             if let street = components.street { address = street }
             if let countryCode = components.countryCode { country = countryCode }
@@ -180,17 +176,40 @@ class SubmitLibraryViewModel {
     private func extractAddressComponents(
         from mapItem: MKMapItem,
     ) -> ReverseGeocodedAddressComponents {
-        let placemark = mapItem.placemark
-        var street: String?
-        if let thoroughfare = placemark.thoroughfare {
-            let number = placemark.subThoroughfare ?? ""
-            street = number.isEmpty ? thoroughfare : "\(thoroughfare) \(number)"
-        }
+        let fullAddress = mapItem.addressRepresentations?.fullAddress(
+            includingRegion: true,
+            singleLine: false,
+        ) ?? mapItem.address?.fullAddress
+
         return ReverseGeocodedAddressComponents(
-            street: street,
-            countryCode: placemark.countryCode,
-            postalCode: placemark.postalCode,
+            street: firstAddressLine(from: fullAddress) ?? mapItem.address?.shortAddress,
+            countryCode: mapItem.addressRepresentations?.region?.identifier,
+            postalCode: postalCode(from: fullAddress),
         )
+    }
+
+    private func firstAddressLine(from fullAddress: String?) -> String? {
+        guard let fullAddress else { return nil }
+
+        return fullAddress
+            .split(whereSeparator: \.isNewline)
+            .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { !$0.isEmpty }
+    }
+
+    private func postalCode(from fullAddress: String?) -> String? {
+        guard let fullAddress else { return nil }
+
+        let pattern = #"\b(?:GIR ?0AA|[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|\d{5}(?:-\d{4})?|\d{4,6})\b"#
+        let addressBody = fullAddress
+            .split(whereSeparator: \.isNewline)
+            .dropFirst()
+            .joined(separator: " ")
+
+        guard let range = addressBody.range(of: pattern, options: .regularExpression) else {
+            return nil
+        }
+        return String(addressBody[range])
     }
 
     // MARK: - Submit

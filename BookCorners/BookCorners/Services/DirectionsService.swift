@@ -36,9 +36,11 @@ enum DirectionsService {
     ) {
         switch app {
         case .appleMaps:
-            let mapItem = MKMapItem(
-                placemark: MKPlacemark(coordinate: coordinate),
+            let location = CLLocation(
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
             )
+            let mapItem = MKMapItem(location: location, address: nil)
             mapItem.name = name
             mapItem.openInMaps(launchOptions: [
                 MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking,
