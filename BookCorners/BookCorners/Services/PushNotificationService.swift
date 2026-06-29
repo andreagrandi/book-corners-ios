@@ -184,7 +184,7 @@ final class PushNotificationService: PushNotificationManaging {
         case .photoQueue:
             eventCenter.post(name: .moderationPhotoQueueDidChange, object: nil)
         case .reportQueue:
-            eventCenter.post(name: .adminModerationSummaryDidChange, object: nil)
+            eventCenter.post(name: .moderationReportQueueDidChange, object: nil)
         case nil:
             break
         }

@@ -118,11 +118,7 @@ struct ContentView: View {
         case .photoQueue:
             PhotoModerationQueueView()
         case .reportQueue:
-            ContentUnavailableView {
-                Label("User Reports", systemImage: "flag")
-            } description: {
-                Text("Open reports are highlighted on the Admin Dashboard summary.")
-            }
+            ReportModerationQueueView()
         }
     }
 

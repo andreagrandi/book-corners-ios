@@ -74,5 +74,4 @@ extension Notification.Name {
     static let remoteNotificationDeviceTokenRegistrationDidFail = Notification.Name("remoteNotificationDeviceTokenRegistrationDidFail")
     static let remoteNotificationWillPresent = Notification.Name("remoteNotificationWillPresent")
     static let remoteNotificationResponseDidReceive = Notification.Name("remoteNotificationResponseDidReceive")
-    static let adminModerationSummaryDidChange = Notification.Name("adminModerationSummaryDidChange")
 }

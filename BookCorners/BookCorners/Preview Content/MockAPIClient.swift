@@ -150,18 +150,26 @@ class MockAPIClient: APIClientProtocol {
         )
     }
 
-    func getModerationReports(request _: ModerationReportListRequest) async throws -> ModerationReportListResponse {
-        ModerationReportListResponse(
-            items: [SampleData.moderationReport],
+    func getModerationReports(request: ModerationReportListRequest) async throws -> ModerationReportListResponse {
+        var items = [SampleData.moderationReport]
+        if request.status != .all {
+            items = items.filter { $0.status.rawValue == request.status.rawValue }
+        }
+        if request.reason != .all {
+            items = items.filter { $0.reason.rawValue == request.reason.rawValue }
+        }
+
+        return ModerationReportListResponse(
+            items: items,
             pagination: PaginationMeta(
-                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                page: 1, pageSize: 20, total: items.count, totalPages: items.isEmpty ? 0 : 1,
                 hasNext: false, hasPrevious: false,
             ),
         )
     }
 
-    func updateModerationReport(id _: Int, status _: ReportModerationStatus) async throws -> ModerationReport {
-        SampleData.moderationReport
+    func updateModerationReport(id _: Int, status: ReportModerationStatus) async throws -> ModerationReport {
+        updatedModerationReport(status: status)
     }
 
     func getModerationPhotos(request: ModerationPhotoListRequest) async throws -> ModerationPhotoListResponse {
@@ -215,6 +223,20 @@ class MockAPIClient: APIClientProtocol {
             status: status,
             rejectionReason: rejectionReason,
             createdBy: library.createdBy,
+        )
+    }
+
+    private func updatedModerationReport(status: ReportModerationStatus) -> ModerationReport {
+        let report = SampleData.moderationReport
+        return ModerationReport(
+            id: report.id,
+            library: report.library,
+            createdBy: report.createdBy,
+            reason: report.reason,
+            details: report.details,
+            photoUrl: report.photoUrl,
+            status: status,
+            createdAt: report.createdAt,
         )
     }
 
