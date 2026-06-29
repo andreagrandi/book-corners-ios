@@ -55,6 +55,15 @@ class MockAPIClient: APIClientProtocol {
         SampleData.tokenPair
     }
 
+    func registerDeviceToken(
+        token: String,
+        environment: APNsEnvironment,
+    ) async throws -> DeviceTokenRegistrationResponse {
+        DeviceTokenRegistrationResponse(token: token, environment: environment, isActive: true)
+    }
+
+    func unregisterDeviceToken(token _: String) async throws {}
+
     func getMe() async throws -> User {
         SampleData.user
     }

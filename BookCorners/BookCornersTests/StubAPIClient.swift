@@ -80,6 +80,30 @@ class StubAPIClient: APIClientProtocol {
         SampleData.tokenPair
     }
 
+    var registerDeviceTokenHandler: ((String, APNsEnvironment) throws -> DeviceTokenRegistrationResponse)?
+    var lastDeviceTokenRegistration: (token: String, environment: APNsEnvironment)?
+
+    func registerDeviceToken(
+        token: String,
+        environment: APNsEnvironment,
+    ) async throws -> DeviceTokenRegistrationResponse {
+        lastDeviceTokenRegistration = (token: token, environment: environment)
+        if let handler = registerDeviceTokenHandler {
+            return try handler(token, environment)
+        }
+        return DeviceTokenRegistrationResponse(token: token, environment: environment, isActive: true)
+    }
+
+    var unregisterDeviceTokenHandler: ((String) throws -> Void)?
+    var lastUnregisteredDeviceToken: String?
+
+    func unregisterDeviceToken(token: String) async throws {
+        lastUnregisteredDeviceToken = token
+        if let handler = unregisterDeviceTokenHandler {
+            try handler(token)
+        }
+    }
+
     func getMe() async throws -> User {
         SampleData.user
     }

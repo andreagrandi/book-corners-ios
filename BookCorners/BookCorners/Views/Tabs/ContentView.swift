@@ -18,9 +18,11 @@ struct ContentView: View {
 
     @SceneStorage("selectedTab") private var selectedTab: AppTab = .nearby
     @State private var showLoginSheet = false
+    @State private var adminNavigationPath = [AdminNotificationRoute]()
 
     @Environment(AuthService.self) private var authService
     @Environment(NetworkMonitor.self) private var networkMonitor
+    @Environment(PushNotificationService.self) private var pushNotificationService
 
     private var tabSelection: Binding<AppTab> {
         Binding {
@@ -59,8 +61,11 @@ struct ContentView: View {
 
                 if authService.canAccessAdmin {
                     Tab("Admin", systemImage: "rectangle.grid.2x2", value: AppTab.admin) {
-                        NavigationStack {
+                        NavigationStack(path: $adminNavigationPath) {
                             AdminDashboardView()
+                                .navigationDestination(for: AdminNotificationRoute.self) { route in
+                                    adminDestination(for: route)
+                                }
                         }
                     }
                 }
@@ -98,11 +103,38 @@ struct ContentView: View {
                     moveAwayFromAdminIfNeeded()
                 }
             }
+            .onChange(of: pushNotificationService.pendingAdminRouteRequest) { _, request in
+                handleAdminRouteRequest(request)
+            }
             .tabBarMinimizeBehavior(.onScrollDown)
         }
     }
 
+    @ViewBuilder
+    private func adminDestination(for route: AdminNotificationRoute) -> some View {
+        switch route {
+        case .libraryQueue:
+            LibraryModerationQueueView()
+        case .photoQueue:
+            PhotoModerationQueueView()
+        case .reportQueue:
+            ReportModerationQueueView()
+        }
+    }
+
+    private func handleAdminRouteRequest(_ request: AdminNotificationRouteRequest?) {
+        guard let request else { return }
+        defer { pushNotificationService.clearPendingAdminRoute(id: request.id) }
+
+        guard authService.canAccessAdmin else { return }
+        selectedTab = .admin
+        adminNavigationPath = [request.route]
+    }
+
     private func moveAwayFromAdminIfNeeded() {
+        if !authService.canAccessAdmin {
+            adminNavigationPath.removeAll()
+        }
         if selectedTab == .admin, !authService.canAccessAdmin {
             selectedTab = .nearby
         }
@@ -110,10 +142,13 @@ struct ContentView: View {
 }
 
 #Preview {
+    let apiClient = APIClient()
+
     ContentView()
         .environment(AuthService(
-            apiClient: APIClient(),
+            apiClient: apiClient,
             keychainService: KeychainService(),
         ))
         .environment(NetworkMonitor())
+        .environment(PushNotificationService(apiClient: apiClient))
 }
