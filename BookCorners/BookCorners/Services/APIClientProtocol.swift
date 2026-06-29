@@ -19,6 +19,11 @@ protocol APIClientProtocol {
     func register(username: String, password: String, email: String) async throws -> TokenPair
     func refreshToken(refreshToken: String) async throws -> AccessToken
     func socialLogin(provider: String, idToken: String, firstName: String?, lastName: String?) async throws -> TokenPair
+    func registerDeviceToken(
+        token: String,
+        environment: APNsEnvironment,
+    ) async throws -> DeviceTokenRegistrationResponse
+    func unregisterDeviceToken(token: String) async throws
     func submitLibrary(_ submission: LibrarySubmissionRequest) async throws -> Library
     func reportLibrary(
         slug: String,

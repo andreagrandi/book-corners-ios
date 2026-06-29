@@ -18,6 +18,7 @@ class AuthService {
     private var refreshToken: String?
     private let apiClient: APIClient
     private let keychainService: KeychainService
+    private let pushNotificationService: (any PushNotificationManaging)?
     private var refreshTask: Task<String, Error>?
 
     var isAuthenticated: Bool {
@@ -28,9 +29,14 @@ class AuthService {
         currentUser?.isStaff == true
     }
 
-    init(apiClient: APIClient, keychainService: KeychainService) {
+    init(
+        apiClient: APIClient,
+        keychainService: KeychainService,
+        pushNotificationService: (any PushNotificationManaging)? = nil,
+    ) {
         self.apiClient = apiClient
         self.keychainService = keychainService
+        self.pushNotificationService = pushNotificationService
 
         self.apiClient.tokenRefresher = { [weak self] in
             guard let self else { throw APIClientError.unauthorized }
@@ -49,6 +55,15 @@ class AuthService {
         try keychainService.saveString(tokenPair.access, forKey: KeychainService.accessTokenKey)
         try keychainService.saveString(tokenPair.refresh, forKey: KeychainService.refreshTokenKey)
         currentUser = try await apiClient.getMe()
+        await pushNotificationService?.registerForRemoteNotificationsIfNeeded()
+    }
+
+    private func clearSession() {
+        setTokens(access: nil, refresh: nil)
+        currentUser = nil
+        try? keychainService.delete(forKey: KeychainService.accessTokenKey)
+        try? keychainService.delete(forKey: KeychainService.refreshTokenKey)
+        errorMessage = nil
     }
 
     private func mapError(_ error: Error) -> String {
@@ -150,12 +165,9 @@ class AuthService {
         return try await refreshTask!.value
     }
 
-    func logout() {
-        setTokens(access: nil, refresh: nil)
-        currentUser = nil
-        try? keychainService.delete(forKey: KeychainService.accessTokenKey)
-        try? keychainService.delete(forKey: KeychainService.refreshTokenKey)
-        errorMessage = nil
+    func logout() async {
+        await pushNotificationService?.unregisterCurrentDevice()
+        clearSession()
     }
 
     func deleteAccount(password: String) async {
@@ -164,9 +176,11 @@ class AuthService {
         defer { isLoading = false }
 
         do {
+            await pushNotificationService?.unregisterCurrentDevice()
             _ = try await apiClient.deleteAccount(password: password, confirm: nil)
-            logout()
+            clearSession()
         } catch {
+            await pushNotificationService?.registerForRemoteNotificationsIfNeeded()
             errorMessage = mapError(error)
         }
     }
@@ -177,9 +191,11 @@ class AuthService {
         defer { isLoading = false }
 
         do {
+            await pushNotificationService?.unregisterCurrentDevice()
             _ = try await apiClient.deleteAccount(password: nil, confirm: true)
-            logout()
+            clearSession()
         } catch {
+            await pushNotificationService?.registerForRemoteNotificationsIfNeeded()
             errorMessage = mapError(error)
         }
     }
@@ -203,12 +219,14 @@ class AuthService {
         // 4. Nested do/catch: try getMe, if fail try refresh + getMe, if fail logout
         do {
             currentUser = try await apiClient.getMe()
+            await pushNotificationService?.registerForRemoteNotificationsIfNeeded()
         } catch {
             do {
                 _ = try await refreshAccessToken()
                 currentUser = try await apiClient.getMe()
+                await pushNotificationService?.registerForRemoteNotificationsIfNeeded()
             } catch {
-                logout()
+                await logout()
             }
         }
     }

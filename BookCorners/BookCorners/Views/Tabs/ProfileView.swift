@@ -42,7 +42,9 @@ struct ProfileView: View {
 
                     Section {
                         Button("Logout") {
-                            authService.logout()
+                            Task {
+                                await authService.logout()
+                            }
                         }
                     }
                 } else {

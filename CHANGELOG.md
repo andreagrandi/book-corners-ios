@@ -6,6 +6,8 @@
 
 ### Features
 
+- Register signed-in devices for push notifications and route moderation alerts
+  to the relevant Admin Dashboard queue
 - Let staff review, approve, and reject submitted book-sharing libraries from
   the Admin Dashboard
 - Let staff review, approve, and reject submitted library photos from the Admin

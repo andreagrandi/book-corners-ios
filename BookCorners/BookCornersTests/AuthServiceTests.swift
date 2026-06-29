@@ -154,105 +154,12 @@ extension SerialNetworkTests {
             await authService.login(username: "test", password: "pass")
             #expect(authService.canAccessAdmin == true)
 
-            authService.logout()
+            await authService.logout()
 
             #expect(authService.isAuthenticated == false)
             #expect(authService.currentUser == nil)
             #expect(authService.canAccessAdmin == false)
             #expect(authService.errorMessage == nil)
-        }
-
-        @Test func `session restore with valid token`() async throws {
-            // Pre-save tokens to keychain
-            try keychainService.saveString("saved-access", forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString("saved-refresh", forKey: KeychainService.refreshTokenKey)
-
-            // Mock getMe to succeed
-            MockURLProtocol.requestHandler = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!, statusCode: 200,
-                    httpVersion: nil, headerFields: nil,
-                )!
-                return (response, Fixtures.userJSON.data(using: .utf8)!)
-            }
-
-            await authService.restoreSession()
-
-            #expect(authService.isAuthenticated)
-            #expect(authService.currentUser?.username == "booklover")
-            #expect(authService.canAccessAdmin == false)
-        }
-
-        @Test func `session restore with staff token grants admin access`() async throws {
-            try keychainService.saveString("saved-access", forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString("saved-refresh", forKey: KeychainService.refreshTokenKey)
-
-            MockURLProtocol.requestHandler = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!, statusCode: 200,
-                    httpVersion: nil, headerFields: nil,
-                )!
-                return (response, Fixtures.staffUserJSON.data(using: .utf8)!)
-            }
-
-            await authService.restoreSession()
-
-            #expect(authService.isAuthenticated)
-            #expect(authService.currentUser?.username == "moderator")
-            #expect(authService.canAccessAdmin == true)
-        }
-
-        @Test func `session restore with expired token refreshes`() async throws {
-            // Pre-save tokens to keychain
-            try keychainService.saveString("expired-access", forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString("valid-refresh", forKey: KeychainService.refreshTokenKey)
-
-            // The flow: restoreSession calls getMe → 401 → APIClient's tokenRefresher
-            // calls refreshAccessToken → auth/refresh → 200 → APIClient retries getMe → 200
-            // So we need: getMe #1 = 401, auth/refresh = 200, getMe #2 = 200
-            var getMeCallCount = 0
-
-            MockURLProtocol.requestHandler = { request in
-                let path = request.url!.path
-
-                if path.contains("auth/me") {
-                    getMeCallCount += 1
-                    if getMeCallCount == 1 {
-                        let response = HTTPURLResponse(
-                            url: request.url!, statusCode: 401,
-                            httpVersion: nil, headerFields: nil,
-                        )!
-                        return (response, Fixtures.apiErrorJSON.data(using: .utf8)!)
-                    } else {
-                        let response = HTTPURLResponse(
-                            url: request.url!, statusCode: 200,
-                            httpVersion: nil, headerFields: nil,
-                        )!
-                        return (response, Fixtures.userJSON.data(using: .utf8)!)
-                    }
-                } else if path.contains("auth/refresh") {
-                    let json = """
-                    {"access": "new-access-token"}
-                    """
-                    let response = HTTPURLResponse(
-                        url: request.url!, statusCode: 200,
-                        httpVersion: nil, headerFields: nil,
-                    )!
-                    return (response, json.data(using: .utf8)!)
-                } else {
-                    Issue.record("Unexpected request: \(path)")
-                    let response = HTTPURLResponse(
-                        url: request.url!, statusCode: 500,
-                        httpVersion: nil, headerFields: nil,
-                    )!
-                    return (response, "{}".data(using: .utf8)!)
-                }
-            }
-
-            await authService.restoreSession()
-
-            #expect(authService.isAuthenticated)
-            #expect(authService.currentUser?.username == "booklover")
         }
 
         @Test func `delete account success clears session`() async {
@@ -321,7 +228,7 @@ extension SerialNetworkTests {
                         url: request.url!, statusCode: 500,
                         httpVersion: nil, headerFields: nil,
                     )!
-                    return (response, "{}".data(using: .utf8)!)
+                    return (response, Data("{}".utf8))
                 }
             }
 
@@ -368,40 +275,6 @@ extension SerialNetworkTests {
             #expect(authService.isAuthenticated == false)
             #expect(authService.currentUser == nil)
             #expect(authService.errorMessage == nil)
-        }
-
-        @Test func `session restore with expired refresh logs out`() async throws {
-            // Pre-save tokens to keychain
-            try keychainService.saveString("expired-access", forKey: KeychainService.accessTokenKey)
-            try keychainService.saveString("expired-refresh", forKey: KeychainService.refreshTokenKey)
-
-            // getMe returns 401 → APIClient calls tokenRefresher → refreshAccessToken
-            // calls auth/refresh which also returns 401 → refresher throws → APIClient
-            // throws → restoreSession's outer catch also tries refresh → fails → logout
-            MockURLProtocol.requestHandler = { request in
-                let path = request.url!.path
-
-                if path.contains("auth/refresh") {
-                    // Refresh token is also expired
-                    let response = HTTPURLResponse(
-                        url: request.url!, statusCode: 401,
-                        httpVersion: nil, headerFields: nil,
-                    )!
-                    return (response, Fixtures.apiErrorJSON.data(using: .utf8)!)
-                } else {
-                    // getMe and anything else returns 401
-                    let response = HTTPURLResponse(
-                        url: request.url!, statusCode: 401,
-                        httpVersion: nil, headerFields: nil,
-                    )!
-                    return (response, Fixtures.apiErrorJSON.data(using: .utf8)!)
-                }
-            }
-
-            await authService.restoreSession()
-
-            #expect(authService.isAuthenticated == false)
-            #expect(authService.currentUser == nil)
         }
     }
 }

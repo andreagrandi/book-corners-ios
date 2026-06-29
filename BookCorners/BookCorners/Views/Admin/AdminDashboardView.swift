@@ -105,6 +105,11 @@ struct AdminDashboardView: View {
                 await viewModel?.refresh()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .adminModerationSummaryDidChange)) { _ in
+            Task {
+                await viewModel?.refresh()
+            }
+        }
     }
 
     private func formattedCount(_ value: Int?) -> String {
