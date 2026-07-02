@@ -40,6 +40,9 @@ protocol APIClientProtocol {
     func getFavourites(page: Int, pageSize: Int) async throws -> LibraryListResponse
     func addFavourite(slug: String) async throws -> MessageResponse
     func removeFavourite(slug: String) async throws
+    func getContributionLibraries(page: Int, pageSize: Int) async throws -> ContributionLibraryListResponse
+    func getContributionReports(page: Int, pageSize: Int) async throws -> ContributionReportListResponse
+    func getContributionPhotos(page: Int, pageSize: Int) async throws -> ContributionPhotoListResponse
     func getModerationSummary() async throws -> ModerationSummary
     func getModerationLibraries(request: ModerationLibraryListRequest) async throws -> ModerationLibraryListResponse
     func getModerationLibrary(slug: String) async throws -> ModerationLibrary

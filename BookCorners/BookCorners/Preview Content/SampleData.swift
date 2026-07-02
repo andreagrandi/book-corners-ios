@@ -136,6 +136,61 @@ enum SampleData {
         createdAt: Date(),
     )
 
+    static let contributionLibrarySummary = ContributionLibrarySummary(
+        id: 1,
+        slug: "community-library-amsterdam",
+        name: "Community Library Amsterdam",
+        city: "Amsterdam",
+        country: "NL",
+        status: .approved,
+    )
+
+    static let contributionLibrary = ContributionLibrary(
+        id: 1,
+        slug: "community-library-amsterdam",
+        name: "Community Library Amsterdam",
+        description: "A cozy street library near the canal, stocked with Dutch and English books.",
+        photoUrl: "/media/libraries/photos/amsterdam.jpg",
+        thumbnailUrl: "/media/libraries/thumbnails/amsterdam.jpg",
+        lat: 52.3676,
+        lng: 4.9041,
+        address: "Keizersgracht 123",
+        city: "Amsterdam",
+        country: "NL",
+        postalCode: "1015 CJ",
+        wheelchairAccessible: "yes",
+        capacity: 50,
+        isIndoor: false,
+        isLit: true,
+        website: "",
+        contact: "",
+        source: "user",
+        operatorName: "",
+        brand: "",
+        createdAt: Date(),
+        isFavourited: true,
+        status: .approved,
+        rejectionReason: "",
+    )
+
+    static let contributionReport = ContributionReport(
+        id: 1,
+        library: contributionLibrarySummary,
+        reason: .damaged,
+        status: .open,
+        createdAt: Date(),
+    )
+
+    static let contributionPhoto = ContributionPhoto(
+        id: 1,
+        library: contributionLibrarySummary,
+        caption: "Front view of the library",
+        photoUrl: "/media/libraries/user_photos/photo.jpg",
+        thumbnailUrl: "/media/libraries/user_photos/thumbnails/photo.jpg",
+        status: .pending,
+        createdAt: Date(),
+    )
+
     static let moderationSummary = ModerationSummary(
         pendingLibrariesCount: 3,
         openReportsCount: 1,
