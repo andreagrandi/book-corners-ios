@@ -311,4 +311,106 @@ extension Fixtures {
         }
     }
     """
+
+    static let contributionLibrariesListJSON = """
+    {
+        "items": [
+            {
+                "id": 1,
+                "slug": "community-library-berlin",
+                "name": "Community Library Berlin",
+                "description": "A cozy book corner near the park",
+                "photo_url": "https://example.com/photo.jpg",
+                "thumbnail_url": "https://example.com/thumb.jpg",
+                "lat": 52.52,
+                "lng": 13.405,
+                "address": "Alexanderplatz 1",
+                "city": "Berlin",
+                "country": "DE",
+                "postal_code": "10178",
+                "wheelchair_accessible": "yes",
+                "capacity": 30,
+                "is_indoor": false,
+                "is_lit": true,
+                "website": "https://example.com",
+                "contact": "info@example.com",
+                "source": "user",
+                "operator": "Book Club Berlin",
+                "brand": "",
+                "created_at": "2025-06-15T14:30:00Z",
+                "is_favourited": true,
+                "status": "approved",
+                "rejection_reason": ""
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "page_size": 20,
+            "total": 1,
+            "total_pages": 1,
+            "has_next": false,
+            "has_previous": false
+        }
+    }
+    """
+
+    static let contributionReportsListJSON = """
+    {
+        "items": [
+            {
+                "id": 7,
+                "library": {
+                    "id": 1,
+                    "slug": "community-library-berlin",
+                    "name": "Community Library Berlin",
+                    "city": "Berlin",
+                    "country": "DE",
+                    "status": "approved"
+                },
+                "reason": "damaged",
+                "status": "open",
+                "created_at": "2025-06-15T14:30:00Z"
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "page_size": 20,
+            "total": 1,
+            "total_pages": 1,
+            "has_next": false,
+            "has_previous": false
+        }
+    }
+    """
+
+    static let contributionPhotosListJSON = """
+    {
+        "items": [
+            {
+                "id": 12,
+                "library": {
+                    "id": 1,
+                    "slug": "community-library-berlin",
+                    "name": "Community Library Berlin",
+                    "city": "Berlin",
+                    "country": "DE",
+                    "status": "approved"
+                },
+                "caption": "Front view",
+                "photo_url": "https://example.com/photo.jpg",
+                "thumbnail_url": "https://example.com/thumb.jpg",
+                "status": "pending",
+                "created_at": "2025-06-15T14:30:00Z"
+            }
+        ],
+        "pagination": {
+            "page": 1,
+            "page_size": 20,
+            "total": 1,
+            "total_pages": 1,
+            "has_next": false,
+            "has_previous": false
+        }
+    }
+    """
 }

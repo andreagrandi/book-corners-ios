@@ -29,6 +29,15 @@ struct ProfileView: View {
                         Text(authService.currentUser?.email ?? "")
                     }
 
+                    Section("Contributions") {
+                        NavigationLink {
+                            ContributionCenterView()
+                        } label: {
+                            ContributionCenterProfileRow()
+                        }
+                        .accessibilityHint("Shows your submitted libraries, reports, photos, and favourites")
+                    }
+
                     if authService.canAccessAdmin {
                         Section("Administration") {
                             NavigationLink {
@@ -172,6 +181,31 @@ struct ProfileView: View {
                 Text("This action is permanent. Enter your password to confirm.")
             }
         }
+    }
+}
+
+private struct ContributionCenterProfileRow: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "tray.full")
+                .font(.headline)
+                .foregroundStyle(.blue)
+                .frame(width: 32, height: 32)
+                .background(.blue.opacity(0.12), in: .rect(cornerRadius: 8, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Contribution Center")
+                    .foregroundStyle(.primary)
+
+                Text("Track submissions and favourites")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Contribution Center, track submissions and favourites")
     }
 }
 

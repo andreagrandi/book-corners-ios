@@ -140,8 +140,10 @@ class StubAPIClient: APIClientProtocol {
     }
 
     var getFavouritesHandler: ((Int, Int) throws -> LibraryListResponse)?
+    var lastFavouritesRequest: (page: Int, pageSize: Int)?
 
     func getFavourites(page: Int, pageSize: Int) async throws -> LibraryListResponse {
+        lastFavouritesRequest = (page: page, pageSize: pageSize)
         if let handler = getFavouritesHandler {
             return try handler(page, pageSize)
         }
@@ -169,6 +171,57 @@ class StubAPIClient: APIClientProtocol {
         if let handler = removeFavouriteHandler {
             try handler(slug)
         }
+    }
+
+    var getContributionLibrariesHandler: ((Int, Int) throws -> ContributionLibraryListResponse)?
+    var lastContributionLibrariesRequest: (page: Int, pageSize: Int)?
+
+    func getContributionLibraries(page: Int, pageSize: Int) async throws -> ContributionLibraryListResponse {
+        lastContributionLibrariesRequest = (page: page, pageSize: pageSize)
+        if let handler = getContributionLibrariesHandler {
+            return try handler(page, pageSize)
+        }
+        return ContributionLibraryListResponse(
+            items: [],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 0, totalPages: 0,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    var getContributionReportsHandler: ((Int, Int) throws -> ContributionReportListResponse)?
+    var lastContributionReportsRequest: (page: Int, pageSize: Int)?
+
+    func getContributionReports(page: Int, pageSize: Int) async throws -> ContributionReportListResponse {
+        lastContributionReportsRequest = (page: page, pageSize: pageSize)
+        if let handler = getContributionReportsHandler {
+            return try handler(page, pageSize)
+        }
+        return ContributionReportListResponse(
+            items: [],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 0, totalPages: 0,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    var getContributionPhotosHandler: ((Int, Int) throws -> ContributionPhotoListResponse)?
+    var lastContributionPhotosRequest: (page: Int, pageSize: Int)?
+
+    func getContributionPhotos(page: Int, pageSize: Int) async throws -> ContributionPhotoListResponse {
+        lastContributionPhotosRequest = (page: page, pageSize: pageSize)
+        if let handler = getContributionPhotosHandler {
+            return try handler(page, pageSize)
+        }
+        return ContributionPhotoListResponse(
+            items: [],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 0, totalPages: 0,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
     }
 
     var getModerationSummaryHandler: (() throws -> ModerationSummary)?
