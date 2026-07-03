@@ -213,14 +213,38 @@ class ModerationLibraryQueueViewModel {
                 rejectionReason: rejectionReason,
             )
             detailLibrary = updatedLibrary
+            reconcileVisibleLibrary(updatedLibrary)
             NotificationCenter.default.post(name: .moderationLibraryQueueDidChange, object: nil)
             await refresh()
+            reconcileVisibleLibrary(updatedLibrary)
         } catch {
             actionErrorMessage = userMessage(
                 for: error,
                 fallback: "Failed to update library status.",
             )
         }
+    }
+
+    private func reconcileVisibleLibrary(_ updatedLibrary: ModerationLibrary) {
+        if selectedFiltersInclude(updatedLibrary) {
+            if let index = libraries.firstIndex(where: { $0.slug == updatedLibrary.slug }) {
+                libraries[index] = updatedLibrary
+            } else {
+                libraries.insert(updatedLibrary, at: 0)
+            }
+        } else {
+            libraries.removeAll { $0.slug == updatedLibrary.slug }
+        }
+    }
+
+    private func selectedFiltersInclude(_ library: ModerationLibrary) -> Bool {
+        let statusMatches = selectedStatus == .all || selectedStatus.rawValue == library.status.rawValue
+        guard statusMatches else { return false }
+        guard !searchQuery.isEmpty else { return true }
+
+        return library.displayName.localizedCaseInsensitiveContains(searchQuery) ||
+            library.address.localizedCaseInsensitiveContains(searchQuery) ||
+            library.city.localizedCaseInsensitiveContains(searchQuery)
     }
 
     private func makeRequest(page: Int) -> ModerationLibraryListRequest {

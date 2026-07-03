@@ -150,6 +150,33 @@ struct ModerationLibraryQueueViewModelTests {
         #expect(viewModel.detailLibrary?.rejectionReason == "Duplicate submission.")
     }
 
+    @Test func `reject removes library from pending queue when refresh returns stale data`() async {
+        stubClient.getModerationSummaryHandler = {
+            Self.summary(pendingLibrariesCount: 0)
+        }
+        stubClient.getModerationLibrariesHandler = { request in
+            #expect(request.status == .pending)
+            return Self.listResponse(items: [Self.library(slug: "stale-library")])
+        }
+        stubClient.updateModerationLibraryHandler = { slug, status, rejectionReason in
+            Self.library(
+                slug: slug,
+                status: status,
+                rejectionReason: rejectionReason ?? "",
+            )
+        }
+
+        let library = Self.library(slug: "stale-library")
+        viewModel.libraries = [library]
+
+        await viewModel.reject(library, reason: "Duplicate submission.")
+
+        #expect(viewModel.summary?.pendingLibrariesCount == 0)
+        #expect(viewModel.libraries.isEmpty)
+        #expect(viewModel.detailLibrary?.status == .rejected)
+        #expect(viewModel.actionErrorMessage == nil)
+    }
+
     @Test func `reject requires a non-empty reason`() async {
         await viewModel.reject(Self.library(), reason: "   ")
 

@@ -24,6 +24,7 @@ extension SerialNetworkTests {
             MockURLProtocol.requestHandler = { request in
                 #expect(request.httpMethod == "GET")
                 #expect(request.url?.path == "/api/v1/libraries/moderation/summary")
+                #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
                 #expect(request.allHTTPHeaderFields?["Authorization"] == "Bearer staff-token")
 
                 let response = HTTPURLResponse(
@@ -44,6 +45,7 @@ extension SerialNetworkTests {
                 let url = request.url!
                 #expect(request.httpMethod == "GET")
                 #expect(url.path == "/api/v1/libraries/moderation")
+                #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
                 #expect(Self.queryValue("status", in: url) == "pending")
                 #expect(Self.queryValue("q", in: url) == "Florence")
                 #expect(Self.queryValue("country", in: url) == "IT")
@@ -77,6 +79,7 @@ extension SerialNetworkTests {
             MockURLProtocol.requestHandler = { request in
                 #expect(request.httpMethod == "GET")
                 #expect(request.url?.path == "/api/v1/libraries/moderation/florence-via-rosina-15-corner-books")
+                #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
 
                 let response = HTTPURLResponse(
                     url: request.url!, statusCode: 200,
@@ -120,6 +123,7 @@ extension SerialNetworkTests {
                 let url = request.url!
                 #expect(request.httpMethod == "GET")
                 #expect(url.path == "/api/v1/libraries/moderation/reports")
+                #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
                 #expect(Self.queryValue("status", in: url) == "open")
                 #expect(Self.queryValue("reason", in: url) == "damaged")
                 #expect(Self.queryValue("page", in: url) == "3")
@@ -169,6 +173,7 @@ extension SerialNetworkTests {
                 let url = request.url!
                 #expect(request.httpMethod == "GET")
                 #expect(url.path == "/api/v1/libraries/moderation/photos")
+                #expect(request.cachePolicy == .reloadIgnoringLocalCacheData)
                 #expect(Self.queryValue("status", in: url) == "pending")
                 #expect(Self.queryValue("page", in: url) == "4")
                 #expect(Self.queryValue("page_size", in: url) == "12")
