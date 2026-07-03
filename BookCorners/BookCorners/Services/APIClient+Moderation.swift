@@ -7,7 +7,10 @@ import Foundation
 
 extension APIClient {
     func getModerationSummary() async throws -> ModerationSummary {
-        try await request(path: "libraries/moderation/summary")
+        try await request(
+            path: "libraries/moderation/summary",
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func getModerationLibraries(
@@ -28,11 +31,18 @@ extension APIClient {
             items.append(URLQueryItem(name: "source", value: source))
         }
 
-        return try await request(path: "libraries/moderation", queryItems: items)
+        return try await request(
+            path: "libraries/moderation",
+            queryItems: items,
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func getModerationLibrary(slug: String) async throws -> ModerationLibrary {
-        try await request(path: "libraries/moderation/\(slug)")
+        try await request(
+            path: "libraries/moderation/\(slug)",
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func updateModerationLibrary(
@@ -57,7 +67,11 @@ extension APIClient {
             URLQueryItem(name: "page_size", value: String(moderationRequest.pageSize)),
         ]
 
-        return try await request(path: "libraries/moderation/reports", queryItems: items)
+        return try await request(
+            path: "libraries/moderation/reports",
+            queryItems: items,
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func updateModerationReport(id: Int, status: ReportModerationStatus) async throws -> ModerationReport {
@@ -77,7 +91,11 @@ extension APIClient {
             URLQueryItem(name: "page_size", value: String(moderationRequest.pageSize)),
         ]
 
-        return try await request(path: "libraries/moderation/photos", queryItems: items)
+        return try await request(
+            path: "libraries/moderation/photos",
+            queryItems: items,
+            cachePolicy: .reloadIgnoringLocalCacheData,
+        )
     }
 
     func updateModerationPhoto(id: Int, status: PhotoModerationStatus) async throws -> ModerationPhoto {

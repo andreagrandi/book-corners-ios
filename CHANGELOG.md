@@ -11,6 +11,10 @@
 - Show signed-out users a library detail prompt explaining that login unlocks
   reports and photo uploads
 
+### Fixes
+
+- Keep rejected library submissions from lingering in the pending moderation queue
+
 ## v1.3.1
 
 ### Features
