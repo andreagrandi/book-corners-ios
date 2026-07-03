@@ -2,6 +2,13 @@
 
 <!-- markdownlint-disable MD024 -->
 
+## v1.4.0
+
+### Features
+
+- Add a Contribution Center for signed-in users to track submissions, reports,
+  photos, and favourites
+
 ## v1.3.1
 
 ### Features

@@ -252,6 +252,79 @@ extension SerialNetworkTests {
             try await client.removeFavourite(slug: "test-slug")
         }
 
+        // MARK: - Contributions
+
+        @Test func `get contribution libraries returns decoded response`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                let url = request.url!
+                #expect(url.path.contains("libraries/mine"))
+                #expect(request.httpMethod == "GET")
+                let query = url.query ?? ""
+                #expect(query.contains("page=1"))
+                #expect(query.contains("page_size=20"))
+
+                let response = HTTPURLResponse(
+                    url: url, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                let data = Fixtures.contributionLibrariesListJSON.data(using: .utf8)!
+                return (response, data)
+            }
+
+            let result = try await client.getContributionLibraries(page: 1, pageSize: 20)
+            #expect(result.items.count == 1)
+            #expect(result.items[0].status == .approved)
+            #expect(result.items[0].isFavourited == true)
+        }
+
+        @Test func `get contribution reports returns decoded response`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                let url = request.url!
+                #expect(url.path.contains("libraries/mine/reports"))
+                #expect(request.httpMethod == "GET")
+
+                let response = HTTPURLResponse(
+                    url: url, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                let data = Fixtures.contributionReportsListJSON.data(using: .utf8)!
+                return (response, data)
+            }
+
+            let result = try await client.getContributionReports(page: 1, pageSize: 20)
+            #expect(result.items.count == 1)
+            #expect(result.items[0].reason == .damaged)
+            #expect(result.items[0].status == .open)
+            #expect(result.items[0].library.slug == "community-library-berlin")
+        }
+
+        @Test func `get contribution photos returns decoded response`() async throws {
+            client.accessToken = "test-token"
+
+            MockURLProtocol.requestHandler = { request in
+                let url = request.url!
+                #expect(url.path.contains("libraries/mine/photos"))
+                #expect(request.httpMethod == "GET")
+
+                let response = HTTPURLResponse(
+                    url: url, statusCode: 200,
+                    httpVersion: nil, headerFields: nil,
+                )!
+                let data = Fixtures.contributionPhotosListJSON.data(using: .utf8)!
+                return (response, data)
+            }
+
+            let result = try await client.getContributionPhotos(page: 1, pageSize: 20)
+            #expect(result.items.count == 1)
+            #expect(result.items[0].caption == "Front view")
+            #expect(result.items[0].status == .pending)
+            #expect(result.items[0].library.slug == "community-library-berlin")
+        }
+
         @Test func `no auth header when token nil`() async throws {
             client.accessToken = nil
 

@@ -109,6 +109,36 @@ class MockAPIClient: APIClientProtocol {
 
     func removeFavourite(slug _: String) async throws {}
 
+    func getContributionLibraries(page _: Int, pageSize _: Int) async throws -> ContributionLibraryListResponse {
+        ContributionLibraryListResponse(
+            items: [SampleData.contributionLibrary],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    func getContributionReports(page _: Int, pageSize _: Int) async throws -> ContributionReportListResponse {
+        ContributionReportListResponse(
+            items: [SampleData.contributionReport],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
+    func getContributionPhotos(page _: Int, pageSize _: Int) async throws -> ContributionPhotoListResponse {
+        ContributionPhotoListResponse(
+            items: [SampleData.contributionPhoto],
+            pagination: PaginationMeta(
+                page: 1, pageSize: 20, total: 1, totalPages: 1,
+                hasNext: false, hasPrevious: false,
+            ),
+        )
+    }
+
     func getModerationSummary() async throws -> ModerationSummary {
         SampleData.moderationSummary
     }
