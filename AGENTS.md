@@ -161,6 +161,16 @@ over Combine, etc.).
 
 ## Testing
 
+- **Every user-facing change must be tested end to end** before declaring work
+  done. Prefer XcodeBuildMCP with a real simulator (`build_run_sim`,
+  `snapshot_ui`, `wait_for_ui`, taps/typing/swipes, and screenshots as needed).
+  If XcodeBuildMCP is unavailable, use an equivalent simulator/manual flow with
+  `xcodebuild`, Simulator, or UI tests.
+- End-to-end coverage must exercise the visible behavior that changed and any
+  relevant navigation, authentication, empty/error, or permission states.
+  Unit/build tests alone are not enough for user-facing changes.
+- If a full end-to-end simulator check cannot be completed, stop and explain the
+  blocker instead of claiming the change is done.
 - **Swift Testing** framework: `import Testing`, `@Test`, `@Suite`, `#expect`
 - Network tests use `MockURLProtocol` with handler closures and a custom `mockSession`
 - ViewModel tests use `StubAPIClient` (conforms to `APIClientProtocol`) with
@@ -185,6 +195,12 @@ over Combine, etc.).
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
 - Never run `git commit` or `git push` without explicit user approval
 - Use `gh` for all GitHub operations; always include a PR description
+- When creating a PR for a user-facing change that was tested in the simulator,
+  include at least one screenshot showing the changed UI in the PR body, normally
+  under `## Verification`. Capture screenshots with XcodeBuildMCP or an
+  equivalent simulator tool, save temporary files under `/tmp/`, and do not
+  commit screenshots to the repository. If a screenshot cannot be attached or
+  linked through `gh`, ask the user before creating the PR without it.
 - Never include personal email addresses in commits or PRs
 - Never use `"Little Free Library"` — it's trademarked. Use "book-sharing
   library" or "library"
