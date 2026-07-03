@@ -8,6 +8,8 @@
 
 - Add a Contribution Center for signed-in users to track submissions, reports,
   photos, and favourites
+- Show signed-out users a library detail prompt explaining that login unlocks
+  reports and photo uploads
 
 ## v1.3.1
 

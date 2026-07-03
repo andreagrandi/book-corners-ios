@@ -101,6 +101,8 @@ struct LibraryDetailView: View {
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.large)
+                            .accessibilityLabel("Report this library")
+                            .accessibilityHint("Opens the report form")
                             .sheet(isPresented: $showReport) {
                                 ReportView(librarySlug: displayLibrary.slug)
                             }
@@ -113,10 +115,14 @@ struct LibraryDetailView: View {
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.large)
+                            .accessibilityLabel("Add a photo")
+                            .accessibilityHint("Opens the photo submission form")
                             .sheet(isPresented: $showSubmitPhoto) {
                                 SubmitPhotoView(librarySlug: displayLibrary.slug)
                             }
                         }
+                    } else {
+                        SignedOutDetailActionsPrompt()
                     }
                 }
                 .padding(.horizontal)
@@ -253,6 +259,44 @@ struct LibraryDetailView: View {
                 }
             }
             .padding(.horizontal)
+        }
+    }
+}
+
+private struct SignedOutDetailActionsPrompt: View {
+    @State private var showingAuth = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Want to help improve this listing?")
+                        .font(.headline)
+                    Text("Directions and sharing are always available. Sign in or register to report an issue or add a photo for this book-sharing library.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            } icon: {
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.title2)
+                    .foregroundStyle(.blue)
+            }
+
+            Button("Sign In or Register", systemImage: "person.crop.circle.badge.plus") {
+                showingAuth = true
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+            .accessibilityLabel("Sign in or register to report issues and add photos")
+            .accessibilityHint("Opens the login and registration screen")
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.blue.opacity(0.08), in: .rect(cornerRadius: 12, style: .continuous))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Account prompt for reporting issues and adding photos")
+        .sheet(isPresented: $showingAuth) {
+            AuthGateView()
         }
     }
 }
