@@ -265,9 +265,17 @@ struct SubmitLibraryView: View {
         }
         .alert("Library Submitted!", isPresented: Binding(
             get: { viewModel.submittedLibrary != nil },
-            set: { if !$0 { viewModel.reset(); onCancel?() } },
+            set: {
+                if !$0 {
+                    viewModel.reset()
+                    onCancel?()
+                }
+            },
         )) {
-            Button("OK") { viewModel.reset(); onCancel?() }
+            Button("OK") {
+                viewModel.reset()
+                onCancel?()
+            }
         } message: {
             Text("Your library has been submitted and will appear after review.")
         }

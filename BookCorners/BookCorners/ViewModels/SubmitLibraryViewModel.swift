@@ -165,9 +165,15 @@ class SubmitLibraryViewModel {
             }
 
             let components = extractAddressComponents(from: mapItem)
-            if let street = components.street { address = street }
-            if let countryCode = components.countryCode { country = countryCode }
-            if let postal = components.postalCode { postalCode = postal }
+            if let street = components.street {
+                address = street
+            }
+            if let countryCode = components.countryCode {
+                country = countryCode
+            }
+            if let postal = components.postalCode {
+                postalCode = postal
+            }
         } catch {
             // Reverse geocoding failed — user can fill address manually
         }

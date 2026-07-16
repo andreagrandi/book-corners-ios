@@ -133,28 +133,26 @@ private struct ReportModerationEvidencePhoto: View {
     }
 
     var body: some View {
-        Group {
-            if let imageURL {
-                AsyncImage(url: imageURL) { phase in
-                    switch phase {
-                    case .empty:
-                        imagePlaceholder
-                    case let .success(image):
-                        image
-                            .resizable()
-                            .scaledToFill()
-                    case .failure:
-                        imagePlaceholder
-                    @unknown default:
-                        imagePlaceholder
-                    }
+        if let imageURL {
+            AsyncImage(url: imageURL) { phase in
+                switch phase {
+                case .empty:
+                    imagePlaceholder
+                case let .success(image):
+                    image
+                        .resizable()
+                        .scaledToFill()
+                case .failure:
+                    imagePlaceholder
+                @unknown default:
+                    imagePlaceholder
                 }
-                .frame(maxWidth: .infinity, minHeight: 240, maxHeight: 320)
-                .clipShape(.rect(cornerRadius: 18, style: .continuous))
-                .accessibilityLabel("Evidence photo")
-            } else {
-                noEvidencePlaceholder
             }
+            .frame(maxWidth: .infinity, minHeight: 240, maxHeight: 320)
+            .clipShape(.rect(cornerRadius: 18, style: .continuous))
+            .accessibilityLabel("Evidence photo")
+        } else {
+            noEvidencePlaceholder
         }
     }
 

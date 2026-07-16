@@ -99,7 +99,9 @@ struct AuthGateView: View {
             }
             .navigationTitle(authMode == .login ? "Login" : "Register")
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
-                if isAuthenticated { dismiss() }
+                if isAuthenticated {
+                    dismiss()
+                }
             }
             .onChange(of: authMode) { _, _ in
                 authService.errorMessage = nil
@@ -108,8 +110,12 @@ struct AuthGateView: View {
     }
 
     private var isSubmitDisabled: Bool {
-        if authService.isLoading { return true }
-        if username.isEmpty || password.isEmpty { return true }
+        if authService.isLoading {
+            return true
+        }
+        if username.isEmpty || password.isEmpty {
+            return true
+        }
         if authMode == .register {
             return email.isEmpty || !email.contains("@") || confirmPassword.isEmpty || password != confirmPassword
         }

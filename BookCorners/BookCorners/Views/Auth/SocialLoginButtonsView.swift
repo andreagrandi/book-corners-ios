@@ -56,7 +56,9 @@ struct SocialLoginButtonsView: View {
                 )
             }
         case let .failure(error):
-            if (error as? ASAuthorizationError)?.code == .canceled { return }
+            if (error as? ASAuthorizationError)?.code == .canceled {
+                return
+            }
             authService.errorMessage = error.localizedDescription
         }
     }
@@ -67,7 +69,9 @@ struct SocialLoginButtonsView: View {
         else { return }
         GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
             if let error {
-                if (error as NSError).code == GIDSignInError.canceled.rawValue { return }
+                if (error as NSError).code == GIDSignInError.canceled.rawValue {
+                    return
+                }
                 authService.errorMessage = error.localizedDescription
                 return
             }
