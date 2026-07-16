@@ -171,13 +171,27 @@ class ModerationPhotoQueueViewModel {
                 status: status,
             )
             detailPhoto = updatedPhoto
+            reconcileVisiblePhoto(updatedPhoto)
             NotificationCenter.default.post(name: .moderationPhotoQueueDidChange, object: nil)
             await refresh()
+            reconcileVisiblePhoto(updatedPhoto)
         } catch {
             actionErrorMessage = userMessage(
                 for: error,
                 fallback: "Failed to update photo status.",
             )
+        }
+    }
+
+    private func reconcileVisiblePhoto(_ updatedPhoto: ModerationPhoto) {
+        if selectedStatus == .all || selectedStatus.rawValue == updatedPhoto.status.rawValue {
+            if let index = photos.firstIndex(where: { $0.id == updatedPhoto.id }) {
+                photos[index] = updatedPhoto
+            } else {
+                photos.insert(updatedPhoto, at: 0)
+            }
+        } else {
+            photos.removeAll { $0.id == updatedPhoto.id }
         }
     }
 

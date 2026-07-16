@@ -13,7 +13,7 @@
 
 ### Fixes
 
-- Keep rejected library submissions from lingering in the pending moderation queue
+- Remove moderated libraries, photos, and reports from their pending queues immediately
 
 ## v1.3.1
 

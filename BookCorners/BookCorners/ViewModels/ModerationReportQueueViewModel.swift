@@ -178,14 +178,34 @@ class ModerationReportQueueViewModel {
                 status: status,
             )
             detailReport = updatedReport
+            reconcileVisibleReport(updatedReport)
             NotificationCenter.default.post(name: .moderationReportQueueDidChange, object: nil)
             await refresh()
+            reconcileVisibleReport(updatedReport)
         } catch {
             actionErrorMessage = userMessage(
                 for: error,
                 fallback: "Failed to update report status.",
             )
         }
+    }
+
+    private func reconcileVisibleReport(_ updatedReport: ModerationReport) {
+        if selectedFiltersInclude(updatedReport) {
+            if let index = reports.firstIndex(where: { $0.id == updatedReport.id }) {
+                reports[index] = updatedReport
+            } else {
+                reports.insert(updatedReport, at: 0)
+            }
+        } else {
+            reports.removeAll { $0.id == updatedReport.id }
+        }
+    }
+
+    private func selectedFiltersInclude(_ report: ModerationReport) -> Bool {
+        let statusMatches = selectedStatus == .all || selectedStatus.rawValue == report.status.rawValue
+        let reasonMatches = selectedReason == .all || selectedReason.rawValue == report.reason.rawValue
+        return statusMatches && reasonMatches
     }
 
     private func makeRequest(page: Int) -> ModerationReportListRequest {
