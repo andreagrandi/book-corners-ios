@@ -155,6 +155,7 @@ struct LibraryModerationQueueView: View {
         } else if viewModel.libraries.isEmpty {
             emptyState(for: viewModel)
                 .frame(maxWidth: .infinity, minHeight: 240)
+                .accessibilityIdentifier("library-moderation-empty")
         } else {
             libraryCards(for: viewModel)
         }
@@ -243,6 +244,7 @@ private struct LibraryModerationQueueHeader: View {
             .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("library-moderation-summary")
     }
 }
 
@@ -317,6 +319,7 @@ private struct LibraryModerationCard: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(viewModel.isUpdating)
+                    .accessibilityIdentifier("approve-library-\(library.slug)")
 
                     Button(role: .destructive, action: onReject) {
                         actionLabel(title: "Reject", systemImage: "xmark")
@@ -331,6 +334,7 @@ private struct LibraryModerationCard: View {
         .padding(16)
         .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("library-moderation-\(library.slug)")
     }
 
     private var submitterText: String {

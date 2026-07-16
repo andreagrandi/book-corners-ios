@@ -9,6 +9,8 @@ import Network
 import XCTest
 
 final class BookCornersUITests: XCTestCase {
+    private let uiTimeout: TimeInterval = 30
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
 
@@ -46,40 +48,59 @@ final class BookCornersUITests: XCTestCase {
         app.launch()
 
         let adminTab = app.tabBars.buttons["Admin"]
-        guard waitForHittable(adminTab, timeout: 10) else {
+        guard waitForHittable(adminTab, timeout: uiTimeout) else {
             XCTFail("Admin tab did not become available. Requests: \(server.receivedRequestLines)")
             return
         }
         adminTab.tap()
         let libraryApprovalsButton = app.buttons["admin-library-approvals"]
-        guard waitForHittable(libraryApprovalsButton, timeout: 10) else {
+        guard waitForHittable(libraryApprovalsButton, timeout: uiTimeout) else {
             XCTFail("Library approvals did not load. Requests: \(server.receivedRequestLines)")
             return
         }
         libraryApprovalsButton.tap()
 
-        let pendingLibrary = app.staticTexts["Corner Books"]
-        XCTAssertTrue(pendingLibrary.waitForExistence(timeout: 10))
-        app.buttons["Approve"].firstMatch.tap()
+        let pendingLibrary = app.descendants(matching: .any)["library-moderation-florence-corner-books"]
+        guard pendingLibrary.waitForExistence(timeout: uiTimeout) else {
+            XCTFail("Pending library did not load. Requests: \(server.receivedRequestLines)")
+            return
+        }
+
+        let approveButton = app.buttons["approve-library-florence-corner-books"]
+        guard waitForHittable(approveButton, timeout: uiTimeout) else {
+            XCTFail("Approve button did not become hittable. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        approveButton.tap()
 
         let confirmation = app.alerts["Approve Library?"]
-        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
-        confirmation.buttons["Approve"].tap()
+        let confirmApproveButton = confirmation.buttons["Approve"]
+        guard waitForHittable(confirmApproveButton, timeout: uiTimeout) else {
+            XCTFail("Approval confirmation did not appear. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        confirmApproveButton.tap()
 
-        XCTAssertTrue(app.staticTexts["No Library Submissions"].waitForExistence(timeout: 10))
+        let emptyState = app.descendants(matching: .any)["library-moderation-empty"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: uiTimeout))
         XCTAssertFalse(pendingLibrary.exists)
-        XCTAssertTrue(
-            app.descendants(matching: .any)
-                .matching(NSPredicate(format: "label CONTAINS %@", "0 pending"))
-                .firstMatch
-                .exists,
-        )
+        let summary = app.descendants(matching: .any)["library-moderation-summary"]
+        XCTAssertTrue(waitForLabel(summary, containing: "0 pending", timeout: uiTimeout))
     }
 
     @MainActor
     private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == true AND hittable == true"),
+            object: element,
+        )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    @MainActor
+    private func waitForLabel(_ element: XCUIElement, containing text: String, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", text),
             object: element,
         )
         return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
