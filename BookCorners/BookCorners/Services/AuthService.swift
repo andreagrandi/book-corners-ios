@@ -201,6 +201,12 @@ class AuthService {
     }
 
     func restoreSession() async {
+        #if DEBUG
+            if await restoreUITestSessionIfConfigured() {
+                return
+            }
+        #endif
+
         isLoading = true
         defer { isLoading = false }
 
@@ -230,4 +236,27 @@ class AuthService {
             }
         }
     }
+
+    #if DEBUG
+        private func restoreUITestSessionIfConfigured() async -> Bool {
+            let environment = ProcessInfo.processInfo.environment
+            guard let accessToken = environment["UI_TEST_ACCESS_TOKEN"],
+                  let refreshToken = environment["UI_TEST_REFRESH_TOKEN"]
+            else {
+                return false
+            }
+
+            isLoading = true
+            defer { isLoading = false }
+
+            setTokens(access: accessToken, refresh: refreshToken)
+            do {
+                currentUser = try await apiClient.getMe()
+            } catch {
+                setTokens(access: nil, refresh: nil)
+                currentUser = nil
+            }
+            return true
+        }
+    #endif
 }

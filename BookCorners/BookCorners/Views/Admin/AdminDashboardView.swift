@@ -236,6 +236,7 @@ private struct AdminModerationList: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("admin-library-approvals")
 
             Divider()
                 .padding(.leading, 64)

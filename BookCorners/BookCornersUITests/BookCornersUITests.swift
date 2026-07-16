@@ -9,6 +9,8 @@ import Network
 import XCTest
 
 final class BookCornersUITests: XCTestCase {
+    private let uiTimeout: TimeInterval = 30
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
 
@@ -32,80 +34,76 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
-    func testApprovingLibraryRemovesItFromPendingQueueWhenRefreshReturnsStaleData() async throws {
+    func testApprovingLibraryRemovesItFromPendingQueueWhenRefreshReturnsStaleData() throws {
         let server = try AdminModerationMockServer()
         let port = try server.start()
         defer { server.stop() }
 
         let baseURL = "http://127.0.0.1:\(port)/api/v1/"
-        try await verifyMockLoginResponse(baseURL: baseURL)
 
         let app = XCUIApplication()
         app.launchEnvironment["API_BASE_URL"] = baseURL
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
         app.launch()
 
         let adminTab = app.tabBars.buttons["Admin"]
-        if !adminTab.waitForExistence(timeout: 2) {
-            app.tabBars.buttons["Profile"].tap()
-            app.buttons["Sign In or Register"].tap()
-
-            let usernameField = app.textFields["Username"]
-            XCTAssertTrue(usernameField.waitForExistence(timeout: 2))
-            usernameField.tap()
-            usernameField.typeText("moderator")
-
-            let passwordField = app.secureTextFields["Password"]
-            passwordField.tap()
-            passwordField.typeText("password")
-
-            app.swipeUp()
-            app.buttons["Login"].firstMatch.tap()
-            guard adminTab.waitForExistence(timeout: 3) else {
-                XCTFail("Staff login did not complete. Requests: \(server.receivedRequestLines)")
-                return
-            }
+        guard waitForHittable(adminTab, timeout: uiTimeout) else {
+            XCTFail("Admin tab did not become available. Requests: \(server.receivedRequestLines)")
+            return
         }
-
         adminTab.tap()
-        let libraryApprovalsLink = app.staticTexts["Library approvals"]
-        guard libraryApprovalsLink.waitForExistence(timeout: 8) else {
+        let libraryApprovalsButton = app.buttons["admin-library-approvals"]
+        guard waitForHittable(libraryApprovalsButton, timeout: uiTimeout) else {
             XCTFail("Library approvals did not load. Requests: \(server.receivedRequestLines)")
             return
         }
-        libraryApprovalsLink.tap()
+        libraryApprovalsButton.tap()
 
-        let pendingLibrary = app.staticTexts["Corner Books"]
-        XCTAssertTrue(pendingLibrary.waitForExistence(timeout: 3))
-        app.buttons["Approve"].firstMatch.tap()
+        let pendingLibrary = app.descendants(matching: .any)["library-moderation-florence-corner-books"]
+        guard pendingLibrary.waitForExistence(timeout: uiTimeout) else {
+            XCTFail("Pending library did not load. Requests: \(server.receivedRequestLines)")
+            return
+        }
+
+        let approveButton = app.buttons["approve-library-florence-corner-books"]
+        guard waitForHittable(approveButton, timeout: uiTimeout) else {
+            XCTFail("Approve button did not become hittable. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        approveButton.tap()
 
         let confirmation = app.alerts["Approve Library?"]
-        XCTAssertTrue(confirmation.waitForExistence(timeout: 2))
-        confirmation.buttons["Approve"].tap()
+        let confirmApproveButton = confirmation.buttons["Approve"]
+        guard waitForHittable(confirmApproveButton, timeout: uiTimeout) else {
+            XCTFail("Approval confirmation did not appear. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        confirmApproveButton.tap()
 
-        XCTAssertTrue(app.staticTexts["No Library Submissions"].waitForExistence(timeout: 3))
+        let emptyState = app.descendants(matching: .any)["library-moderation-empty"]
+        XCTAssertTrue(emptyState.waitForExistence(timeout: uiTimeout))
         XCTAssertFalse(pendingLibrary.exists)
-        XCTAssertTrue(
-            app.descendants(matching: .any)
-                .matching(NSPredicate(format: "label CONTAINS %@", "0 pending"))
-                .firstMatch
-                .exists,
-        )
+        let summary = app.descendants(matching: .any)["library-moderation-summary"]
+        XCTAssertTrue(waitForLabel(summary, containing: "0 pending", timeout: uiTimeout))
     }
 
-    private func verifyMockLoginResponse(baseURL: String) async throws {
-        let url = try XCTUnwrap(URL(string: "\(baseURL)auth/login"))
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.httpBody = Data("{\"username\":\"moderator\",\"password\":\"password\"}".utf8)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        let httpResponse = try XCTUnwrap(response as? HTTPURLResponse)
-        XCTAssertEqual(httpResponse.statusCode, 200)
-        XCTAssertEqual(
-            String(data: data, encoding: .utf8),
-            "{\"access\":\"staff-access-token\",\"refresh\":\"staff-refresh-token\"}",
+    @MainActor
+    private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND hittable == true"),
+            object: element,
         )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    @MainActor
+    private func waitForLabel(_ element: XCUIElement, containing text: String, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND label CONTAINS %@", text),
+            object: element,
+        )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
     @MainActor
@@ -235,11 +233,6 @@ private final class AdminModerationMockServer: @unchecked Sendable {
         let target = requestParts.count > 1 ? String(requestParts[1]) : ""
         let path = target.split(separator: "?", maxSplits: 1).first.map(String.init) ?? ""
 
-        if method == "POST", path == "/api/v1/auth/login" {
-            return """
-            {"access":"staff-access-token","refresh":"staff-refresh-token"}
-            """
-        }
         if method == "GET", path == "/api/v1/auth/me" {
             return """
             {"id":44,"username":"moderator","email":"moderator@example.invalid","is_social_only":false,"is_staff":true}
