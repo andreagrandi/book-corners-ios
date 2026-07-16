@@ -159,6 +159,39 @@ struct ModerationReportQueueViewModelTests {
         #expect(viewModel.detailReport?.status == .dismissed)
     }
 
+    @Test(arguments: [ReportModerationStatus.resolved, .dismissed])
+    func `moderation removes report from open queue when refresh returns stale data`(
+        status: ReportModerationStatus,
+    ) async {
+        stubClient.getModerationSummaryHandler = {
+            Self.summary(openReportsCount: 0)
+        }
+        stubClient.getModerationReportsHandler = { request in
+            #expect(request.status == .open)
+            return Self.listResponse(items: [Self.report(id: 9)])
+        }
+        stubClient.updateModerationReportHandler = { id, status in
+            Self.report(id: id, status: status)
+        }
+
+        let report = Self.report(id: 9)
+        viewModel.reports = [report]
+
+        switch status {
+        case .resolved:
+            await viewModel.resolve(report)
+        case .dismissed:
+            await viewModel.dismiss(report)
+        case .open:
+            Issue.record("Open is not a completed moderation action")
+        }
+
+        #expect(viewModel.summary?.openReportsCount == 0)
+        #expect(viewModel.reports.isEmpty)
+        #expect(viewModel.detailReport?.status == status)
+        #expect(viewModel.actionErrorMessage == nil)
+    }
+
     @Test func `load failure exposes user-facing error`() async {
         stubClient.getModerationSummaryHandler = {
             throw APIClientError.networkError(URLError(.notConnectedToInternet))

@@ -143,6 +143,39 @@ struct ModerationPhotoQueueViewModelTests {
         #expect(viewModel.detailPhoto?.status == .rejected)
     }
 
+    @Test(arguments: [PhotoModerationStatus.approved, .rejected])
+    func `moderation removes photo from pending queue when refresh returns stale data`(
+        status: PhotoModerationStatus,
+    ) async {
+        stubClient.getModerationSummaryHandler = {
+            Self.summary(pendingPhotosCount: 0)
+        }
+        stubClient.getModerationPhotosHandler = { request in
+            #expect(request.status == .pending)
+            return Self.listResponse(items: [Self.photo(id: 9)])
+        }
+        stubClient.updateModerationPhotoHandler = { id, status in
+            Self.photo(id: id, status: status)
+        }
+
+        let photo = Self.photo(id: 9)
+        viewModel.photos = [photo]
+
+        switch status {
+        case .approved:
+            await viewModel.approve(photo)
+        case .rejected:
+            await viewModel.reject(photo)
+        case .pending:
+            Issue.record("Pending is not a completed moderation action")
+        }
+
+        #expect(viewModel.summary?.pendingPhotosCount == 0)
+        #expect(viewModel.photos.isEmpty)
+        #expect(viewModel.detailPhoto?.status == status)
+        #expect(viewModel.actionErrorMessage == nil)
+    }
+
     @Test func `load failure exposes user-facing error`() async {
         stubClient.getModerationSummaryHandler = {
             throw APIClientError.networkError(URLError(.notConnectedToInternet))
