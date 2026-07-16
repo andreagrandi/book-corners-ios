@@ -26,8 +26,13 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
       - name: Run tests
+        # CI runners can't sustain two simulator clones at once: with parallel
+        # testing on, unit and UI tests share a 3-4 vCPU host, app launches take
+        # 80+ seconds, and the admin moderation UI test times out. Serialize
+        # test execution on CI only; the scheme keeps parallel testing locally.
         run: |
           xcodebuild test \
             -project BookCorners/BookCorners.xcodeproj \
             -scheme BookCorners \
-            -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=latest'
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max,OS=latest' \
+            -parallel-testing-enabled NO
