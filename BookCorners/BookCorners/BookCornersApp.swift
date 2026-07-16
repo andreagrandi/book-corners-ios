@@ -52,7 +52,7 @@ struct BookCornersApp: App {
                     .environment(locationService)
                     .environment(pushNotificationService)
                     .task {
-                        async let restore: () = authService.restoreSession()
+                        async let restore: () = restoreSession()
                         async let minDelay: () = Task.sleep(for: .milliseconds(800))
                         if locationService.isAuthorized {
                             locationService.startMonitoring()
@@ -63,5 +63,22 @@ struct BookCornersApp: App {
                     }
             }
         }
+    }
+
+    private func restoreSession() async {
+        #if DEBUG
+            let environment = ProcessInfo.processInfo.environment
+            if let accessToken = environment["UI_TEST_ACCESS_TOKEN"],
+               let refreshToken = environment["UI_TEST_REFRESH_TOKEN"]
+            {
+                await authService.restoreUITestSession(
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                )
+                return
+            }
+        #endif
+
+        await authService.restoreSession()
     }
 }

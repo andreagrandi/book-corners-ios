@@ -230,4 +230,19 @@ class AuthService {
             }
         }
     }
+
+    #if DEBUG
+        func restoreUITestSession(accessToken: String, refreshToken: String) async {
+            isLoading = true
+            defer { isLoading = false }
+
+            setTokens(access: accessToken, refresh: refreshToken)
+            do {
+                currentUser = try await apiClient.getMe()
+            } catch {
+                setTokens(access: nil, refresh: nil)
+                currentUser = nil
+            }
+        }
+    #endif
 }
