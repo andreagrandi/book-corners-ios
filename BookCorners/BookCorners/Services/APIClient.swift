@@ -267,14 +267,30 @@ class APIClient: APIClientProtocol {
             URLQueryItem(name: "page", value: String(libraryRequest.page)),
             URLQueryItem(name: "page_size", value: String(libraryRequest.pageSize)),
         ]
-        if let query = libraryRequest.query { items.append(URLQueryItem(name: "q", value: query)) }
-        if let city = libraryRequest.city { items.append(URLQueryItem(name: "city", value: city)) }
-        if let country = libraryRequest.country { items.append(URLQueryItem(name: "country", value: country)) }
-        if let postalCode = libraryRequest.postalCode { items.append(URLQueryItem(name: "postal_code", value: postalCode)) }
-        if let lat = libraryRequest.lat { items.append(URLQueryItem(name: "lat", value: String(lat))) }
-        if let lng = libraryRequest.lng { items.append(URLQueryItem(name: "lng", value: String(lng))) }
-        if let radiusKm = libraryRequest.radiusKm { items.append(URLQueryItem(name: "radius_km", value: String(radiusKm))) }
-        if let hasPhoto = libraryRequest.hasPhoto { items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto))) }
+        if let query = libraryRequest.query {
+            items.append(URLQueryItem(name: "q", value: query))
+        }
+        if let city = libraryRequest.city {
+            items.append(URLQueryItem(name: "city", value: city))
+        }
+        if let country = libraryRequest.country {
+            items.append(URLQueryItem(name: "country", value: country))
+        }
+        if let postalCode = libraryRequest.postalCode {
+            items.append(URLQueryItem(name: "postal_code", value: postalCode))
+        }
+        if let lat = libraryRequest.lat {
+            items.append(URLQueryItem(name: "lat", value: String(lat)))
+        }
+        if let lng = libraryRequest.lng {
+            items.append(URLQueryItem(name: "lng", value: String(lng)))
+        }
+        if let radiusKm = libraryRequest.radiusKm {
+            items.append(URLQueryItem(name: "radius_km", value: String(radiusKm)))
+        }
+        if let hasPhoto = libraryRequest.hasPhoto {
+            items.append(URLQueryItem(name: "has_photo", value: String(hasPhoto)))
+        }
 
         return try await request(path: "libraries/", queryItems: items)
     }
@@ -320,19 +336,39 @@ class APIClient: APIClientProtocol {
         multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: submission.photo)
 
         // Optional fields
-        if let name = submission.name { multipart.addField(name: "name", value: name) }
-        if let description = submission.description { multipart.addField(name: "description", value: description) }
-        if let postalCode = submission.postalCode { multipart.addField(name: "postal_code", value: postalCode) }
+        if let name = submission.name {
+            multipart.addField(name: "name", value: name)
+        }
+        if let description = submission.description {
+            multipart.addField(name: "description", value: description)
+        }
+        if let postalCode = submission.postalCode {
+            multipart.addField(name: "postal_code", value: postalCode)
+        }
         if let wheelchairAccessible = submission.wheelchairAccessible {
             multipart.addField(name: "wheelchair_accessible", value: wheelchairAccessible)
         }
-        if let capacity = submission.capacity { multipart.addField(name: "capacity", value: String(capacity)) }
-        if let isIndoor = submission.isIndoor { multipart.addField(name: "is_indoor", value: String(isIndoor)) }
-        if let isLit = submission.isLit { multipart.addField(name: "is_lit", value: String(isLit)) }
-        if let website = submission.website { multipart.addField(name: "website", value: website) }
-        if let contact = submission.contact { multipart.addField(name: "contact", value: contact) }
-        if let operatorName = submission.operatorName { multipart.addField(name: "operator", value: operatorName) }
-        if let brand = submission.brand { multipart.addField(name: "brand", value: brand) }
+        if let capacity = submission.capacity {
+            multipart.addField(name: "capacity", value: String(capacity))
+        }
+        if let isIndoor = submission.isIndoor {
+            multipart.addField(name: "is_indoor", value: String(isIndoor))
+        }
+        if let isLit = submission.isLit {
+            multipart.addField(name: "is_lit", value: String(isLit))
+        }
+        if let website = submission.website {
+            multipart.addField(name: "website", value: website)
+        }
+        if let contact = submission.contact {
+            multipart.addField(name: "contact", value: contact)
+        }
+        if let operatorName = submission.operatorName {
+            multipart.addField(name: "operator", value: operatorName)
+        }
+        if let brand = submission.brand {
+            multipart.addField(name: "brand", value: brand)
+        }
 
         return try await multipartRequest(path: "libraries/", multipart: multipart)
     }
@@ -349,8 +385,12 @@ class APIClient: APIClientProtocol {
         multipart.addField(name: "reason", value: reason)
 
         // Optional fields
-        if let details { multipart.addField(name: "details", value: details) }
-        if let photo { multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo) }
+        if let details {
+            multipart.addField(name: "details", value: details)
+        }
+        if let photo {
+            multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo)
+        }
 
         return try await multipartRequest(path: "libraries/\(slug)/report", multipart: multipart)
     }
@@ -366,7 +406,9 @@ class APIClient: APIClientProtocol {
         multipart.addFile(name: "photo", fileName: "photo.jpg", mimeType: "image/jpeg", data: photo)
 
         // Optional fields
-        if let caption { multipart.addField(name: "caption", value: caption) }
+        if let caption {
+            multipart.addField(name: "caption", value: caption)
+        }
 
         return try await multipartRequest(path: "libraries/\(slug)/photo", multipart: multipart)
     }

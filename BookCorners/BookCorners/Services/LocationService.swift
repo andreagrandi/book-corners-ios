@@ -34,7 +34,9 @@ class LocationService: NSObject, CLLocationManagerDelegate {
         updatesTask = Task {
             do {
                 for try await update in CLLocationUpdate.liveUpdates() {
-                    if let location = update.location { currentLocation = location }
+                    if let location = update.location {
+                        currentLocation = location
+                    }
                 }
             } catch {
                 // Location updates ended — permission revoked or system error

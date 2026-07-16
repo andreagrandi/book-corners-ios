@@ -66,7 +66,9 @@ struct RegisterView: View {
             }
             .navigationTitle("Register")
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
-                if isAuthenticated { dismiss() }
+                if isAuthenticated {
+                    dismiss()
+                }
             }
         }
     }

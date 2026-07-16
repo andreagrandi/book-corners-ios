@@ -49,7 +49,9 @@ struct LoginView: View {
             }
             .navigationTitle("Login")
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
-                if isAuthenticated { dismiss() }
+                if isAuthenticated {
+                    dismiss()
+                }
             }
         }
     }
