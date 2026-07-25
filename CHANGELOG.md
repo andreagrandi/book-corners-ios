@@ -15,6 +15,10 @@
 
 - Remove moderated libraries, photos, and reports from their pending queues immediately
 
+### Polish
+
+- Make it clear that a photo is required when submitting a library
+
 ## v1.3.1
 
 ### Features

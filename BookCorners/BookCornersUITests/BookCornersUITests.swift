@@ -91,6 +91,42 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
+    func testLibrarySubmissionExplainsRequiredPhoto() throws {
+        let server = try AdminModerationMockServer()
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
+        app.launch()
+
+        let submitTab = app.tabBars.buttons["Submit"]
+        guard waitForHittable(submitTab, timeout: uiTimeout) else {
+            XCTFail("Submit tab did not become available. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        submitTab.tap()
+
+        XCTAssertTrue(app.staticTexts["Photo (required)"].waitForExistence(timeout: uiTimeout))
+
+        let requirement = app.staticTexts["submit-library-photo-requirement"]
+        XCTAssertTrue(requirement.waitForExistence(timeout: uiTimeout))
+        XCTAssertEqual(requirement.label, "A clear photo is required to submit a library.")
+
+        let submitButton = app.buttons["submit-library-button"]
+        for _ in 0 ..< 6 {
+            if submitButton.exists {
+                break
+            }
+            app.swipeUp()
+        }
+        XCTAssertTrue(submitButton.waitForExistence(timeout: uiTimeout))
+        XCTAssertFalse(submitButton.isEnabled)
+    }
+
+    @MainActor
     private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == true AND hittable == true"),
