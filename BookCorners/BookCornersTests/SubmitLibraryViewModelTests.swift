@@ -89,6 +89,24 @@ struct SubmitLibraryViewModelTests {
         #expect(viewModel.isSubmitting == false)
     }
 
+    @Test func `submit without photo does not call API client`() async {
+        viewModel.city = "Florence"
+        viewModel.country = "IT"
+        viewModel.latitude = 43.77
+        viewModel.longitude = 11.25
+        var didCallAPIClient = false
+        stubClient.submitLibraryHandler = {
+            didCallAPIClient = true
+            return SampleData.library
+        }
+
+        await viewModel.submit()
+
+        #expect(didCallAPIClient == false)
+        #expect(viewModel.submittedLibrary == nil)
+        #expect(viewModel.isSubmitting == false)
+    }
+
     @Test func `reset clears all fields`() {
         viewModel.photoData = Data([0xFF])
         viewModel.address = "Via Roma 1"

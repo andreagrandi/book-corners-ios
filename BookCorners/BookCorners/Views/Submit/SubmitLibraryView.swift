@@ -35,7 +35,7 @@ struct SubmitLibraryView: View {
         Form {
             // MARK: - Photo
 
-            Section("Photo") {
+            Section {
                 if let thumbnail = viewModel.photoThumbnail {
                     thumbnail
                         .resizable()
@@ -64,6 +64,11 @@ struct SubmitLibraryView: View {
                 }
                 .accessibilityLabel(viewModel.photoData != nil ? "Change photo" : "Select photo")
                 .accessibilityHint("Opens photo or camera options")
+            } header: {
+                Text("Photo (required)")
+            } footer: {
+                Text("A clear photo is required to submit a library.")
+                    .accessibilityIdentifier("submit-library-photo-requirement")
             }
 
             // MARK: - Location
@@ -237,6 +242,7 @@ struct SubmitLibraryView: View {
                     }
                 }
                 .disabled(!viewModel.isValid || viewModel.isSubmitting)
+                .accessibilityIdentifier("submit-library-button")
             }
         }
         .navigationTitle("Submit Library")
