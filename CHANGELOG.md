@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD024 -->
 
-## v1.4.0
+## v1.4.1
 
 ### Features
 
