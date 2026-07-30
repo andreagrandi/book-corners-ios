@@ -8,6 +8,10 @@
 
 - Show staff when shared moderation work is waiting from the Nearby screen
 
+### Polish
+
+- Put moderation actions before dashboard statistics for staff
+
 ## v1.4.0
 
 ### Features
