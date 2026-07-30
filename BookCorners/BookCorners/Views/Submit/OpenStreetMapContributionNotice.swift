@@ -13,19 +13,18 @@ struct OpenStreetMapContributionNotice: View {
     var body: some View {
         Section {
             Text(
-                "After moderation, factual location data from approved submissions "
-                    + "may be contributed to OpenStreetMap in the future.",
+                "In the future, we may add approved library locations to OpenStreetMap.",
             )
             .accessibilityIdentifier("osm-contribution-notice")
 
             Link(
-                "Learn more in our privacy policy.",
+                "Read our privacy policy.",
                 destination: Self.privacyPolicyURL,
             )
             .accessibilityHint("Opens the Book Corners privacy policy")
             .accessibilityIdentifier("osm-contribution-privacy-policy-link")
         } header: {
-            Label("Future OpenStreetMap contributions", systemImage: "info.circle")
+            Label("About your submission", systemImage: "info.circle")
         }
     }
 }

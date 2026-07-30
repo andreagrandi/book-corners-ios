@@ -310,11 +310,10 @@ final class BookCornersUITests: XCTestCase {
         XCTAssertTrue(notice.waitForExistence(timeout: uiTimeout))
         XCTAssertEqual(
             notice.label,
-            "After moderation, factual location data from approved submissions "
-                + "may be contributed to OpenStreetMap in the future.",
+            "In the future, we may add approved library locations to OpenStreetMap.",
         )
         XCTAssertTrue(privacyPolicyLink.waitForExistence(timeout: uiTimeout))
-        XCTAssertEqual(privacyPolicyLink.label, "Learn more in our privacy policy.")
+        XCTAssertEqual(privacyPolicyLink.label, "Read our privacy policy.")
         XCTAssertTrue(submitButton.waitForExistence(timeout: uiTimeout))
         XCTAssertLessThanOrEqual(notice.frame.maxY, privacyPolicyLink.frame.minY)
         XCTAssertLessThanOrEqual(privacyPolicyLink.frame.maxY, submitButton.frame.minY)
