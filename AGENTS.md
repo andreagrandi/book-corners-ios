@@ -195,12 +195,6 @@ over Combine, etc.).
 - Short imperative subjects: `Add ...`, `Fix ...`, `Update ...`
 - Never run `git commit` or `git push` without explicit user approval
 - Use `gh` for all GitHub operations; always include a PR description
-- When creating a PR for a user-facing change that was tested in the simulator,
-  include at least one screenshot showing the changed UI in the PR body, normally
-  under `## Verification`. Capture screenshots with XcodeBuildMCP or an
-  equivalent simulator tool, save temporary files under `/tmp/`, and do not
-  commit screenshots to the repository. If a screenshot cannot be attached or
-  linked through `gh`, ask the user before creating the PR without it.
 - Never include personal email addresses in commits or PRs
 - Never use `"Little Free Library"` — it's trademarked. Use "book-sharing
   library" or "library"
