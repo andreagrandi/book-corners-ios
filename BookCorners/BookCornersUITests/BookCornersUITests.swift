@@ -273,7 +273,7 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
-    func testLibrarySubmissionExplainsRequiredPhoto() throws {
+    func testLibrarySubmissionExplainsRequirementsAndFutureOSMContribution() throws {
         let server = try AdminModerationMockServer()
         let port = try server.start()
         defer { server.stop() }
@@ -297,15 +297,38 @@ final class BookCornersUITests: XCTestCase {
         XCTAssertTrue(requirement.waitForExistence(timeout: uiTimeout))
         XCTAssertEqual(requirement.label, "A clear photo is required to submit a library.")
 
+        let notice = app.staticTexts["osm-contribution-notice"]
+        let privacyPolicyLink = app.descendants(matching: .any)["osm-contribution-privacy-policy-link"]
         let submitButton = app.buttons["submit-library-button"]
         for _ in 0 ..< 6 {
-            if submitButton.exists {
+            if notice.exists, privacyPolicyLink.exists, submitButton.exists {
                 break
             }
             app.swipeUp()
         }
+
+        XCTAssertTrue(notice.waitForExistence(timeout: uiTimeout))
+        XCTAssertEqual(
+            notice.label,
+            "After moderation, factual location data from approved submissions "
+                + "may be contributed to OpenStreetMap in the future.",
+        )
+        XCTAssertTrue(privacyPolicyLink.waitForExistence(timeout: uiTimeout))
+        XCTAssertEqual(privacyPolicyLink.label, "Learn more in our privacy policy.")
         XCTAssertTrue(submitButton.waitForExistence(timeout: uiTimeout))
+        XCTAssertLessThanOrEqual(notice.frame.maxY, privacyPolicyLink.frame.minY)
+        XCTAssertLessThanOrEqual(privacyPolicyLink.frame.maxY, submitButton.frame.minY)
         XCTAssertFalse(submitButton.isEnabled)
+
+        let noticeScreenshot = XCTAttachment(screenshot: app.screenshot())
+        noticeScreenshot.name = "OpenStreetMap submission notice"
+        noticeScreenshot.lifetime = .keepAlways
+        add(noticeScreenshot)
+
+        privacyPolicyLink.tap()
+
+        let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
+        XCTAssertTrue(safari.wait(for: .runningForeground, timeout: uiTimeout))
     }
 
     @MainActor

@@ -7,6 +7,8 @@
 ### Features
 
 - Show staff when shared moderation work is waiting from the Nearby screen
+- Explain when approved factual location data may later be contributed to
+  OpenStreetMap before a library is submitted
 
 ### Polish
 

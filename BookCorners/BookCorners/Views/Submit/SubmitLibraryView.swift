@@ -222,6 +222,8 @@ struct SubmitLibraryView: View {
                 ))
             }
 
+            OpenStreetMapContributionNotice()
+
             // MARK: - Submit
 
             Section {
