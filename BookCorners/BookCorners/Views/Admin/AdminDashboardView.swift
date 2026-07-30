@@ -62,14 +62,14 @@ struct AdminDashboardView: View {
                     AdminDashboardErrorBanner(message: errorMessage)
                 }
 
+                AdminDashboardSection(title: "Moderation queue") {
+                    AdminModerationList(summary: viewModel?.summary)
+                }
+
                 LazyVGrid(columns: summaryColumns, spacing: 12) {
                     ForEach(summaryItems) { item in
                         AdminSummaryCard(item: item)
                     }
-                }
-
-                AdminDashboardSection(title: "Moderation queue") {
-                    AdminModerationList(summary: viewModel?.summary)
                 }
 
                 AdminDashboardSection(title: "System status") {
@@ -135,6 +135,7 @@ private struct AdminDashboardHeader: View {
                 .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("admin-dashboard-header")
     }
 }
 
@@ -149,6 +150,7 @@ private struct AdminDashboardErrorBanner: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.orange.opacity(0.12), in: .rect(cornerRadius: 12, style: .continuous))
             .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("admin-dashboard-error")
     }
 }
 
@@ -253,6 +255,7 @@ private struct AdminModerationList: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("admin-photo-approvals")
 
             Divider()
                 .padding(.leading, 64)
@@ -269,6 +272,7 @@ private struct AdminModerationList: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("admin-report-moderation")
         }
         .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16, style: .continuous))
         .clipShape(.rect(cornerRadius: 16, style: .continuous))

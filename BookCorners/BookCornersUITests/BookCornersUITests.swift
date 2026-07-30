@@ -135,6 +135,77 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
+    func testAdminDashboardPrioritizesModerationQueueAndKeepsLinksAccessible() throws {
+        let server = try AdminModerationMockServer()
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
+        app.launch()
+
+        let moderationButton = app.buttons["nearby-moderation-button"]
+        guard waitForValue(
+            moderationButton,
+            equalTo: "Pending moderation work",
+            timeout: uiTimeout,
+        ) else {
+            XCTFail("Pending moderation indicator did not appear. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        moderationButton.tap()
+
+        let header = app.descendants(matching: .any)["admin-dashboard-header"]
+        let moderationHeading = app.staticTexts["MODERATION QUEUE"]
+        let lastModerationLink = app.buttons["admin-report-moderation"]
+        let firstStatistic = app
+            .descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Total Libraries,"))
+            .firstMatch
+        let lastStatistic = app
+            .descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Open Reports,"))
+            .firstMatch
+        let systemStatusHeading = app.staticTexts["SYSTEM STATUS"]
+
+        XCTAssertTrue(header.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(moderationHeading.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(lastModerationLink.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(firstStatistic.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(lastStatistic.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(systemStatusHeading.waitForExistence(timeout: uiTimeout))
+        XCTAssertLessThan(header.frame.maxY, moderationHeading.frame.minY)
+        XCTAssertLessThan(lastModerationLink.frame.maxY, firstStatistic.frame.minY)
+        XCTAssertLessThan(lastStatistic.frame.maxY, systemStatusHeading.frame.minY)
+
+        let dashboardScreenshot = XCTAttachment(screenshot: app.screenshot())
+        dashboardScreenshot.name = "Admin Dashboard moderation queue first"
+        dashboardScreenshot.lifetime = .keepAlways
+        add(dashboardScreenshot)
+
+        let destinations = [
+            ("admin-library-approvals", "Library Approvals"),
+            ("admin-photo-approvals", "Submitted Photos"),
+            ("admin-report-moderation", "User Reports"),
+        ]
+        for (identifier, title) in destinations {
+            let link = app.buttons[identifier]
+            guard waitForHittable(link, timeout: uiTimeout) else {
+                XCTFail("\(title) link did not become available. Requests: \(server.receivedRequestLines)")
+                return
+            }
+            link.tap()
+
+            let navigationBar = app.navigationBars[title]
+            XCTAssertTrue(navigationBar.waitForExistence(timeout: uiTimeout))
+            navigationBar.buttons.firstMatch.tap()
+            XCTAssertTrue(app.navigationBars["Admin Dashboard"].waitForExistence(timeout: uiTimeout))
+        }
+    }
+
+    @MainActor
     func testModerationIndicatorIsHiddenForNonStaffUser() throws {
         let server = try AdminModerationMockServer(isStaffUser: false)
         let port = try server.start()
@@ -191,6 +262,14 @@ final class BookCornersUITests: XCTestCase {
         moderationButton.tap()
 
         XCTAssertTrue(app.navigationBars["Admin Dashboard"].waitForExistence(timeout: uiTimeout))
+        let header = app.descendants(matching: .any)["admin-dashboard-header"]
+        let errorBanner = app.descendants(matching: .any)["admin-dashboard-error"]
+        let moderationHeading = app.staticTexts["MODERATION QUEUE"]
+        XCTAssertTrue(header.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(errorBanner.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(moderationHeading.waitForExistence(timeout: uiTimeout))
+        XCTAssertLessThan(header.frame.maxY, errorBanner.frame.minY)
+        XCTAssertLessThan(errorBanner.frame.maxY, moderationHeading.frame.minY)
     }
 
     @MainActor
