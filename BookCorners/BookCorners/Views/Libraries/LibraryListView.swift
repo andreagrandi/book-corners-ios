@@ -9,6 +9,10 @@ import CoreLocation
 import SwiftUI
 
 struct LibraryListView: View {
+    let showsModerationIndicator: Bool
+    let hasPendingModerationWork: Bool
+    let onOpenAdmin: () -> Void
+
     @Environment(\.apiClient) private var apiClient: APIClient
     @Environment(LocationService.self) private var locationService: LocationService
     @Environment(AuthService.self) private var authService
@@ -19,6 +23,16 @@ struct LibraryListView: View {
 
     private var isNearbyMode: Bool {
         viewModel?.listMode == .nearby
+    }
+
+    init(
+        showsModerationIndicator: Bool = false,
+        hasPendingModerationWork: Bool = false,
+        onOpenAdmin: @escaping () -> Void = {},
+    ) {
+        self.showsModerationIndicator = showsModerationIndicator
+        self.hasPendingModerationWork = hasPendingModerationWork
+        self.onOpenAdmin = onOpenAdmin
     }
 
     var body: some View {
@@ -51,6 +65,16 @@ struct LibraryListView: View {
                 }
             }
             .navigationTitle(navigationTitle)
+            .toolbar {
+                if showsModerationIndicator {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        ModerationToolbarButton(
+                            hasPendingWork: hasPendingModerationWork,
+                            action: onOpenAdmin,
+                        )
+                    }
+                }
+            }
             .task {
                 if viewModel == nil {
                     viewModel = LibraryListViewModel(client: apiClient)
@@ -244,6 +268,31 @@ struct LibraryListView: View {
     private func distanceTo(_ library: Library) -> CLLocationDistance? {
         guard let location = locationService.currentLocation else { return nil }
         return library.distance(from: location)
+    }
+}
+
+private struct ModerationToolbarButton: View {
+    let hasPendingWork: Bool
+    let action: () -> Void
+
+    @ScaledMetric(relativeTo: .body) private var indicatorSize = 8.0
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "bell")
+                .overlay(alignment: .topTrailing) {
+                    Circle()
+                        .fill(.red)
+                        .frame(width: indicatorSize, height: indicatorSize)
+                        .offset(x: 3, y: -2)
+                        .opacity(hasPendingWork ? 1 : 0)
+                        .accessibilityHidden(true)
+                }
+        }
+        .accessibilityLabel("Moderation")
+        .accessibilityValue(hasPendingWork ? "Pending moderation work" : "No pending moderation work")
+        .accessibilityHint("Opens the Admin Dashboard")
+        .accessibilityIdentifier("nearby-moderation-button")
     }
 }
 

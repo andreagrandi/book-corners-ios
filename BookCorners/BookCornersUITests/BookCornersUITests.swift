@@ -88,6 +88,109 @@ final class BookCornersUITests: XCTestCase {
         XCTAssertFalse(pendingLibrary.exists)
         let summary = app.descendants(matching: .any)["library-moderation-summary"]
         XCTAssertTrue(waitForLabel(summary, containing: "0 pending", timeout: uiTimeout))
+
+        let nearbyTab = app.tabBars.buttons["Nearby"]
+        nearbyTab.tap()
+
+        let moderationButton = app.buttons["nearby-moderation-button"]
+        XCTAssertTrue(waitForValue(
+            moderationButton,
+            equalTo: "No pending moderation work",
+            timeout: uiTimeout,
+        ))
+    }
+
+    @MainActor
+    func testStaffModerationIndicatorShowsPendingWorkAndOpensAdminDashboard() throws {
+        let server = try AdminModerationMockServer()
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
+        app.launch()
+
+        let moderationButton = app.buttons["nearby-moderation-button"]
+        guard waitForValue(
+            moderationButton,
+            equalTo: "Pending moderation work",
+            timeout: uiTimeout,
+        ) else {
+            XCTFail("Pending moderation indicator did not appear. Requests: \(server.receivedRequestLines)")
+            return
+        }
+
+        let pendingIndicatorScreenshot = XCTAttachment(screenshot: app.screenshot())
+        pendingIndicatorScreenshot.name = "Nearby pending moderation indicator"
+        pendingIndicatorScreenshot.lifetime = .keepAlways
+        add(pendingIndicatorScreenshot)
+
+        moderationButton.tap()
+
+        let adminTab = app.tabBars.buttons["Admin"]
+        XCTAssertTrue(adminTab.isSelected)
+        XCTAssertTrue(app.navigationBars["Admin Dashboard"].waitForExistence(timeout: uiTimeout))
+    }
+
+    @MainActor
+    func testModerationIndicatorIsHiddenForNonStaffUser() throws {
+        let server = try AdminModerationMockServer(isStaffUser: false)
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "user-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "user-refresh-token"
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["Nearby"].waitForExistence(timeout: uiTimeout))
+        XCTAssertFalse(app.buttons["nearby-moderation-button"].exists)
+        XCTAssertFalse(app.tabBars.buttons["Admin"].exists)
+    }
+
+    @MainActor
+    func testModerationIndicatorIsHiddenForSignedOutUser() throws {
+        let server = try AdminModerationMockServer()
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launch()
+
+        XCTAssertTrue(app.navigationBars["Nearby"].waitForExistence(timeout: uiTimeout))
+        XCTAssertFalse(app.buttons["nearby-moderation-button"].exists)
+        XCTAssertFalse(app.tabBars.buttons["Admin"].exists)
+    }
+
+    @MainActor
+    func testModerationSummaryFailureDoesNotBlockAdminDashboard() throws {
+        let server = try AdminModerationMockServer(summaryShouldFail: true)
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
+        app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
+        app.launch()
+
+        let moderationButton = app.buttons["nearby-moderation-button"]
+        guard waitForValue(
+            moderationButton,
+            equalTo: "No pending moderation work",
+            timeout: uiTimeout,
+        ) else {
+            XCTFail("Staff moderation button did not appear. Requests: \(server.receivedRequestLines)")
+            return
+        }
+
+        moderationButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Admin Dashboard"].waitForExistence(timeout: uiTimeout))
     }
 
     @MainActor
@@ -145,6 +248,15 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
+    private func waitForValue(_ element: XCUIElement, equalTo text: String, timeout: TimeInterval) -> Bool {
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == true AND value == %@", text),
+            object: element,
+        )
+        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
+    }
+
+    @MainActor
     func testLaunchPerformance() {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
@@ -157,10 +269,17 @@ private final class AdminModerationMockServer: @unchecked Sendable {
     private let listener: NWListener
     private let queue = DispatchQueue(label: "AdminModerationMockServer")
     private let stateLock = NSLock()
+    private let isStaffUser: Bool
+    private let summaryShouldFail: Bool
     private var isLibraryApproved = false
     private var requestLines: [String] = []
 
-    init() throws {
+    init(
+        isStaffUser: Bool = true,
+        summaryShouldFail: Bool = false,
+    ) throws {
+        self.isStaffUser = isStaffUser
+        self.summaryShouldFail = summaryShouldFail
         listener = try NWListener(using: .tcp, on: .any)
     }
 
@@ -273,10 +392,13 @@ private final class AdminModerationMockServer: @unchecked Sendable {
 
         if method == "GET", path == "/api/v1/auth/me" {
             return """
-            {"id":44,"username":"moderator","email":"moderator@example.invalid","is_social_only":false,"is_staff":true}
+            {"id":44,"username":"test-user","email":"test@example.invalid","is_social_only":false,"is_staff":\(isStaffUser)}
             """
         }
         if method == "GET", path == "/api/v1/libraries/moderation/summary" {
+            if summaryShouldFail {
+                return "{}"
+            }
             let pendingCount = libraryIsApproved ? 0 : 1
             return """
             {"pending_libraries_count":\(pendingCount),"open_reports_count":0,"pending_photos_count":0,"total_pending":\(pendingCount),"total_libraries":350,"total_users":128}

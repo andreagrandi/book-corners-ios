@@ -2,6 +2,12 @@
 
 <!-- markdownlint-disable MD024 -->
 
+## v1.4.1
+
+### Features
+
+- Show staff when shared moderation work is waiting from the Nearby screen
+
 ## v1.4.0
 
 ### Features

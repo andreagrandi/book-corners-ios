@@ -19,7 +19,10 @@ struct ContentView: View {
     @SceneStorage("selectedTab") private var selectedTab: AppTab = .nearby
     @State private var showLoginSheet = false
     @State private var adminNavigationPath = [AdminNotificationRoute]()
+    @State private var moderationIndicatorViewModel: ModerationIndicatorViewModel?
 
+    @Environment(\.apiClient) private var apiClient
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(AuthService.self) private var authService
     @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(PushNotificationService.self) private var pushNotificationService
@@ -52,7 +55,12 @@ struct ContentView: View {
 
             TabView(selection: tabSelection) {
                 Tab("Nearby", systemImage: "books.vertical", value: AppTab.nearby) {
-                    LibraryListView()
+                    LibraryListView(
+                        showsModerationIndicator: authService.canAccessAdmin,
+                        hasPendingModerationWork: moderationIndicatorViewModel?.hasPendingWork == true,
+                        onOpenAdmin: openAdminDashboard,
+                    )
+                    .onAppear(perform: refreshModerationIndicator)
                 }
 
                 Tab("Map", systemImage: "map", value: AppTab.map) {
@@ -100,11 +108,28 @@ struct ContentView: View {
             }
             .onChange(of: authService.canAccessAdmin) { _, newValue in
                 if newValue == false {
+                    moderationIndicatorViewModel = nil
                     moveAwayFromAdminIfNeeded()
+                } else {
+                    refreshModerationIndicator()
                 }
             }
             .onChange(of: pushNotificationService.pendingAdminRouteRequest) { _, request in
                 handleAdminRouteRequest(request)
+            }
+            .onChange(of: scenePhase) {
+                if scenePhase == .active {
+                    refreshModerationIndicator()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .moderationLibraryQueueDidChange)) { _ in
+                refreshModerationIndicator()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .moderationPhotoQueueDidChange)) { _ in
+                refreshModerationIndicator()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .moderationReportQueueDidChange)) { _ in
+                refreshModerationIndicator()
             }
             .tabBarMinimizeBehavior(.onScrollDown)
         }
@@ -129,6 +154,24 @@ struct ContentView: View {
         guard authService.canAccessAdmin else { return }
         selectedTab = .admin
         adminNavigationPath = [request.route]
+    }
+
+    private func openAdminDashboard() {
+        guard authService.canAccessAdmin else { return }
+        adminNavigationPath.removeAll()
+        selectedTab = .admin
+    }
+
+    private func refreshModerationIndicator() {
+        guard authService.canAccessAdmin else { return }
+
+        if moderationIndicatorViewModel == nil {
+            moderationIndicatorViewModel = ModerationIndicatorViewModel(client: apiClient)
+        }
+
+        Task {
+            await moderationIndicatorViewModel?.refresh()
+        }
     }
 
     private func moveAwayFromAdminIfNeeded() {
