@@ -112,6 +112,8 @@ final class BookCornersUITests: XCTestCase {
         app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
         app.launch()
 
+        selectNearbyTab(in: app)
+
         let moderationButton = app.buttons["nearby-moderation-button"]
         guard waitForValue(
             moderationButton,
@@ -145,6 +147,8 @@ final class BookCornersUITests: XCTestCase {
         app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
         app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
         app.launch()
+
+        selectNearbyTab(in: app)
 
         let moderationButton = app.buttons["nearby-moderation-button"]
         guard waitForValue(
@@ -217,6 +221,8 @@ final class BookCornersUITests: XCTestCase {
         app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "user-refresh-token"
         app.launch()
 
+        selectNearbyTab(in: app)
+
         XCTAssertTrue(app.navigationBars["Nearby"].waitForExistence(timeout: uiTimeout))
         XCTAssertFalse(app.buttons["nearby-moderation-button"].exists)
         XCTAssertFalse(app.tabBars.buttons["Admin"].exists)
@@ -231,6 +237,8 @@ final class BookCornersUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
         app.launch()
+
+        selectNearbyTab(in: app)
 
         XCTAssertTrue(app.navigationBars["Nearby"].waitForExistence(timeout: uiTimeout))
         XCTAssertFalse(app.buttons["nearby-moderation-button"].exists)
@@ -248,6 +256,8 @@ final class BookCornersUITests: XCTestCase {
         app.launchEnvironment["UI_TEST_ACCESS_TOKEN"] = "staff-access-token"
         app.launchEnvironment["UI_TEST_REFRESH_TOKEN"] = "staff-refresh-token"
         app.launch()
+
+        selectNearbyTab(in: app)
 
         let moderationButton = app.buttons["nearby-moderation-button"]
         guard waitForValue(
@@ -328,6 +338,14 @@ final class BookCornersUITests: XCTestCase {
 
         let safari = XCUIApplication(bundleIdentifier: "com.apple.mobilesafari")
         XCTAssertTrue(safari.wait(for: .runningForeground, timeout: uiTimeout))
+    }
+
+    @MainActor
+    private func selectNearbyTab(in app: XCUIApplication) {
+        let nearbyTab = app.tabBars.buttons["Nearby"]
+        XCTAssertTrue(waitForHittable(nearbyTab, timeout: uiTimeout))
+        nearbyTab.tap()
+        XCTAssertTrue(app.navigationBars["Nearby"].waitForExistence(timeout: uiTimeout))
     }
 
     @MainActor
