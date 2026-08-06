@@ -29,7 +29,7 @@ protocol APIClientProtocol {
         firstName: String?,
         lastName: String?,
         contributorAgreement: ContributorAgreement.Acceptance?,
-    ) async throws -> SocialAuthResponse
+    ) async throws -> TokenPair
     func registerDeviceToken(
         token: String,
         environment: APNsEnvironment,

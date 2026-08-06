@@ -131,14 +131,14 @@ class AuthService {
         defer { isLoading = false }
 
         do {
-            let response = try await apiClient.socialLogin(
+            let tokenPair = try await apiClient.socialLogin(
                 provider: "apple",
                 idToken: identityToken,
                 firstName: firstName,
                 lastName: lastName,
                 contributorAgreement: contributorAgreement,
             )
-            try await handleAuthSuccess(response.tokenPair)
+            try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
         }
@@ -153,12 +153,12 @@ class AuthService {
         defer { isLoading = false }
 
         do {
-            let response = try await apiClient.socialLogin(
+            let tokenPair = try await apiClient.socialLogin(
                 provider: "google",
                 idToken: idToken,
                 contributorAgreement: contributorAgreement,
             )
-            try await handleAuthSuccess(response.tokenPair)
+            try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
         }

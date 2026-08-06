@@ -249,7 +249,7 @@ extension SerialNetworkTests {
                 return (response, data)
             }
 
-            let response = try await client.socialLogin(
+            let tokenPair = try await client.socialLogin(
                 provider: "apple",
                 idToken: "apple-identity-token-long-enough",
                 firstName: "Jane",
@@ -257,7 +257,8 @@ extension SerialNetworkTests {
                 contributorAgreement: ContributorAgreement.currentAcceptance,
             )
 
-            #expect(response.accountCreated == true)
+            #expect(tokenPair.access == "new-access")
+            #expect(tokenPair.refresh == "new-refresh")
         }
 
         @Test func `social login omits acceptance and decodes old server response`() async throws {
@@ -276,16 +277,16 @@ extension SerialNetworkTests {
                 return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
             }
 
-            let response = try await client.socialLogin(
+            let tokenPair = try await client.socialLogin(
                 provider: "google",
                 idToken: "google-identity-token-long-enough",
                 contributorAgreement: nil,
             )
 
-            #expect(response.accountCreated == nil)
+            #expect(tokenPair.access.contains("access"))
         }
 
-        @Test func `new server social login reports existing account without acceptance`() async throws {
+        @Test func `new server social login ignores additive account created field`() async throws {
             MockURLProtocol.requestHandler = { request in
                 let body = try requestJSONBody(from: request)
                 #expect(body["contributor_agreement_version"] == nil)
@@ -303,13 +304,14 @@ extension SerialNetworkTests {
                 return (response, data)
             }
 
-            let response = try await client.socialLogin(
+            let tokenPair = try await client.socialLogin(
                 provider: "apple",
                 idToken: "existing-identity-token-long-enough",
                 contributorAgreement: nil,
             )
 
-            #expect(response.accountCreated == false)
+            #expect(tokenPair.access == "existing-access")
+            #expect(tokenPair.refresh == "existing-refresh")
         }
 
         // MARK: - Error Handling

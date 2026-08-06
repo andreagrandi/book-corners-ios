@@ -12,16 +12,6 @@ nonisolated struct TokenPair: Codable {
     let refresh: String
 }
 
-nonisolated struct SocialAuthResponse: Decodable {
-    let access: String
-    let refresh: String
-    let accountCreated: Bool?
-
-    var tokenPair: TokenPair {
-        TokenPair(access: access, refresh: refresh)
-    }
-}
-
 nonisolated struct AccessToken: Codable {
     let access: String
 }

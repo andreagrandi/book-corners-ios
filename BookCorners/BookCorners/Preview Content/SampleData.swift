@@ -107,12 +107,6 @@ enum SampleData {
         refresh: "sample.refresh.token",
     )
 
-    static let socialAuthResponse = SocialAuthResponse(
-        access: tokenPair.access,
-        refresh: tokenPair.refresh,
-        accountCreated: false,
-    )
-
     static let statistics = Statistics(
         totalApproved: 1234,
         totalWithImage: 987,

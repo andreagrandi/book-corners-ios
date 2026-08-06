@@ -331,7 +331,7 @@ class APIClient: APIClientProtocol {
         firstName: String? = nil,
         lastName: String? = nil,
         contributorAgreement: ContributorAgreement.Acceptance? = nil,
-    ) async throws -> SocialAuthResponse {
+    ) async throws -> TokenPair {
         try await request(
             path: "auth/social",
             method: "POST",
