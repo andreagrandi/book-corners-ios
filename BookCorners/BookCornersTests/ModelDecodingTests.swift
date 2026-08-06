@@ -70,6 +70,20 @@ struct ModelDecodingTests {
         #expect(tokenPair.refresh.contains("refresh"))
     }
 
+    @Test func `new server social response decodes as token pair`() throws {
+        let data = Data("""
+        {
+            "access": "new.access.token",
+            "refresh": "new.refresh.token",
+            "account_created": true
+        }
+        """.utf8)
+        let tokenPair = try decoder.decode(TokenPair.self, from: data)
+
+        #expect(tokenPair.access == "new.access.token")
+        #expect(tokenPair.refresh == "new.refresh.token")
+    }
+
     @Test func `user decodes`() throws {
         let data = try #require(Fixtures.userJSON.data(using: .utf8))
         let user = try decoder.decode(User.self, from: data)

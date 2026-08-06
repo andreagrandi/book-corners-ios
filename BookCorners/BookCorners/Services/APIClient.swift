@@ -303,10 +303,21 @@ class APIClient: APIClientProtocol {
         try await request(path: "auth/me", method: "GET")
     }
 
-    func register(username: String, password: String, email: String) async throws -> TokenPair {
+    func register(
+        username: String,
+        password: String,
+        email: String,
+        contributorAgreement: ContributorAgreement.Acceptance? = nil,
+    ) async throws -> TokenPair {
         try await request(
-            path: "auth/register", method: "POST",
-            body: RegisterRequest(username: username, password: password, email: email),
+            path: "auth/register",
+            method: "POST",
+            body: RegisterRequest(
+                username: username,
+                password: password,
+                email: email,
+                contributorAgreement: contributorAgreement,
+            ),
         )
     }
 
@@ -314,11 +325,23 @@ class APIClient: APIClientProtocol {
         try await request(path: "auth/refresh", method: "POST", body: RefreshRequest(refresh: refreshToken))
     }
 
-    func socialLogin(provider: String, idToken: String, firstName: String? = nil, lastName: String? = nil) async throws -> TokenPair {
+    func socialLogin(
+        provider: String,
+        idToken: String,
+        firstName: String? = nil,
+        lastName: String? = nil,
+        contributorAgreement: ContributorAgreement.Acceptance? = nil,
+    ) async throws -> TokenPair {
         try await request(
             path: "auth/social",
             method: "POST",
-            body: SocialLoginRequest(provider: provider, idToken: idToken, firstName: firstName, lastName: lastName),
+            body: SocialLoginRequest(
+                provider: provider,
+                idToken: idToken,
+                firstName: firstName,
+                lastName: lastName,
+                contributorAgreement: contributorAgreement,
+            ),
         )
     }
 

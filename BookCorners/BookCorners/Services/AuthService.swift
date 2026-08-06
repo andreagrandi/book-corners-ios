@@ -97,20 +97,35 @@ class AuthService {
         }
     }
 
-    func register(username: String, password: String, email: String) async {
+    func register(
+        username: String,
+        password: String,
+        email: String,
+        contributorAgreement: ContributorAgreement.Acceptance,
+    ) async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
 
         do {
-            let tokenPair = try await apiClient.register(username: username, password: password, email: email)
+            let tokenPair = try await apiClient.register(
+                username: username,
+                password: password,
+                email: email,
+                contributorAgreement: contributorAgreement,
+            )
             try await handleAuthSuccess(tokenPair)
         } catch {
             errorMessage = mapError(error)
         }
     }
 
-    func loginWithApple(identityToken: String, firstName: String?, lastName: String?) async {
+    func loginWithApple(
+        identityToken: String,
+        firstName: String?,
+        lastName: String?,
+        contributorAgreement: ContributorAgreement.Acceptance? = nil,
+    ) async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -121,6 +136,7 @@ class AuthService {
                 idToken: identityToken,
                 firstName: firstName,
                 lastName: lastName,
+                contributorAgreement: contributorAgreement,
             )
             try await handleAuthSuccess(tokenPair)
         } catch {
@@ -128,7 +144,10 @@ class AuthService {
         }
     }
 
-    func loginWithGoogle(idToken: String) async {
+    func loginWithGoogle(
+        idToken: String,
+        contributorAgreement: ContributorAgreement.Acceptance? = nil,
+    ) async {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
@@ -137,6 +156,7 @@ class AuthService {
             let tokenPair = try await apiClient.socialLogin(
                 provider: "google",
                 idToken: idToken,
+                contributorAgreement: contributorAgreement,
             )
             try await handleAuthSuccess(tokenPair)
         } catch {

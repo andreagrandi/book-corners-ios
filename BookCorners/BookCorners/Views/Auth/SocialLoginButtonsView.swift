@@ -8,23 +8,30 @@ import GoogleSignIn
 import SwiftUI
 
 struct SocialLoginButtonsView: View {
+    let isRegistration: Bool
+    let hasAcceptedContributorAgreement: Bool
+
     @Environment(AuthService.self) private var authService
 
     var body: some View {
         Section {
-            SignInWithAppleButton(.signIn) { request in
+            SignInWithAppleButton(isRegistration ? .signUp : .signIn) { request in
                 request.requestedScopes = [.fullName, .email]
             } onCompletion: { result in
                 handleAppleSignIn(result)
             }
             .frame(height: 44)
+            .disabled(isDisabled)
+            .accessibilityIdentifier("social-apple-button")
+            .accessibilityLabel(isRegistration ? "Sign up with Apple" : "Sign in with Apple")
+            .accessibilityHint(accessibilityHint)
 
             Button(action: handleGoogleSignIn) {
                 HStack {
                     Image("GoogleLogo")
                         .resizable()
                         .frame(width: 18, height: 18)
-                    Text("Sign in with Google")
+                    Text(isRegistration ? "Sign up with Google" : "Sign in with Google")
                         .fontWeight(.medium)
                 }
                 .frame(maxWidth: .infinity, minHeight: 44)
@@ -36,7 +43,28 @@ struct SocialLoginButtonsView: View {
                 )
             }
             .buttonStyle(.plain)
+            .disabled(isDisabled)
+            .accessibilityIdentifier("social-google-button")
+            .accessibilityHint(accessibilityHint)
         }
+    }
+
+    private var contributorAgreement: ContributorAgreement.Acceptance? {
+        guard isRegistration, hasAcceptedContributorAgreement else {
+            return nil
+        }
+        return ContributorAgreement.currentAcceptance
+    }
+
+    private var isDisabled: Bool {
+        authService.isLoading || (isRegistration && !hasAcceptedContributorAgreement)
+    }
+
+    private var accessibilityHint: String {
+        if isRegistration, !hasAcceptedContributorAgreement {
+            return "Accept the Contributor Agreement before creating an account"
+        }
+        return isRegistration ? "Creates an account using this provider" : "Logs in to an existing account"
     }
 
     private func handleAppleSignIn(_ result: Result<ASAuthorization, any Error>) {
@@ -53,6 +81,7 @@ struct SocialLoginButtonsView: View {
                     identityToken: identityToken,
                     firstName: firstName,
                     lastName: lastName,
+                    contributorAgreement: contributorAgreement,
                 )
             }
         case let .failure(error):
@@ -76,7 +105,12 @@ struct SocialLoginButtonsView: View {
                 return
             }
             guard let idToken = result?.user.idToken?.tokenString else { return }
-            Task { await authService.loginWithGoogle(idToken: idToken) }
+            Task {
+                await authService.loginWithGoogle(
+                    idToken: idToken,
+                    contributorAgreement: contributorAgreement,
+                )
+            }
         }
     }
 }

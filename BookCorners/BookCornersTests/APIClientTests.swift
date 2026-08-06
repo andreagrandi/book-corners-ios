@@ -9,6 +9,48 @@
 import Foundation
 import Testing
 
+private nonisolated enum APIClientTestError: Error {
+    case missingRequestBody
+    case invalidRequestBody
+    case requestBodyStreamFailed
+}
+
+private nonisolated func requestBodyData(from request: URLRequest) throws -> Data {
+    if let body = request.httpBody {
+        return body
+    }
+    guard let stream = request.httpBodyStream else {
+        throw APIClientTestError.missingRequestBody
+    }
+
+    stream.open()
+    defer { stream.close() }
+
+    var body = Data()
+    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: 4096)
+    defer { buffer.deallocate() }
+
+    while stream.hasBytesAvailable {
+        let count = stream.read(buffer, maxLength: 4096)
+        if count < 0 {
+            throw APIClientTestError.requestBodyStreamFailed
+        }
+        if count == 0 {
+            break
+        }
+        body.append(buffer, count: count)
+    }
+    return body
+}
+
+private nonisolated func requestJSONBody(from request: URLRequest) throws -> [String: Any] {
+    let data = try requestBodyData(from: request)
+    guard let body = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        throw APIClientTestError.invalidRequestBody
+    }
+    return body
+}
+
 extension SerialNetworkTests {
     @MainActor struct APIClientTests {
         let client: APIClient
@@ -80,6 +122,196 @@ extension SerialNetworkTests {
                     country: "DE",
                 ),
             )
+        }
+
+        // MARK: - Registration Agreement
+
+        @Test func `registration encodes current accepted agreement and decodes old server response`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                #expect(request.httpMethod == "POST")
+                #expect(request.url?.path.hasSuffix("/auth/register") == true)
+                let body = try requestJSONBody(from: request)
+                #expect(body["contributor_agreement_version"] as? String == "1.0")
+                #expect(body["contributor_agreement_accepted"] as? Bool == true)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 201,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+            }
+
+            let response = try await client.register(
+                username: "new-reader",
+                password: "StrongPass123!",
+                email: "reader@example.com",
+                contributorAgreement: ContributorAgreement.currentAcceptance,
+            )
+
+            #expect(response.access.contains("access"))
+        }
+
+        @Test func `registration compatibility request omits missing agreement fields`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                let body = try requestJSONBody(from: request)
+                #expect(body["contributor_agreement_version"] == nil)
+                #expect(body["contributor_agreement_accepted"] == nil)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 201,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+            }
+
+            _ = try await client.register(
+                username: "legacy-reader",
+                password: "StrongPass123!",
+                email: "legacy@example.com",
+                contributorAgreement: nil,
+            )
+        }
+
+        @Test func `registration encodes accepted stale agreement for server validation`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                let body = try requestJSONBody(from: request)
+                #expect(body["contributor_agreement_version"] as? String == "0.9")
+                #expect(body["contributor_agreement_accepted"] as? Bool == true)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 201,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+            }
+
+            _ = try await client.register(
+                username: "stale-reader",
+                password: "StrongPass123!",
+                email: "stale@example.com",
+                contributorAgreement: ContributorAgreement.Acceptance(
+                    version: "0.9",
+                    accepted: true,
+                ),
+            )
+        }
+
+        @Test func `registration encodes false current agreement for server validation`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                let body = try requestJSONBody(from: request)
+                #expect(body["contributor_agreement_version"] as? String == "1.0")
+                #expect(body["contributor_agreement_accepted"] as? Bool == false)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 201,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+            }
+
+            _ = try await client.register(
+                username: "declined-reader",
+                password: "StrongPass123!",
+                email: "declined@example.com",
+                contributorAgreement: ContributorAgreement.Acceptance(
+                    version: ContributorAgreement.currentVersion,
+                    accepted: false,
+                ),
+            )
+        }
+
+        @Test func `social registration encodes acceptance and decodes new server response`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                #expect(request.httpMethod == "POST")
+                #expect(request.url?.path.hasSuffix("/auth/social") == true)
+                let body = try requestJSONBody(from: request)
+                #expect(body["provider"] as? String == "apple")
+                #expect(body["contributor_agreement_version"] as? String == "1.0")
+                #expect(body["contributor_agreement_accepted"] as? Bool == true)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                let data = Data("""
+                {"access":"new-access","refresh":"new-refresh","account_created":true}
+                """.utf8)
+                return (response, data)
+            }
+
+            let tokenPair = try await client.socialLogin(
+                provider: "apple",
+                idToken: "apple-identity-token-long-enough",
+                firstName: "Jane",
+                lastName: "Doe",
+                contributorAgreement: ContributorAgreement.currentAcceptance,
+            )
+
+            #expect(tokenPair.access == "new-access")
+            #expect(tokenPair.refresh == "new-refresh")
+        }
+
+        @Test func `social login omits acceptance and decodes old server response`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                let body = try requestJSONBody(from: request)
+                #expect(body["provider"] as? String == "google")
+                #expect(body["contributor_agreement_version"] == nil)
+                #expect(body["contributor_agreement_accepted"] == nil)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                return (response, Fixtures.tokenPairJSON.data(using: .utf8)!)
+            }
+
+            let tokenPair = try await client.socialLogin(
+                provider: "google",
+                idToken: "google-identity-token-long-enough",
+                contributorAgreement: nil,
+            )
+
+            #expect(tokenPair.access.contains("access"))
+        }
+
+        @Test func `new server social login ignores additive account created field`() async throws {
+            MockURLProtocol.requestHandler = { request in
+                let body = try requestJSONBody(from: request)
+                #expect(body["contributor_agreement_version"] == nil)
+                #expect(body["contributor_agreement_accepted"] == nil)
+
+                let response = HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil,
+                )!
+                let data = Data("""
+                {"access":"existing-access","refresh":"existing-refresh","account_created":false}
+                """.utf8)
+                return (response, data)
+            }
+
+            let tokenPair = try await client.socialLogin(
+                provider: "apple",
+                idToken: "existing-identity-token-long-enough",
+                contributorAgreement: nil,
+            )
+
+            #expect(tokenPair.access == "existing-access")
+            #expect(tokenPair.refresh == "existing-refresh")
         }
 
         // MARK: - Error Handling

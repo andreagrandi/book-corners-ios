@@ -16,9 +16,20 @@ protocol APIClientProtocol {
     func getStatistics() async throws -> Statistics
     func login(username: String, password: String) async throws -> TokenPair
     func getMe() async throws -> User
-    func register(username: String, password: String, email: String) async throws -> TokenPair
+    func register(
+        username: String,
+        password: String,
+        email: String,
+        contributorAgreement: ContributorAgreement.Acceptance?,
+    ) async throws -> TokenPair
     func refreshToken(refreshToken: String) async throws -> AccessToken
-    func socialLogin(provider: String, idToken: String, firstName: String?, lastName: String?) async throws -> TokenPair
+    func socialLogin(
+        provider: String,
+        idToken: String,
+        firstName: String?,
+        lastName: String?,
+        contributorAgreement: ContributorAgreement.Acceptance?,
+    ) async throws -> TokenPair
     func registerDeviceToken(
         token: String,
         environment: APNsEnvironment,

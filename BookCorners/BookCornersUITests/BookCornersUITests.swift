@@ -309,6 +309,69 @@ final class BookCornersUITests: XCTestCase {
     }
 
     @MainActor
+    func testRegistrationRequiresAgreementAndPresentsFullText() throws {
+        let server = try AdminModerationMockServer()
+        let port = try server.start()
+        defer { server.stop() }
+
+        let app = XCUIApplication()
+        app.launchEnvironment["API_BASE_URL"] = "http://127.0.0.1:\(port)/api/v1/"
+        app.launchEnvironment["CONTRIBUTOR_AGREEMENT_URL"] = "http://127.0.0.1:\(port)/contributor-agreement/1.0/en/"
+        app.launch()
+
+        let submitTab = app.tabBars.buttons["Submit"]
+        guard waitForHittable(submitTab, timeout: uiTimeout) else {
+            XCTFail("Submit tab did not become available. Requests: \(server.receivedRequestLines)")
+            return
+        }
+        submitTab.tap()
+
+        XCTAssertTrue(app.navigationBars["Login"].waitForExistence(timeout: uiTimeout))
+        XCTAssertFalse(app.buttons["contributor-agreement-acceptance"].exists)
+        XCTAssertEqual(app.buttons["social-google-button"].label, "Sign in with Google")
+
+        let registerMode = app.segmentedControls.buttons["Register"]
+        XCTAssertTrue(waitForHittable(registerMode, timeout: uiTimeout))
+        registerMode.tap()
+
+        let agreementControl = app.buttons["contributor-agreement-acceptance"]
+        for _ in 0 ..< 4 where !agreementControl.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(agreementControl.waitForExistence(timeout: uiTimeout))
+        XCTAssertEqual(agreementControl.value as? String, "Not accepted")
+
+        let appleButton = app.buttons["social-apple-button"]
+        let googleButton = app.buttons["social-google-button"]
+        for _ in 0 ..< 4 where !googleButton.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertEqual(appleButton.label, "Sign up with Apple")
+        XCTAssertEqual(googleButton.label, "Sign up with Google")
+        XCTAssertFalse(appleButton.isEnabled)
+        XCTAssertFalse(googleButton.isEnabled)
+
+        let readAgreementButton = app.buttons["read-contributor-agreement"]
+        XCTAssertTrue(waitForHittable(readAgreementButton, timeout: uiTimeout))
+        readAgreementButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Contributor Agreement"].waitForExistence(timeout: uiTimeout))
+        let agreementHeading = app.webViews.staticTexts["Contributor Agreement v1.0"]
+        XCTAssertTrue(agreementHeading.waitForExistence(timeout: uiTimeout))
+        XCTAssertTrue(app.webViews.staticTexts["Your contributions and rights"].exists)
+        app.navigationBars["Contributor Agreement"].buttons.firstMatch.tap()
+
+        for _ in 0 ..< 4 where !agreementControl.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(waitForHittable(agreementControl, timeout: uiTimeout))
+        agreementControl.tap()
+        XCTAssertTrue(waitForValue(agreementControl, equalTo: "Accepted", timeout: uiTimeout))
+        XCTAssertTrue(appleButton.isEnabled)
+        XCTAssertTrue(googleButton.isEnabled)
+    }
+
+    @MainActor
     private func waitForHittable(_ element: XCUIElement, timeout: TimeInterval) -> Bool {
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == true AND hittable == true"),
@@ -437,9 +500,12 @@ private final class AdminModerationMockServer: @unchecked Sendable {
         let request = String(data: requestData, encoding: .utf8) ?? ""
         let responseBody = responseBody(for: request)
         let responseData = Data(responseBody.utf8)
+        let contentType = request.contains("GET /contributor-agreement/")
+            ? "text/html; charset=utf-8"
+            : "application/json"
         let responseHeaders = [
             "HTTP/1.1 200 OK",
-            "Content-Type: application/json",
+            "Content-Type: \(contentType)",
             "Content-Length: \(responseData.count)",
             "Cache-Control: no-store",
             "Connection: close",
@@ -469,6 +535,20 @@ private final class AdminModerationMockServer: @unchecked Sendable {
         let target = requestParts.count > 1 ? String(requestParts[1]) : ""
         let path = target.split(separator: "?", maxSplits: 1).first.map(String.init) ?? ""
 
+        if method == "GET", path == "/contributor-agreement/1.0/en/" {
+            return """
+            <!doctype html>
+            <html lang="en">
+            <head><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+            <body>
+              <h1>Contributor Agreement v1.0</h1>
+              <h2>Your contributions and rights</h2>
+              <p>This full agreement explains how Book Corners can use and share contributed data and images.</p>
+              <p>You confirm that you have the rights needed to contribute the material.</p>
+            </body>
+            </html>
+            """
+        }
         if method == "GET", path == "/api/v1/auth/me" {
             return """
             {"id":44,"username":"test-user","email":"test@example.invalid","is_social_only":false,"is_staff":\(isStaffUser)}

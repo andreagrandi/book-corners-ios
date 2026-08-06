@@ -12,6 +12,7 @@ struct RegisterView: View {
     @State private var password = ""
     @State private var email = ""
     @State private var confirmPassword = ""
+    @State private var hasAcceptedContributorAgreement = false
 
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
@@ -32,6 +33,8 @@ struct RegisterView: View {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .textContentType(.password)
                 }
+
+                ContributorAgreementSection(isAccepted: $hasAcceptedContributorAgreement)
 
                 if let error = authService.errorMessage {
                     Text(error)
@@ -56,10 +59,18 @@ struct RegisterView: View {
                     Button("Register") {
                         let trimmedUsername = username.trimmingCharacters(in: .whitespaces)
                         let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
-                        Task { await authService.register(username: trimmedUsername, password: password, email: trimmedEmail) }
+                        Task {
+                            await authService.register(
+                                username: trimmedUsername,
+                                password: password,
+                                email: trimmedEmail,
+                                contributorAgreement: ContributorAgreement.currentAcceptance,
+                            )
+                        }
                     }
                     .disabled(username.isEmpty || email.isEmpty || !email.contains("@") || password.isEmpty || confirmPassword.isEmpty || password != confirmPassword ||
-                        authService.isLoading)
+                        !hasAcceptedContributorAgreement || authService.isLoading)
+                    .accessibilityIdentifier("credential-auth-submit")
                 }
 
                 Button("Already have an account? Login") { dismiss() }

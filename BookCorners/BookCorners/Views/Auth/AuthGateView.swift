@@ -16,6 +16,7 @@ struct AuthGateView: View {
     @State private var password = ""
     @State private var email = ""
     @State private var confirmPassword = ""
+    @State private var hasAcceptedContributorAgreement = false
 
     @Environment(AuthService.self) private var authService
     @Environment(\.dismiss) private var dismiss
@@ -23,10 +24,8 @@ struct AuthGateView: View {
     var body: some View {
         NavigationStack {
             Form {
-                SocialLoginButtonsView()
-
                 Section {
-                    Picker("", selection: $authMode) {
+                    Picker("Authentication mode", selection: $authMode) {
                         ForEach(AuthMode.allCases, id: \.self) { mode in
                             Text(mode.rawValue).tag(mode)
                         }
@@ -34,6 +33,7 @@ struct AuthGateView: View {
                     .pickerStyle(.segmented)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
+                    .accessibilityIdentifier("auth-mode-picker")
                 }
 
                 Section("Account") {
@@ -55,6 +55,10 @@ struct AuthGateView: View {
                         SecureField("Confirm Password", text: $confirmPassword)
                             .textContentType(.password)
                     }
+                }
+
+                if authMode == .register {
+                    ContributorAgreementSection(isAccepted: $hasAcceptedContributorAgreement)
                 }
 
                 if let error = authService.errorMessage {
@@ -90,12 +94,19 @@ struct AuthGateView: View {
                                     username: trimmedUsername,
                                     password: password,
                                     email: trimmedEmail,
+                                    contributorAgreement: ContributorAgreement.currentAcceptance,
                                 )
                             }
                         }
                     }
                     .disabled(isSubmitDisabled)
+                    .accessibilityIdentifier("credential-auth-submit")
                 }
+
+                SocialLoginButtonsView(
+                    isRegistration: authMode == .register,
+                    hasAcceptedContributorAgreement: hasAcceptedContributorAgreement,
+                )
             }
             .navigationTitle(authMode == .login ? "Login" : "Register")
             .onChange(of: authService.isAuthenticated) { _, isAuthenticated in
@@ -105,6 +116,7 @@ struct AuthGateView: View {
             }
             .onChange(of: authMode) { _, _ in
                 authService.errorMessage = nil
+                hasAcceptedContributorAgreement = false
             }
         }
     }
@@ -117,7 +129,8 @@ struct AuthGateView: View {
             return true
         }
         if authMode == .register {
-            return email.isEmpty || !email.contains("@") || confirmPassword.isEmpty || password != confirmPassword
+            return email.isEmpty || !email.contains("@") || confirmPassword.isEmpty || password != confirmPassword ||
+                !hasAcceptedContributorAgreement
         }
         return false
     }
