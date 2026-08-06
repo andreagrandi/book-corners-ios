@@ -38,7 +38,12 @@ class MockAPIClient: APIClientProtocol {
         SampleData.tokenPair
     }
 
-    func register(username _: String, password _: String, email _: String) async throws -> TokenPair {
+    func register(
+        username _: String,
+        password _: String,
+        email _: String,
+        contributorAgreement _: ContributorAgreement.Acceptance?,
+    ) async throws -> TokenPair {
         SampleData.tokenPair
     }
 
@@ -51,8 +56,9 @@ class MockAPIClient: APIClientProtocol {
         idToken _: String,
         firstName _: String?,
         lastName _: String?,
-    ) async throws -> TokenPair {
-        SampleData.tokenPair
+        contributorAgreement _: ContributorAgreement.Acceptance?,
+    ) async throws -> SocialAuthResponse {
+        SampleData.socialAuthResponse
     }
 
     func registerDeviceToken(

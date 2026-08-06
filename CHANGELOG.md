@@ -2,6 +2,17 @@
 
 <!-- markdownlint-disable MD024 -->
 
+## v1.5.0
+
+### Features
+
+- Require people creating credential, Apple, or Google accounts to read and
+  explicitly accept Contributor Agreement v1.0
+- Keep existing login unchanged and remain compatible with older servers while
+  registration enforcement is staged
+- Keep server enforcement disabled until v1.5.0 (build 22) is the minimum
+  supported app version and credential, Apple, and Google flows are verified
+
 ## v1.4.1
 
 ### Features

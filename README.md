@@ -33,6 +33,15 @@ Book Corners is a community directory of book-sharing libraries — those little
 2. Open `BookCorners/BookCorners.xcodeproj` in Xcode
 3. Select a simulator or device and run (`Cmd+R`)
 
+## Contributor Agreement Rollout
+
+App version 1.5.0 (build 22) adds explicit Contributor Agreement acceptance to
+new-account registration while keeping existing login compatible. Server-side
+registration enforcement must remain disabled until this release is the minimum
+supported app version and credential, Apple, and Google account creation and
+existing-login flows have been verified in production. Releasing the app alone
+does not activate enforcement or change existing contributions.
+
 ## Contributing
 
 Contributions are welcome! If you'd like to help:

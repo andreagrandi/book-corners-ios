@@ -70,6 +70,28 @@ struct ModelDecodingTests {
         #expect(tokenPair.refresh.contains("refresh"))
     }
 
+    @Test func `old server social response decodes without account created`() throws {
+        let data = try #require(Fixtures.tokenPairJSON.data(using: .utf8))
+        let response = try decoder.decode(SocialAuthResponse.self, from: data)
+
+        #expect(response.tokenPair.access.contains("access"))
+        #expect(response.accountCreated == nil)
+    }
+
+    @Test func `new server social response decodes account created`() throws {
+        let data = Data("""
+        {
+            "access": "new.access.token",
+            "refresh": "new.refresh.token",
+            "account_created": true
+        }
+        """.utf8)
+        let response = try decoder.decode(SocialAuthResponse.self, from: data)
+
+        #expect(response.tokenPair.refresh == "new.refresh.token")
+        #expect(response.accountCreated == true)
+    }
+
     @Test func `user decodes`() throws {
         let data = try #require(Fixtures.userJSON.data(using: .utf8))
         let user = try decoder.decode(User.self, from: data)

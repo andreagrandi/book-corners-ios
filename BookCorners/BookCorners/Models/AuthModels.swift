@@ -12,6 +12,16 @@ nonisolated struct TokenPair: Codable {
     let refresh: String
 }
 
+nonisolated struct SocialAuthResponse: Decodable {
+    let access: String
+    let refresh: String
+    let accountCreated: Bool?
+
+    var tokenPair: TokenPair {
+        TokenPair(access: access, refresh: refresh)
+    }
+}
+
 nonisolated struct AccessToken: Codable {
     let access: String
 }
@@ -65,6 +75,21 @@ nonisolated struct RegisterRequest: Encodable {
     let username: String
     let password: String
     let email: String
+    let contributorAgreementVersion: String?
+    let contributorAgreementAccepted: Bool?
+
+    init(
+        username: String,
+        password: String,
+        email: String,
+        contributorAgreement: ContributorAgreement.Acceptance?,
+    ) {
+        self.username = username
+        self.password = password
+        self.email = email
+        contributorAgreementVersion = contributorAgreement?.version
+        contributorAgreementAccepted = contributorAgreement?.accepted
+    }
 }
 
 nonisolated struct RefreshRequest: Encodable {
@@ -76,4 +101,21 @@ nonisolated struct SocialLoginRequest: Encodable {
     let idToken: String
     let firstName: String?
     let lastName: String?
+    let contributorAgreementVersion: String?
+    let contributorAgreementAccepted: Bool?
+
+    init(
+        provider: String,
+        idToken: String,
+        firstName: String?,
+        lastName: String?,
+        contributorAgreement: ContributorAgreement.Acceptance?,
+    ) {
+        self.provider = provider
+        self.idToken = idToken
+        self.firstName = firstName
+        self.lastName = lastName
+        contributorAgreementVersion = contributorAgreement?.version
+        contributorAgreementAccepted = contributorAgreement?.accepted
+    }
 }
